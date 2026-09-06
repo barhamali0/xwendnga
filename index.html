@@ -144,6 +144,7 @@ body:has(.sheet.open) #telegramBtn{
       <div class="stat"><i class="fa-solid fa-language"></i><strong id="wordCount">0</strong><span>وشە</span></div>
     </div></section>
 
+    <!-- پۆلەکانی کتێبخانە -->
     <section class="section">
       <div class="chips" id="filters">
         <button class="chip active" data-filter="all">هەموو</button>
@@ -180,6 +181,7 @@ body:has(.sheet.open) #telegramBtn{
   </div></div>
 </div>
 
+<!-- پەڕەی ڕێکخستنی پوخت بە دوگمەی کشاوە -->
 <div id="sheetBack" class="back"></div>
 <div id="settingsSheet" class="sheet">
   <div class="handle"></div>
@@ -236,6 +238,7 @@ body:has(.sheet.open) #telegramBtn{
   </div>
 </div>
 
+<!-- پەڕەی بەڕێوەبەر (Owner Panel) -->
 <div id="ownerBack" class="back"></div>
 <div id="ownerSheet" class="sheet">
   <div class="handle"></div>
@@ -330,8 +333,9 @@ var musicVolume=.32;
 var speechVolume=.85;
 var speechState="stopped";
 var speechUtterance=null;
+var speechTimer=null;
 var speechWordIndex=0;
-var speechRate=0.82; 
+var speechRate=0.85; 
 var translatedPages={};
 var pageKurdish=false;
 
@@ -678,14 +682,6 @@ function renderOwnerPanel(){
 function toggleFav(id){var b=books.find(function(x){return x.id===id});if(!b)return;b.favorite=!b.favorite;dbPut(b).then(renderBooks)}
 function delBook(id){var b=books.find(function(x){return x.id===id});if(!b)return;if(!confirm("دڵنیایت لە سڕینەوەی «"+b.title+"»؟"))return;dbDel(id).then(function(){books=books.filter(function(x){return x.id!==id});renderBooks();renderOwnerPanel();toast("ڪتێبەڪە سڕایەوە")});}
 
-function stopSpeech(){
-  if(window.speechSynthesis) window.speechSynthesis.cancel();
-  speechState="stopped";
-  speechUtterance=null;
-  clearSpeakHighlight();
-  setSpeakIcon();
-}
-
 function clearSpeakHighlight(){
   var a=document.querySelectorAll(".rw.speaking");
   for(var i=0;i<a.length;i++) a[i].classList.remove("speaking");
@@ -706,61 +702,111 @@ function highlightWord(i){
   }
 }
 
-// سیستەمی نوێی ڕێکخستنی دەنگەکە کە کێشەی وەستانی نییە
-function startPageSpeech(){
-  if(!window.speechSynthesis){toast("خوێندنەوەی دەنگی لەم وێبگەڕەدا بەردەست نییە");return;}
-  
-  if(speechState==="playing"){
-    window.speechSynthesis.pause();
-    speechState="paused";
-    setSpeakIcon();
-    return;
-  }
-  
-  if(speechState==="paused"){
-    window.speechSynthesis.resume();
-    speechState="playing";
-    setSpeakIcon();
-    return;
-  }
-  
-  var text=$("readerText").innerText.trim();
-  if(!text){toast("دەقی لاپەڕەڪە نییە");return;}
+function stopSpeech(){
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+  speechState="stopped";
+  speechUtterance=null;
+  clearTimeout(speechTimer);
+  speechTimer=null;
+  speechWordIndex=0;
+  clearSpeakHighlight();
+  setSpeakIcon();
+}
 
-  stopSpeech();
-  
+// خەمڵاندنی کاتی هەر وشەیەک بە تەواوی ورد بۆ هاوتاکردنی دەنگ و ڕەنگی سەوز
+function getWordDelay(word, rate){
+  var r = rate || 0.85;
+  var clean = String(word||"").replace(/^[.,!?;:()"'،؛؟]+|[.,!?;:()"'،؛؟]+$/g, "");
+  var len = clean.length || 1;
+  // کاتی ئاسایی گوتنی پیتەکان
+  var ms = 190 + (len * 40);
+  // وەستان بۆ نیشانەکانی خاڵبەندی
+  if(/[.!?؟]/.test(word)) ms += 320;
+  else if(/[,،;:]/.test(word)) ms += 160;
+  else if(/[-—]/.test(word)) ms += 100;
+  return ms / r;
+}
+
+// پێشکەوتنی هایلایتەکە وشە بە وشە بە شێوازێکی تەواو سەربەخۆ لە مۆبایل
+function runHighlightLoop(){
+  if(speechState!=="playing") return;
   var words=document.querySelectorAll(".rw");
-  var u=new SpeechSynthesisUtterance(text);
+  if(speechWordIndex>=words.length){
+    stopSpeech();
+    return;
+  }
+  highlightWord(speechWordIndex);
+  var curWordText=words[speechWordIndex]?words[speechWordIndex].textContent:"";
+  var delay=getWordDelay(curWordText, speechRate);
+
+  speechWordIndex++;
+  speechTimer=setTimeout(runHighlightLoop, delay);
+}
+
+// خوێندنەوەی بەشی ماوە لە کاتی وەستان یان دەستپێکردنەوە
+function speakRemainingText(startIndex){
+  var words=document.querySelectorAll(".rw");
+  if(startIndex>=words.length){
+    stopSpeech();
+    return;
+  }
+
+  // کۆکردنەوەی وشەکانی لاپەڕەکە لەو خاڵەی کە وەستاوە
+  var remainingWords=[];
+  for(var i=startIndex; i<words.length; i++){
+    remainingWords.push(words[i].textContent);
+  }
+  var textToSpeak=remainingWords.join(" ");
+
+  if(window.speechSynthesis) window.speechSynthesis.cancel();
+
+  var u=new SpeechSynthesisUtterance(textToSpeak);
   speechUtterance=u;
   u.lang=(currentBook.lang==="ar"?"ar-SA":currentBook.lang==="fa"?"fa-IR":currentBook.lang==="ku"?"ku-Arab":"en-US");
   u.volume=speechVolume;
-  u.rate=speechRate; // خێرایی باشتر کراوە
+  u.rate=speechRate;
 
-  u.onstart=function(){
-    speechState="playing";
-    setSpeakIcon();
-    highlightWord(0);
+  u.onend=function(){
+    stopSpeech();
   };
-
-  // بە وردترین شێوە وشەکە هایلایت دەکات بەپێی ڕێژەی خوێندنەوەی دەقەکە
-  u.onboundary=function(e){
-    if(speechState!=="playing" || !e || e.charIndex===undefined) return;
-    var pre=text.slice(0, e.charIndex);
-    var targetIdx=(pre.match(/\S+/g)||[]).length;
-    if(targetIdx < words.length){
-      highlightWord(targetIdx);
-    }
-  };
-
-  u.onend=function(){stopSpeech();};
   u.onerror=function(e){
-    // هەندێک جار مۆبایل هەڵەی تایبەت دەدات لە کاتی وەستاندندا
     if(e.error!=="interrupted" && e.error!=="canceled"){
-       stopSpeech();
+      stopSpeech();
     }
   };
 
   window.speechSynthesis.speak(u);
+  runHighlightLoop();
+}
+
+function startPageSpeech(){
+  if(!window.speechSynthesis){toast("خوێندنەوەی دەنگی لەم وێبگەڕەدا بەردەست نییە");return;}
+
+  // ئەگەر خەریکی خوێندنەوە بێت، دەوەستێت
+  if(speechState==="playing"){
+    if(window.speechSynthesis) window.speechSynthesis.cancel();
+    clearTimeout(speechTimer);
+    speechState="paused";
+    setSpeakIcon();
+    return;
+  }
+
+  // ئەگەر وەستابێت، لە هەمان وشەوە دەست پێدەکاتەوە
+  if(speechState==="paused"){
+    speechState="playing";
+    setSpeakIcon();
+    speakRemainingText(speechWordIndex);
+    return;
+  }
+
+  // ئەگەر تازە دەست پێبکات
+  var text=$("readerText").innerText.trim();
+  if(!text){toast("دەقی لاپەڕەڪە نییە");return;}
+
+  speechState="playing";
+  speechWordIndex=0;
+  setSpeakIcon();
+  speakRemainingText(0);
 }
 
 function paintText(text){
@@ -780,7 +826,7 @@ function paintText(text){
 
 function renderPage(){
   if(!currentBook)return;
-  clearSpeakHighlight();
+  stopSpeech();
   var text=currentBook.pages[currentPage]||"ئەم لاپەڕەیە دەقی دەرنەهاتووە.";
   $("readerText").className="rtext"+(["ar","fa","ku"].indexOf(currentBook.lang)>=0?" rtl":" ltr");
   $("readerText").style.fontSize=readerFont+"px";
@@ -808,7 +854,7 @@ function openBook(id){
   $("reader").classList.add("show");
   applyReaderTheme();
   renderPage();
-  updateTelegramBtn(); // شاردنەوەی دوگمەی تێلیگرام لە ناو خوێنەر
+  updateTelegramBtn();
 }
 
 function changePage(d){
@@ -1026,12 +1072,22 @@ document.addEventListener("click",function(e){
     if(window.getSelection&&!window.getSelection().isCollapsed){
       var sel=window.getSelection().toString().trim();
       if(sel.length>1){
-        if(speechState==="playing"){window.speechSynthesis.pause();speechState="paused";setSpeakIcon()}
+        if(speechState==="playing"){
+          if(window.speechSynthesis) window.speechSynthesis.cancel();
+          clearTimeout(speechTimer);
+          speechState="paused";
+          setSpeakIcon();
+        }
         openSentenceModal(sel);
         return;
       }
     }
-    if(speechState==="playing"){window.speechSynthesis.pause();speechState="paused";setSpeakIcon()}
+    if(speechState==="playing"){
+      if(window.speechSynthesis) window.speechSynthesis.cancel();
+      clearTimeout(speechTimer);
+      speechState="paused";
+      setSpeakIcon();
+    }
     document.querySelectorAll(".rw.selected").forEach(function(x){x.classList.remove("selected")});
     w.classList.add("selected");
     openWordModal(w.getAttribute("data-word"));
@@ -1076,6 +1132,7 @@ init();
 })();
 </script>
 
+<!-- دوگمەی تێلیگرام (تەنیا لە بەشی سەرەکی دەردەکەوێت) -->
 <a id="telegramBtn" href="https://t.me/about_Barham" target="_blank" title="کەناڵی تێلیگرامەکەم">
   <i class="fa-brands fa-telegram"></i>
 </a>
