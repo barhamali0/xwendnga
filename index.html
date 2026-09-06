@@ -8,7 +8,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-ا<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -321,9 +321,6 @@ function detectLang(text){
 function isRtlChar(ch){
   return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(ch||"");
 }
-function itemIsRtl(str){
-  return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(String(str||""));
-}
 function buildPdfText(items){
   if(!items||!items.length)return "";
   var usable=items.filter(function(it){return it&&String(it.str||"").trim()!=="";});
@@ -333,7 +330,7 @@ function buildPdfText(items){
   usable.forEach(function(it){
     var tr=it.transform||[], y=Number(tr[5]||0), found=null;
     for(var g=0;g<groups.length;g++){
-      if(Math.abs(groups[g].y-y)<=Math.max(2,Number(it.height||10)*0.6)){
+      if(Math.abs(groups[g].y-y)<=Math.max(2,Number(it.height||10)*0.5)){
         found=groups[g];break;
       }
     }
@@ -345,43 +342,63 @@ function buildPdfText(items){
 
   var lines=[];
   groups.forEach(function(g){
-    var rtl=0,ltr=0;
-    g.items.forEach(function(it){
-      if(itemIsRtl(it.str))rtl++;else ltr++;
-    });
-    var isRTL=rtl>ltr;
+    var rtlCount=0, ltrCount=0;
 
+    // ١. ڕیزکردنی هەموو پیتەکان لە چەپەوە بۆ ڕاست (Visual LTR)
     g.items.sort(function(a,b){
       var ax=Number((a.transform||[])[4]||0);
       var bx=Number((b.transform||[])[4]||0);
-      return isRTL ? bx-ax : ax-bx;
+      return ax - bx;
     });
 
-    var line="";
-    for(var i=0;i<g.items.length;i++){
-      var it=g.items[i], txt=String(it.str||"");
-      if(!txt)continue;
-      if(!line){line=txt;continue;}
+    var words = [];
+    var currentWord = "";
+    var prevX = null;
+    var prevW = 0;
 
-      var prev=g.items[i-1]||{};
-      var px=Number((prev.transform||[])[4]||0);
-      var cx=Number((it.transform||[])[4]||0);
-      var pw=Math.abs(Number(prev.width||0));
-      var h=Math.max(Number(it.height||0),Number(prev.height||0),10);
-      var expected=isRTL ? px-pw : px+pw;
-      var gap=Math.abs(cx-expected);
+    g.items.forEach(function(it){
+       var x = Number((it.transform||[])[4]||0);
+       var w = Math.abs(Number(it.width||0));
+       var h = Math.max(Number(it.height||10), 1);
+       var str = String(it.str);
+       var isRtl = isRtlChar(str);
 
-      // Don't insert spaces between individual Arabic/Persian/Kurdish glyphs.
-      var needSpace=gap>Math.max(3,h*0.42);
-      if(/\s$/.test(line)||/^\s/.test(txt))needSpace=false;
-      line += (needSpace ? " " : "") + txt;
+       if(isRtl) rtlCount++; else if(/[a-zA-Z0-9]/.test(str)) ltrCount++;
+
+       var gap = prevX !== null ? (x - (prevX + prevW)) : 0;
+
+       // ٢. دیاریکردنی بۆشایی نێوان وشەکان
+       if(prevX !== null && gap > h * 0.22){
+           if(currentWord) words.push(currentWord);
+           currentWord = str;
+       } else {
+           // ٣. ئەگەر پیتەکە کوردی بێت، دەیخەینە پێشەوەی وشەکە بۆ چاککردنەوەی ئاڕاستەکەی
+           if(isRtl){
+               currentWord = str + currentWord;
+           } else {
+               // ئەگەر ئینگلیزی یان ژمارە بێت، لە دوایەوە دایدەنێین
+               currentWord = currentWord + str;
+           }
+       }
+       prevX = x;
+       prevW = w;
+    });
+
+    if(currentWord) words.push(currentWord);
+
+    // ٤. ئەگەر دێڕەکە زۆربەی کوردی بوو، ڕیزبەندی وشەکان پێچەوانە دەکەینەوە
+    if(rtlCount >= ltrCount) {
+        words.reverse();
     }
-    lines.push(line.trim());
+
+    lines.push(words.join(" ").trim());
   });
 
+  // ٥. بەکارهێنانی NFKC بۆ گۆڕینی فۆنتە تێکچووەکان بۆ یۆنیکۆدی ستاندارد
   return lines.join("\n")
     .replace(/[ \t]{2,}/g," ")
     .replace(/\n{3,}/g,"\n\n")
+    .normalize("NFKC")
     .trim();
 }
 function cleanPdfText(text){
