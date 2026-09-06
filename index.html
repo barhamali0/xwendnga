@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#07111f">
-<title>خوێندنگە</title>
+<title>خوێندنگە — V14</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -66,7 +66,8 @@ main{max-width:760px;margin:auto;padding:15px}.section{margin-top:16px}
 .reader-top{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#0a1525;color:#fff}.rbtn{width:39px;height:39px;border-radius:11px;background:#13233a;color:#fff;border:1px solid #2a3d59}.rtitle{flex:1;min-width:0}.rtitle strong{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rtitle span{font-size:9px;color:#92a5bc}
 .reader-bar{display:flex;align-items:center;gap:6px;padding:8px 9px;background:#fff;border-bottom:1px solid #dae1e9;overflow:auto;scrollbar-width:none}.reader-bar::-webkit-scrollbar{display:none}.rb{flex:0 0 42px;width:42px;height:42px;border-radius:11px;border:1px solid #d8e0ea;background:#f5f7fa;color:#263750}.rb.kur{flex-basis:64px;width:64px;color:#fff;background:linear-gradient(135deg,var(--a),var(--b));border-color:transparent;font-weight:900}.rb.kur.active{background:linear-gradient(135deg,#14a36d,#087c57)}
 .pagebox{display:flex;align-items:center;gap:4px;margin-right:auto;color:#64758b;font-size:10px;flex:0 0 auto}.pagebox input{width:48px;padding:8px;border:1px solid #d8e0ea;border-radius:9px;text-align:center;color:#1e2c3e;background:#fff}
-.rbody{flex:1;overflow:auto;padding:18px 13px 75px;background:var(--reader-bg)}.paper{max-width:820px;min-height:100%;margin:auto;padding:28px 20px;background:var(--paper);border-radius:10px;box-shadow:0 6px 25px rgba(20,34,55,.12)}.rtext{font-family:"Noto Naskh Arabic","Vazirmatn",serif;font-size:20px;line-height:2.25;white-space:pre-wrap;color:var(--reader-fg)}.rtext.ltr{direction:ltr;text-align:left;font-family:Georgia,"Times New Roman",serif;font-size:18px;line-height:1.85}.rw{cursor:pointer;padding:0 2px;border-radius:5px}.rw.selected{background:#a9ddff;color:#063c61}.rw.speaking{background:var(--a);color:#fff!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--a) 25%,transparent)}
+.rbody{flex:1;overflow:auto;padding:18px 13px 75px;background:var(--reader-bg)}.paper{max-width:820px;min-height:100%;margin:auto;padding:28px 20px;background:var(--paper);border-radius:10px;box-shadow:0 6px 25px rgba(20,34,55,.12)}.rtext{font-family:"Noto Naskh Arabic","Vazirmatn",serif;font-size:20px;line-height:2.25;white-space:pre-wrap;color:var(--reader-fg)}.rtext.ltr{direction:ltr;text-align:left;font-family:Georgia,"Times New Roman",serif;font-size:18px;line-height:1.85}
+.rtext.rtl{direction:rtl;text-align:right;font-family:"Noto Naskh Arabic","Vazirmatn",serif;unicode-bidi:plaintext;word-break:normal;overflow-wrap:anywhere}.rw{cursor:pointer;padding:0 2px;border-radius:5px}.rw.selected{background:#a9ddff;color:#063c61}.rw.speaking{background:var(--a);color:#fff!important;box-shadow:0 0 0 2px color-mix(in srgb,var(--a) 25%,transparent)}
 .reader-bottom{position:fixed;right:0;left:0;bottom:0;height:58px;background:rgba(255,255,255,.94);border-top:1px solid #dbe1e7;display:flex;justify-content:center;align-items:center;z-index:73}.reader-bottom button{border:1px solid #d8e0e7;border-radius:12px;background:#fff;color:#26364d;padding:9px 13px;font-size:11px}
 
 .reader-tools{position:fixed;z-index:95;left:9px;right:9px;bottom:67px;max-width:760px;margin:auto;background:rgba(10,23,40,.98);border:1px solid #304763;border-radius:22px;padding:13px;box-shadow:var(--shadow);display:none;color:#fff}.reader-tools.show{display:block}.tools-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}.tools-head strong{font-size:13px}.tools-close{width:32px;height:32px;border-radius:10px;border:1px solid #304763;background:#14263d;color:#fff}.vols{display:grid;grid-template-columns:1fr 1fr;gap:9px}.vol{background:#12243a;border:1px solid #2b425e;border-radius:14px;padding:9px}.vol label{display:flex;justify-content:space-between;font-size:10px;color:#bbcadb}.vol input{width:100%;accent-color:var(--a)}.reader-col-title{font-size:11px;font-weight:800;margin-top:12px;margin-bottom:7px}.reader-colors{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}.reader-colors button{height:42px;border-radius:11px;border:1px solid rgba(255,255,255,.13);position:relative}.reader-colors button span{position:absolute;right:4px;left:4px;bottom:4px;height:4px;border-radius:8px;background:rgba(0,0,0,.2)}
@@ -133,6 +134,11 @@ main{max-width:760px;margin:auto;padding:15px}.section{margin-top:16px}
   <div class="field"><label>ڕەنگی خودی سایت</label><div id="siteThemes" class="theme-grid"></div></div>
   <div class="field"><label>قەبارەی فۆنتی Reader</label><select id="fontSize"><option value="18">کەم</option><option value="20">ئاسایی</option><option value="23">گەورە</option><option value="26">زۆر گەورە</option></select></div>
   <div class="field"><label>ڕەنگی لاپەڕەی Reader</label><div id="readerThemes" class="theme-grid"></div></div>
+  
+<div class="field" style="font-size:10px;line-height:1.8;color:var(--muted)">
+  <strong style="color:#f4c85c">تێبینی:</strong>
+  بەشی Owner و دەسەڵاتی تایبەت پێویستی بە سیستەمی login + database لە server هەیە؛ ئەم وەشانە تەنیا front-end ـە.
+</div>
   <div class="hero-actions"><button class="ghost" data-action="clear-vocab">سڕینەوەی وشەکان</button><button class="primary" data-action="close-settings">باشە</button></div>
 </div>
 
@@ -285,7 +291,59 @@ function loadLocal(){
     readerTheme=localStorage.getItem("kh_reader_theme")||"paper";
   }catch(e){}
 }
-function detectLang(text){return /[\u0600-\u06FF]/.test((text||"").slice(0,5000))?"ar":"en";}
+function detectLang(text){
+  var t=String(text||"").slice(0,12000);
+  if(/[\u06AF\u06CC\u06A9\u067E\u0698]/.test(t)) return "ku";
+  if(/[\u067E\u0686\u0698\u06AF\u06CC\u06A9]/.test(t)) return "fa";
+  if(/[\u0600-\u06FF]/.test(t)) return "ar";
+  return "en";
+}
+function isRtlChar(ch){
+  return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(ch||"");
+}
+function itemIsRtl(str){
+  var m=(str||"").match(/[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/g)||[];
+  return m.length>0;
+}
+function buildPdfText(items){
+  if(!items||!items.length)return "";
+  var out="", prev=null;
+  for(var i=0;i<items.length;i++){
+    var it=items[i]||{}, s=String(it.str||"");
+    if(!s)continue;
+    var rtl=itemIsRtl(s);
+    if(!out){out=s;prev=it;continue;}
+
+    var prevStr=String((prev&&prev.str)||"");
+    var sameLine=true;
+    if(prev&&it.transform&&prev.transform){
+      var py=Number(prev.transform[5]||0), y=Number(it.transform[5]||0);
+      sameLine=Math.abs(y-py)<Math.max(3,Math.abs(Number(it.height||10))*0.75);
+    }
+
+    if(rtl || itemIsRtl(prevStr)){
+      var px=prev&&prev.transform?Number(prev.transform[4]||0):0;
+      var cx=it.transform?Number(it.transform[4]||0):px;
+      var pw=prev&&prev.width?Number(prev.width):0;
+      var gap=Math.abs(cx-(px+pw));
+      var needSpace = !sameLine ? true : gap > Math.max(6, Number(it.height||10)*0.55);
+      if(/\s$/.test(out) || /^\s/.test(s)) needSpace=false;
+      out += (needSpace ? " " : "") + s;
+    }else{
+      out += (/\s$/.test(out)||/^\s/.test(s) ? "" : " ") + s;
+    }
+    prev=it;
+  }
+  return out.replace(/[ \t]+/g," ").replace(/\n[ \t]*/g,"\n").trim();
+}
+function cleanPdfText(text){
+  return String(text||"")
+    .replace(/\u00AD/g,"")
+    .replace(/\u200B/g,"")
+    .replace(/[ \t]{2,}/g," ")
+    .replace(/\n{3,}/g,"\n\n")
+    .trim();
+}
 function extractPDF(file){
   return new Promise(function(resolve,reject){
     if(!window.pdfjsLib){reject(new Error("PDF engine"));return;}
@@ -298,13 +356,15 @@ function extractPDF(file){
           for(let i=1;i<=pdf.numPages;i++){
             chain=chain.then(function(){
               return pdf.getPage(i).then(function(page){
-                return page.getTextContent().then(function(c){
-                  pages.push(c.items.map(function(x){return x.str}).join(" ").replace(/\s+/g," ").trim());
+                return page.getTextContent({normalizeWhitespace:false,disableCombineTextItems:false}).then(function(c){
+                  pages.push(cleanPdfText(buildPdfText(c.items)));
                 });
               });
             });
           }
-          chain.then(function(){resolve({pages:pages,lang:detectLang(pages.join(" "))})}).catch(reject);
+          chain.then(function(){
+            resolve({pages:pages,lang:detectLang(pages.join("\n"))});
+          }).catch(reject);
         }).catch(reject);
       }catch(e){reject(e)}
     };
@@ -316,6 +376,8 @@ function addPDF(file){
   if(!file)return;
   toast("PDF خەریکی خوێندنەوەیە...");
   extractPDF(file).then(function(d){
+    var usablePages=d.pages.filter(function(p){return p&&p.trim().length>0;});
+    if(!usablePages.length){toast("ئەم PDF ـە تەنیا وێنەیە یان تێکستی دەرنەهاتووە");return;}
     var b={id:String(Date.now())+"_"+Math.floor(Math.random()*10000),title:file.name.replace(/\.pdf$/i,""),author:"",pages:d.pages,lang:d.lang,pageCount:d.pages.length,currentPage:0,progress:0,favorite:false,addedAt:Date.now()};
     return dbPut(b).then(function(){books.push(b);renderBooks();toast("کتێبەکە زیادکرا");});
   }).catch(function(e){console.error(e);toast("نەتوانرا PDF بخوێندرێتەوە");});
@@ -352,7 +414,7 @@ function startPageSpeech(){
   if(speechState==="paused"){window.speechSynthesis.resume();speechState="playing";setSpeakIcon();return;}
   var text=$("readerText").innerText.trim();if(!text){toast("دەقی لاپەڕەکە نییە");return}
   stopSpeech();speechState="playing";setSpeakIcon();
-  var words=document.querySelectorAll(".rw"),u=new SpeechSynthesisUtterance(text);speechUtterance=u;u.lang=(currentBook.lang==="ar"?"ar-SA":"en-US");u.volume=speechVolume;u.rate=.95;
+  var words=document.querySelectorAll(".rw"),u=new SpeechSynthesisUtterance(text);speechUtterance=u;u.lang=(currentBook.lang==="ar"?"ar-SA":currentBook.lang==="fa"?"fa-IR":currentBook.lang==="ku"?"ku-Arab":"en-US");u.volume=speechVolume;u.rate=.95;
   var boundary=false,fallbackIndex=0;
   u.onstart=function(){highlightWord(0);speechTimer=setTimeout(function tick(){if(speechState!=="playing"||boundary)return;fallbackIndex++;if(fallbackIndex<words.length){highlightWord(fallbackIndex);speechTimer=setTimeout(tick,500)}},850)};
   u.onboundary=function(e){boundary=true;var pre=text.slice(0,e.charIndex);var idx=(pre.match(/\S+/g)||[]).length;highlightWord(idx)};
@@ -370,11 +432,13 @@ function renderPage(){
   if(!currentBook)return;
   clearSpeakHighlight();
   var text=currentBook.pages[currentPage]||"ئەم لاپەڕەیە تێکستی دەرهێنراوی نییە.";
-  $("readerText").className="rtext"+(currentBook.lang==="ar"?"":" ltr");$("readerText").style.fontSize=readerFont+"px";
+  $("readerText").className="rtext"+(["ar","fa","ku"].indexOf(currentBook.lang)>=0?" rtl":" ltr");$("readerText").style.fontSize=readerFont+"px";
   paintText(text);
   $("rTitle").textContent=currentBook.title;$("rSub").textContent="لاپەڕە "+(currentPage+1)+" لە "+currentBook.pageCount;$("pageInput").value=currentPage+1;$("pageTotal").textContent="/ "+currentBook.pageCount;
-  if(currentBook.lang==="ar")$("readerText").classList.remove("ltr");
-  $("prevPage").disabled=true;
+  if(["ar","fa","ku"].indexOf(currentBook.lang)>=0){
+    $("readerText").classList.remove("ltr");
+    $("readerText").classList.add("rtl");
+  }
   currentBook.currentPage=currentPage;currentBook.progress=currentBook.pageCount>1?currentPage/(currentBook.pageCount-1):1;
   dbPut(currentBook);
 }
@@ -383,7 +447,7 @@ function openBook(id){
   currentPage=Math.max(0,Math.min(currentBook.pageCount-1,currentBook.currentPage||0));pageKurdish=false;$("readerKurdish").classList.remove("active");$("reader").classList.add("show");applyReaderTheme();renderPage();
 }
 function changePage(d){
-  if(!currentBook)return;var n=currentPage+d;if(n<0||n>=currentBook.pageCount)return;stopSpeech();pageKurdish=false;$("readerKurdish").classList.remove("active");currentPage=n;renderPage();
+  if(!currentBook)return;closeTools();var n=currentPage+d;if(n<0||n>=currentBook.pageCount)return;stopSpeech();pageKurdish=false;$("readerKurdish").classList.remove("active");currentPage=n;renderPage();
 }
 function translateText(text){
   var url="https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ckb&dt=t&q="+encodeURIComponent(text);
@@ -402,7 +466,7 @@ function togglePageKurdish(){
 }
 function showTranslatedPage(t){$("readerText").className="rtext";$("readerText").style.fontSize=readerFont+"px";$("readerText").textContent=t;}
 function openWordModal(word){
-  currentWord=word;currentLang=currentBook?currentBook.lang:"en";$("modalWord").textContent=word;$("modalKu").textContent="چاوەڕوانی...";$("modalThird").textContent="چاوەڕوانی...";$("modalThirdLabel").textContent=currentLang==="en"?"بە عەرەبی":"بە ئینگلیزی";openSheet($("wordBack"),$("wordSheet"));
+  currentWord=word;currentLang=currentBook?currentBook.lang:"en";$("modalWord").textContent=word;$("modalKu").textContent="چاوەڕوانی...";$("modalThird").textContent="چاوەڕوانی...";$("modalThirdLabel").textContent=currentLang==="en"?"بە عەرەبی":(currentLang==="ku"||currentLang==="fa"?"بە ئینگلیزی":"بە ئینگلیزی");openSheet($("wordBack"),$("wordSheet"));
   translateText(word).then(function(t){$("modalKu").textContent=t}).catch(function(){$("modalKu").textContent="کێشەی ئینتەرنێت"});
   var target=currentLang==="en"?"ar":"en";var url="https://translate.googleapis.com/translate_a/single?client=gtx&sl="+currentLang+"&tl="+target+"&dt=t&q="+encodeURIComponent(word);
   fetch(url).then(function(r){return r.json()}).then(function(j){$("modalThird").textContent=(j[0]||[]).map(function(x){return x[0]||""}).join("")||"—"}).catch(function(){$("modalThird").textContent="—"});
@@ -412,7 +476,7 @@ function renderVocab(){
   var back=document.createElement("div"),sheet=document.createElement("div");back.className="back open";sheet.className="sheet open";sheet.innerHTML='<div class="handle"></div><div class="section-head"><h3>وشەکانم</h3><button class="icon-btn" data-temp-close>×</button></div><div style="margin-top:10px">'+(vocab.length?vocab.map(function(v){return '<div class="field"><div style="font-weight:800;color:#f4c85c;font-size:17px">'+esc(v.word)+'</div><div style="margin-top:5px;line-height:1.8">'+esc(v.ku)+'<br><span style="color:var(--muted)">'+esc(v.third)+'</span></div><div class="hero-actions"><button class="ghost" data-vspeak="'+esc(v.word)+'" data-vlang="'+esc(v.lang)+'">گوێگرتن</button><button class="ghost" data-vdel="'+esc(v.id)+'">سڕینەوە</button></div></div>'}).join(""):'<div style="text-align:center;color:var(--muted);padding:25px">هێشتا وشەیەک نییە</div>')+'</div>';document.body.appendChild(back);document.body.appendChild(sheet);
   function close(){back.remove();sheet.remove()}back.addEventListener("click",close);sheet.addEventListener("click",function(e){if(e.target.closest("[data-temp-close]"))close();var s=e.target.closest("[data-vspeak]");if(s){speakText(s.getAttribute("data-vspeak"),s.getAttribute("data-vlang"))}var d=e.target.closest("[data-vdel]");if(d){vocab=vocab.filter(function(v){return v.id!==d.getAttribute("data-vdel")});try{localStorage.setItem("kh_vocab",JSON.stringify(vocab))}catch(e){}close();renderVocab();renderBooks()}}); 
 }
-function speakText(text,lang){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang=lang==="en"?"en-US":"ar-SA";u.volume=speechVolume;window.speechSynthesis.speak(u)}
+function speakText(text,lang){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang=lang==="en"?"en-US":lang==="fa"?"fa-IR":lang==="ku"?"ku-Arab":"ar-SA";u.volume=speechVolume;window.speechSynthesis.speak(u)}
 
 function showTools(type){
   var title=$("toolsTitle"),body=$("toolsBody");
@@ -502,6 +566,17 @@ function init(){
   dbAll().then(function(a){books=a||[];renderBooks()}).catch(function(e){console.error(e);books=[];renderBooks()});
 }
 init();
+
+
+window.__KH_DIAGNOSTIC__=function(){
+  return {
+    pdfjs:!!window.pdfjsLib,
+    indexedDB:!!window.indexedDB,
+    speech:!!window.speechSynthesis,
+    bookCount:books.length,
+    currentBook:currentBook?currentBook.title:null
+  };
+};
 
 })();
 </script>
