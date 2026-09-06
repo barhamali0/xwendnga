@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <meta name="theme-color" content="#07111f">
-<title>خوێندنگە — V15</title>
+<title>خوێندنگە — V16 Pro</title>
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,6 +23,7 @@ if(window.pdfjsLib){
   --bg:#07111f;--bg2:#0d182a;--surface:#111f34;--surface2:#182943;
   --line:#29405d;--text:#f7fbff;--muted:#8fa4bd;
   --a:#35bbff;--b:#7b61ff;--accent:#35bbff;
+  --gold:#f5cd68;
   --shadow:0 18px 45px rgba(0,0,0,.3);
   --reader-bg:#f4f6f9;--paper:#fff;--reader-fg:#1d2a3d;
 }
@@ -40,27 +41,30 @@ radial-gradient(circle at 0% 18%,color-mix(in srgb,var(--b) 12%,transparent),tra
 .topbar-in{max-width:760px;margin:auto;display:flex;align-items:center;justify-content:space-between}
 .brand{display:flex;align-items:center;gap:10px}.logo{width:42px;height:42px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--a),var(--b));color:#fff;box-shadow:0 10px 25px color-mix(in srgb,var(--a) 20%,transparent)}
 .brand h1{margin:0;font-size:17px;font-weight:800}.brand p{margin:2px 0 0;color:var(--muted);font-size:10px}
-.icon-btn{width:42px;height:42px;border-radius:13px;border:1px solid var(--line);background:var(--surface);color:#e8f1fb}
+.top-actions{display:flex;gap:8px}
+.icon-btn{width:42px;height:42px;border-radius:13px;border:1px solid var(--line);background:var(--surface);color:#e8f1fb;display:grid;place-items:center}
+.icon-btn.gold{color:var(--gold);border-color:rgba(245,205,104,.3)}
 
 main{max-width:760px;margin:auto;padding:15px}.section{margin-top:16px}
 .hero{border:1px solid var(--line);border-radius:27px;padding:17px;background:linear-gradient(140deg,color-mix(in srgb,var(--a) 12%,transparent),color-mix(in srgb,var(--b) 10%,transparent)),var(--surface);box-shadow:var(--shadow)}
-.hero-row{display:flex;justify-content:space-between;gap:12px}.hero h2{margin:0 0 6px;font-size:22px}.hero p{margin:0;color:var(--muted);font-size:12px;line-height:1.9}.badge{border-radius:12px;padding:7px 8px;color:#f5cd68;background:rgba(245,205,104,.1);border:1px solid rgba(245,205,104,.18);font-size:9px;white-space:nowrap;height:max-content}
+.hero-row{display:flex;justify-content:space-between;gap:12px}.hero h2{margin:0 0 6px;font-size:22px}.hero p{margin:0;color:var(--muted);font-size:12px;line-height:1.9}.badge{border-radius:12px;padding:7px 8px;color:var(--gold);background:rgba(245,205,104,.1);border:1px solid rgba(245,205,104,.18);font-size:9px;white-space:nowrap;height:max-content}
 .hero-actions{display:flex;gap:8px;margin-top:15px}.primary,.ghost{border:0;border-radius:14px;padding:12px 13px;font-weight:800;display:flex;justify-content:center;align-items:center;gap:7px}.primary{flex:1;background:linear-gradient(135deg,var(--a),var(--b));color:#fff}.ghost{background:var(--surface2);border:1px solid var(--line);color:#fff}
 .search{height:53px;border-radius:17px;background:#eef3f7;color:#61728a;padding:0 14px;display:flex;align-items:center;gap:9px}.search input{width:100%;border:0;outline:0;background:transparent;color:#1e2c40;font-size:13px}.search input::placeholder{color:#7a899f}
 
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.stat{padding:12px;border:1px solid var(--line);border-radius:17px;background:var(--surface)}.stat i{color:var(--a);font-size:13px}.stat strong{display:block;font-size:19px;margin-top:4px}.stat span{color:var(--muted);font-size:10px}
-.chips{display:flex;gap:8px;overflow:auto;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}.chip{white-space:nowrap;border:1px solid var(--line);background:var(--surface);color:#b8c6d8;padding:9px 13px;border-radius:13px;font-size:11px}.chip.active{color:#fff;border-color:var(--a);background:color-mix(in srgb,var(--a) 16%,var(--surface))}
+.chips{display:flex;gap:8px;overflow:auto;scrollbar-width:none;padding-bottom:4px}.chips::-webkit-scrollbar{display:none}.chip{white-space:nowrap;border:1px solid var(--line);background:var(--surface);color:#b8c6d8;padding:9px 14px;border-radius:13px;font-size:11px}.chip.active{color:#fff;border-color:var(--a);background:color-mix(in srgb,var(--a) 16%,var(--surface))}
 .section-title{margin:0;font-size:18px}.section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}.muted{color:var(--muted);font-size:10px}
 
 .grid{display:grid;grid-template-columns:1fr;gap:11px}.book{display:flex;gap:11px;padding:11px;border:1px solid var(--line);border-radius:20px;background:var(--surface);position:relative;overflow:hidden}.book:before{content:"";position:absolute;right:0;top:0;bottom:0;width:3px;background:linear-gradient(var(--a),var(--b))}
-.cover{width:92px;height:123px;flex:0 0 92px;border-radius:14px;background:linear-gradient(145deg,#284f78,#172943);display:grid;place-items:center;font-size:30px;color:#fff}.book-main{flex:1;min-width:0;display:flex;flex-direction:column}.book-title{font-weight:800;font-size:14px;line-height:1.6}.book-author{color:var(--muted);font-size:10px}.meta{color:#91a3b8;font-size:9px;display:flex;gap:8px;margin-top:6px}.progress{height:4px;background:#263650;border-radius:20px;overflow:hidden;margin-top:8px}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--a),var(--b))}.actions{display:flex;gap:7px;margin-top:auto}.small{flex:1;padding:8px;border-radius:11px;border:1px solid var(--line);background:var(--surface2);color:#fff;font-size:10px}.small.primary{background:linear-gradient(135deg,var(--a),var(--b));border:0}.fav{position:absolute;left:9px;top:9px;width:34px;height:34px;border-radius:11px;background:rgba(4,11,21,.75);border:1px solid var(--line);color:#dce7f4;z-index:2}
+.cover{width:92px;height:123px;flex:0 0 92px;border-radius:14px;background:linear-gradient(145deg,#284f78,#172943);display:grid;place-items:center;font-size:30px;color:#fff}.book-main{flex:1;min-width:0;display:flex;flex-direction:column}.book-title{font-weight:800;font-size:14px;line-height:1.6}.book-author{color:var(--muted);font-size:10px}.meta{color:#91a3b8;font-size:9px;display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}.progress{height:4px;background:#263650;border-radius:20px;overflow:hidden;margin-top:8px}.progress span{display:block;height:100%;background:linear-gradient(90deg,var(--a),var(--b))}.actions{display:flex;gap:7px;margin-top:auto}.small{flex:1;padding:8px;border-radius:11px;border:1px solid var(--line);background:var(--surface2);color:#fff;font-size:10px}.small.primary{background:linear-gradient(135deg,var(--a),var(--b));border:0}.fav{position:absolute;left:9px;top:9px;width:34px;height:34px;border-radius:11px;background:rgba(4,11,21,.75);border:1px solid var(--line);color:#dce7f4;z-index:2}
+.tag-badge{background:rgba(53,187,255,.12);color:var(--a);border-radius:6px;padding:2px 6px;font-size:9px}
 
 .music{border:1px solid var(--line);border-radius:20px;padding:13px;background:linear-gradient(135deg,color-mix(in srgb,var(--b) 9%,transparent),color-mix(in srgb,var(--a) 6%,transparent)),var(--surface)}.music-head{display:flex;gap:10px;align-items:center}.album{width:54px;height:54px;border-radius:15px;background:linear-gradient(135deg,var(--b),#f05bd5);display:grid;place-items:center;font-size:21px}.music-info{min-width:0;flex:1}.music-name{font-size:12px;font-weight:800}.music-sub{font-size:9px;color:var(--muted);margin-top:2px}.music input[type=range]{width:100%;margin-top:10px;accent-color:var(--a)}.music-controls{display:flex;justify-content:center;gap:9px;margin-top:6px}.music-btn{width:40px;height:40px;border-radius:12px;background:var(--surface2);border:1px solid var(--line);color:#fff}.music-btn.big{width:48px;height:48px;border:0;background:linear-gradient(135deg,var(--a),var(--b))}.tracks{display:grid;gap:7px;margin-top:9px;max-height:190px;overflow:auto}.track{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--surface2)}.track button{background:transparent;border:0;color:#fff}.track span{flex:1;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 .bottom{position:fixed;bottom:0;right:0;left:0;z-index:30;height:78px;background:rgba(6,14,26,.97);border-top:1px solid rgba(255,255,255,.06);padding:7px 10px max(7px,env(safe-area-inset-bottom));backdrop-filter:blur(16px)}.bottom-in{max-width:760px;margin:auto;height:100%;display:grid;grid-template-columns:repeat(4,1fr)}.nav{border:0;background:transparent;color:#7789a2;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;font-size:10px;font-weight:700}.nav i{font-size:18px}.nav.active{color:var(--a)}
 
 .back{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.2s}.back.open{opacity:1;pointer-events:auto}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:91;max-height:88vh;overflow:auto;transform:translateY(105%);transition:.22s;background:var(--bg2);border-top:1px solid var(--line);border-radius:25px 25px 0 0;padding:17px 15px max(16px,env(safe-area-inset-bottom))}.sheet.open{transform:translateY(0)}.handle{width:40px;height:5px;background:#3a4e6c;border-radius:99px;margin:0 auto 14px}.sheet h3{margin:0;font-size:17px}.field{margin-top:11px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface)}.field label{display:block;font-size:10px;color:var(--muted);margin-bottom:6px}.field select{width:100%;border:0;outline:0;background:transparent;color:#fff}.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.theme{height:54px;border:1px solid rgba(255,255,255,.13);border-radius:13px;position:relative}.theme i{position:absolute;right:7px;top:7px;width:19px;height:19px;border-radius:50%}.theme b{position:absolute;left:7px;right:7px;bottom:7px;height:7px;border-radius:7px}.theme.active{outline:2px solid var(--a);outline-offset:1px}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:91;max-height:88vh;overflow:auto;transform:translateY(105%);transition:.22s;background:var(--bg2);border-top:1px solid var(--line);border-radius:25px 25px 0 0;padding:17px 15px max(16px,env(safe-area-inset-bottom))}.sheet.open{transform:translateY(0)}.handle{width:40px;height:5px;background:#3a4e6c;border-radius:99px;margin:0 auto 14px}.sheet h3{margin:0;font-size:17px}.field{margin-top:11px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface)}.field label{display:block;font-size:10px;color:var(--muted);margin-bottom:6px}.field select,.field input[type=text]{width:100%;border:0;outline:0;background:transparent;color:#fff}.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.theme{height:54px;border:1px solid rgba(255,255,255,.13);border-radius:13px;position:relative}.theme i{position:absolute;right:7px;top:7px;width:19px;height:19px;border-radius:50%}.theme b{position:absolute;left:7px;right:7px;bottom:7px;height:7px;border-radius:7px}.theme.active{outline:2px solid var(--a);outline-offset:1px}
 
 .reader{display:none;position:fixed;inset:0;z-index:70;background:var(--reader-bg);color:var(--reader-fg);flex-direction:column}.reader.show{display:flex}
 .reader-top{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#0a1525;color:#fff}.rbtn{width:39px;height:39px;border-radius:11px;background:#13233a;color:#fff;border:1px solid #2a3d59}.rtitle{flex:1;min-width:0}.rtitle strong{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rtitle span{font-size:9px;color:#92a5bc}
@@ -81,37 +85,52 @@ main{max-width:760px;margin:auto;padding:15px}.section{margin-top:16px}
 <body>
 <div class="app" id="app">
   <div class="topbar"><div class="topbar-in">
-    <div class="brand"><div class="logo"><i class="fa-solid fa-feather-pointed"></i></div><div><h1>خوێندنگە</h1><p>کتێب • فێربوون • موزیک</p></div></div>
-    <button class="icon-btn" data-action="settings"><i class="fa-solid fa-sliders"></i></button>
+    <div class="brand"><div class="logo"><i class="fa-solid fa-feather-pointed"></i></div><div><h1>خوێندنگە</h1><p>پلاتفۆرمی فێربوون و ڪتێبخانە</p></div></div>
+    <div class="top-actions">
+      <button class="icon-btn gold" data-action="owner-panel" title="پانێڵی بەڕێوەبەر"><i class="fa-solid fa-crown"></i></button>
+      <button class="icon-btn" data-action="settings" title="ڕێکخستن"><i class="fa-solid fa-sliders"></i></button>
+    </div>
   </div></div>
 
   <main>
     <section class="hero">
-      <div class="hero-row"><div><h2>خوێندنەوەیەکی جیاواز.</h2><p>کتێبەکانت بخوێنەوە، وشەکان فێربە و لەگەڵ خوێندنەوە موزیک گوێ لێبگرە.</p></div><div class="badge">PRO READER</div></div>
+      <div class="hero-row"><div><h2>خوێندنەوەیەڪی جیاواز.</h2><p>ڪتێبەڪانت بخوێنەوە، فەرهەنگ دروست بڪە و لەگەڵ خوێندنەوە گوێ لە دەنگ بگرە.</p></div><div class="badge">OWNER EDITION</div></div>
       <div class="hero-actions">
-        <button class="primary" data-action="add-pdf"><i class="fa-solid fa-file-circle-plus"></i> زیادکردنی PDF</button>
+        <button class="primary" data-action="add-pdf"><i class="fa-solid fa-file-circle-plus"></i> زیادڪردنی PDF</button>
         <button class="ghost" data-action="continue"><i class="fa-solid fa-play"></i></button>
       </div>
       <input id="pdfInput" class="hidden" type="file" accept="application/pdf">
     </section>
 
-    <section class="section"><div class="search"><i class="fa-solid fa-magnifying-glass"></i><input id="searchInput" placeholder="گەڕان بۆ کتێب یان نووسەر..."></div></section>
+    <section class="section"><div class="search"><i class="fa-solid fa-magnifying-glass"></i><input id="searchInput" placeholder="گەڕان بۆ ڪتێب، نووسەر، یان پۆل..."></div></section>
 
     <section class="section"><div class="stats">
-      <div class="stat"><i class="fa-solid fa-book"></i><strong id="bookCount">0</strong><span>کتێب</span></div>
-      <div class="stat"><i class="fa-solid fa-heart"></i><strong id="favoriteCount">0</strong><span>دڵخواز</span></div>
+      <div class="stat"><i class="fa-solid fa-book"></i><strong id="bookCount">0</strong><span>ڪتێب</span></div>
+      <div class="stat"><i class="fa-solid fa-layer-group"></i><strong id="catCount">9</strong><span>پۆل</span></div>
       <div class="stat"><i class="fa-solid fa-language"></i><strong id="wordCount">0</strong><span>وشە</span></div>
     </div></section>
 
-    <section class="section"><div class="chips" id="filters">
-      <button class="chip active" data-filter="all">هەموو</button><button class="chip" data-filter="recent">تازەکان</button><button class="chip" data-filter="favorites">دڵخواز</button>
-    </div></section>
+    <!-- پۆلەکانی کتێبخانە (Categories) -->
+    <section class="section">
+      <div class="chips" id="filters">
+        <button class="chip active" data-filter="all">هەموو</button>
+        <button class="chip" data-filter="favorites">دڵخوازەڪان</button>
+        <button class="chip" data-filter="recent">تازەڪان</button>
+        <button class="chip" data-filter="زمان">زانستی زمان</button>
+        <button class="chip" data-filter="ئەدەب">ئەدەب و شیعر</button>
+        <button class="chip" data-filter="مێژوو">مێژوو</button>
+        <button class="chip" data-filter="زانست">زانست</button>
+        <button class="chip" data-filter="فەلسەفە">فەلسەفە</button>
+        <button class="chip" data-filter="ئایین">ئایین و فیقە</button>
+        <button class="chip" data-filter="ئینگلیزی">فێربوونی ئینگلیزی</button>
+      </div>
+    </section>
 
-    <section class="section"><div class="section-head"><h2 class="section-title">کتێبەکان</h2><span class="muted" id="resultHint">0 کتێب</span></div><div id="bookList" class="grid"></div></section>
+    <section class="section"><div class="section-head"><h2 class="section-title">ڪتێبەڪان</h2><span class="muted" id="resultHint">0 ڪتێب</span></div><div id="bookList" class="grid"></div></section>
 
-    <section class="section"><div class="section-head"><h2 class="section-title"><i class="fa-solid fa-headphones" style="color:#f05bd5"></i> موزیک و گۆرانی</h2><span class="muted">بۆ کاتی خوێندنەوە</span></div>
+    <section class="section"><div class="section-head"><h2 class="section-title"><i class="fa-solid fa-headphones" style="color:#f05bd5"></i> موزیک و دەنگ</h2><span class="muted">بۆ خوێندنەوە</span></div>
       <div class="music">
-        <div class="music-head"><div class="album"><i class="fa-solid fa-music"></i></div><div class="music-info"><div class="music-name" id="nowName">هیچ تراکێک هەڵنەبژێردراوە</div><div class="music-sub" id="nowSub">گۆرانییەکانی خۆت زیاد بکە</div></div><button class="icon-btn" data-action="add-music"><i class="fa-solid fa-plus"></i></button></div>
+        <div class="music-head"><div class="album"><i class="fa-solid fa-music"></i></div><div class="music-info"><div class="music-name" id="nowName">هیچ دەنگێڪ هەڵنەبژێردراوە</div><div class="music-sub" id="nowSub">فایلی دەنگیی خۆت زیاد بڪە</div></div><button class="icon-btn" data-action="add-music"><i class="fa-solid fa-plus"></i></button></div>
         <input id="musicInput" class="hidden" type="file" accept="audio/*" multiple>
         <input id="audioRange" type="range" min="0" max="100" value="0">
         <div class="music-controls"><button class="music-btn" data-action="prev-track"><i class="fa-solid fa-backward-step"></i></button><button class="music-btn big" data-action="play-pause"><i class="fa-solid fa-play"></i></button><button class="music-btn" data-action="next-track"><i class="fa-solid fa-forward-step"></i></button></div>
@@ -121,52 +140,68 @@ main{max-width:760px;margin:auto;padding:15px}.section{margin-top:16px}
   </main>
 
   <div class="bottom"><div class="bottom-in">
-    <button class="nav active" data-nav="home"><i class="fa-solid fa-house"></i><span>سەرەکی</span></button>
-    <button class="nav" data-nav="library"><i class="fa-solid fa-book-open"></i><span>کتێبەکان</span></button>
+    <button class="nav active" data-nav="home"><i class="fa-solid fa-house"></i><span>سەرەڪی</span></button>
+    <button class="nav" data-nav="library"><i class="fa-solid fa-book-open"></i><span>ڪتێبەڪان</span></button>
     <button class="nav" data-nav="favorites"><i class="fa-solid fa-heart"></i><span>دڵخواز</span></button>
-    <button class="nav" data-nav="vocab"><i class="fa-solid fa-language"></i><span>وشەکانم</span></button>
+    <button class="nav" data-nav="vocab"><i class="fa-solid fa-language"></i><span>وشەڪانم</span></button>
   </div></div>
 </div>
 
+<!-- پەڕەی ڕێکخستن -->
 <div id="sheetBack" class="back"></div>
 <div id="settingsSheet" class="sheet">
   <div class="handle"></div><h3>ڕێکخستن</h3>
-  <div class="field"><label>ڕەنگی خودی سایت</label><div id="siteThemes" class="theme-grid"></div></div>
-  <div class="field"><label>قەبارەی فۆنتی Reader</label><select id="fontSize"><option value="18">کەم</option><option value="20">ئاسایی</option><option value="23">گەورە</option><option value="26">زۆر گەورە</option></select></div>
-  <div class="field"><label>ڕەنگی لاپەڕەی Reader</label><div id="readerThemes" class="theme-grid"></div></div>
-  
-<div class="field" style="font-size:10px;line-height:1.8;color:var(--muted)">
-  <strong style="color:#f4c85c">تێبینی:</strong>
-  بەشی Owner و دەسەڵاتی تایبەت پێویستی بە سیستەمی login + database لە server هەیە؛ ئەم وەشانە تەنیا front-end ـە.
+  <div class="field"><label>ڕەنگی پلاتفۆرم</label><div id="siteThemes" class="theme-grid"></div></div>
+  <div class="field"><label>قەبارەی فۆنتی خوێنەر</label><select id="fontSize"><option value="18">ڪەم</option><option value="20">ئاسایی</option><option value="23">گەورە</option><option value="26">زۆر گەورە</option></select></div>
+  <div class="field"><label>ڕەنگی لاپەڕە</label><div id="readerThemes" class="theme-grid"></div></div>
+  <div class="hero-actions"><button class="ghost" data-action="clear-vocab">سڕینەوەی وشەڪان</button><button class="primary" data-action="close-settings">تەواو</button></div>
 </div>
-  <div class="hero-actions"><button class="ghost" data-action="clear-vocab">سڕینەوەی وشەکان</button><button class="primary" data-action="close-settings">باشە</button></div>
+
+<!-- پەڕەی بەڕێوەبەر (Owner Panel) -->
+<div id="ownerBack" class="back"></div>
+<div id="ownerSheet" class="sheet">
+  <div class="handle"></div>
+  <div class="section-head">
+    <h3><i class="fa-solid fa-crown" style="color:var(--gold)"></i> پانێڵی بەڕێوەبەر (Owner Panel)</h3>
+    <button class="icon-btn" data-action="close-owner"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+  <p style="font-size:11px;color:var(--muted);margin:0 0 10px">بەخێربێیت بەڕێوەبەر! لێرەوە دەتوانیت سەرپەرشتیی هەموو پەڕتووڪەڪان، پۆلەڪان و دۆخی بڵاوڪردنەوە بڪەیت.</p>
+  
+  <div class="field">
+    <label>ئاماری گشتیی پلاتفۆرم</label>
+    <div style="font-size:11px;line-height:2;color:#d5e5f7">
+      • ڪۆی گشتیی ڪتێبەڪان: <strong id="ownerTotalBooks" style="color:var(--a)">0</strong><br>
+      • ڪتێبی گشتی/بڵاوڪراوە: <strong id="ownerPublicBooks" style="color:#22c98b">0</strong><br>
+      • ڪتێبی تایبەت/چاوەڕوان: <strong id="ownerPendingBooks" style="color:var(--gold)">0</strong><br>
+      • فایلی دەنگیی چالاک: <strong id="ownerTotalAudios" style="color:#f05bd5">0</strong>
+    </div>
+  </div>
+
+  <div class="field">
+    <label>بەڕێوەبردنی خێرای ڪتێبەڪان بەپێی پۆل</label>
+    <div id="ownerBooksList" style="max-height:220px;overflow:auto;display:grid;gap:8px;margin-top:6px"></div>
+  </div>
+
+  <div class="hero-actions">
+    <button class="primary" data-action="close-owner">داخستنی پانێڵ</button>
+  </div>
 </div>
 
 <div id="wordBack" class="back"></div>
 <div id="wordSheet" class="sheet">
   <div class="handle"></div><div class="section-head"><h3>وەرگێڕانی وشە</h3><button class="icon-btn" data-action="close-word"><i class="fa-solid fa-xmark"></i></button></div>
   <div class="field"><label>وشە</label><div id="modalWord" style="font-size:20px;font-weight:800;color:#f4c85c"></div></div>
-  <div class="field"><label>بە کوردی</label><div id="modalKu">چاوەڕوانی...</div></div>
+  <div class="field"><label>بە ڪوردی</label><div id="modalKu">چاوەڕوانی...</div></div>
   <div class="field"><label id="modalThirdLabel">وەرگێڕان</label><div id="modalThird">چاوەڕوانی...</div></div>
-  <div class="hero-actions"><button class="ghost" data-action="speak-word"><i class="fa-solid fa-volume-high"></i> دەنگ</button><button class="primary" data-action="save-word">خەزنکردن</button></div>
+  <div class="hero-actions"><button class="ghost" data-action="speak-word"><i class="fa-solid fa-volume-high"></i> دەنگ</button><button class="primary" data-action="save-word">خەزنڪردن</button></div>
 </div>
-
 
 <div id="sentenceBack" class="back"></div>
 <div id="sentenceSheet" class="sheet">
   <div class="handle"></div>
-  <div class="section-head">
-    <h3>وەرگێڕانی ڕستە</h3>
-    <button class="icon-btn" data-action="close-sentence"><i class="fa-solid fa-xmark"></i></button>
-  </div>
-  <div class="field">
-    <label>ڕستەی هەڵبژێردراو</label>
-    <div id="sentenceOriginal" style="line-height:1.9"></div>
-  </div>
-  <div class="field">
-    <label>بە کوردی</label>
-    <div id="sentenceKu" style="line-height:1.9">چاوەڕوانی...</div>
-  </div>
+  <div class="section-head"><h3>وەرگێڕانی ڕستە</h3><button class="icon-btn" data-action="close-sentence"><i class="fa-solid fa-xmark"></i></button></div>
+  <div class="field"><label>ڕستەی هەڵبژێردراو</label><div id="sentenceOriginal" style="line-height:1.9"></div></div>
+  <div class="field"><label>بە ڪوردی</label><div id="sentenceKu" style="line-height:1.9">چاوەڕوانی...</div></div>
 </div>
 
 <div id="toast" class="toast"></div>
@@ -174,11 +209,11 @@ main{max-width:760px;margin:auto;padding:15px}.section{margin-top:16px}
 <div id="reader" class="reader">
   <div class="reader-top">
     <button class="rbtn" data-action="reader-close"><i class="fa-solid fa-arrow-right"></i></button>
-    <div class="rtitle"><strong id="rTitle">کتێب</strong><span id="rSub">لاپەڕە 1</span></div>
+    <div class="rtitle"><strong id="rTitle">ڪتێب</strong><span id="rSub">لاپەڕە 1</span></div>
     <button class="rbtn" id="readerSpeak" data-action="reader-speak"><i class="fa-solid fa-play"></i></button>
   </div>
   <div class="reader-bar">
-    <button class="rb kur" id="readerKurdish" data-action="reader-kurdish"><i class="fa-solid fa-language"></i> کوردی</button>
+    <button class="rb kur" id="readerKurdish" data-action="reader-kurdish"><i class="fa-solid fa-language"></i> ڪوردی</button>
     <button class="rb" data-action="reader-tools"><i class="fa-solid fa-sliders"></i></button>
     <button class="rb" data-action="reader-music"><i class="fa-solid fa-music"></i></button>
     <button class="rb" data-action="font-down"><i class="fa-solid fa-minus"></i></button>
@@ -188,7 +223,7 @@ main{max-width:760px;margin:auto;padding:15px}.section{margin-top:16px}
     <button class="rb" data-action="page-next"><i class="fa-solid fa-chevron-left"></i></button>
   </div>
   <div id="readerBody" class="rbody"><div class="paper"><div id="readerText" class="rtext"></div></div></div>
-  <div class="reader-bottom"><button data-action="save-progress"><i class="fa-solid fa-bookmark"></i> پاشەکەوتکردنی شوێن</button></div>
+  <div class="reader-bottom"><button data-action="save-progress"><i class="fa-solid fa-bookmark"></i> پاشەکەوتڪردنی شوێن</button></div>
 </div>
 
 <div id="readerTools" class="reader-tools">
@@ -221,6 +256,8 @@ var speechTimer=null;
 var translatedPages={};
 var pageKurdish=false;
 
+var CATEGORIES=["گشتی","زمان","ئەدەب","مێژوو","زانست","فەلسەفە","ئایین","ئینگلیزی"];
+
 var SITE_THEMES={
  cyan:{name:"شینی ئاسمانی",a:"#35bbff",b:"#7b61ff",bg:"#07111f",bg2:"#0d182a",surface:"#111f34",surface2:"#182943",line:"#29405d"},
  violet:{name:"مۆری",a:"#8b6cff",b:"#d35cff",bg:"#0b081b",bg2:"#160f2a",surface:"#1d1735",surface2:"#282047",line:"#47386a"},
@@ -238,14 +275,14 @@ var SITE_THEMES={
 
 var READER_THEMES={
  paper:{name:"سپی",bg:"#f4f6f9",paper:"#ffffff",fg:"#1d2a3d",toolbar:"#ffffff"},
- cream:{name:"کرێمی",bg:"#eee5d1",paper:"#fff9e7",fg:"#403728",toolbar:"#f7edd8"},
+ cream:{name:"ڪرێمی",bg:"#eee5d1",paper:"#fff9e7",fg:"#403728",toolbar:"#f7edd8"},
  mint:{name:"سەوزی کاڵ",bg:"#dfece5",paper:"#f4fbf7",fg:"#203c31",toolbar:"#edf7f1"},
  sky:{name:"ئاسمانی",bg:"#dceef4",paper:"#f2fbff",fg:"#24414b",toolbar:"#eaf7fa"},
  rose:{name:"پەمەیی",bg:"#f0dfe2",paper:"#fff5f6",fg:"#4a2d33",toolbar:"#fff0f2"},
  lavender:{name:"مۆری",bg:"#e6def4",paper:"#fbf8ff",fg:"#332b46",toolbar:"#f2ecfb"},
  sand:{name:"خۆڵەمێشی",bg:"#e7ded2",paper:"#fbf4eb",fg:"#493b2e",toolbar:"#f4ebdf"},
  forest:{name:"دارستان",bg:"#dee8de",paper:"#f5fbf3",fg:"#213525",toolbar:"#edf6eb"},
- sepia:{name:"کتێبی کۆن",bg:"#e6dbc6",paper:"#f7eddb",fg:"#4a3925",toolbar:"#f0e4d0"},
+ sepia:{name:"ڪتێبی کۆن",bg:"#e6dbc6",paper:"#f7eddb",fg:"#4a3925",toolbar:"#f0e4d0"},
  slate:{name:"سڵەیت",bg:"#dce1e7",paper:"#eef1f5",fg:"#263341",toolbar:"#e8ecf1"},
  night:{name:"شەو",bg:"#0b1420",paper:"#101b2c",fg:"#e9f2fc",toolbar:"#122035"},
  black:{name:"ڕەش",bg:"#050505",paper:"#0b0b0b",fg:"#f1f1f1",toolbar:"#101010"}
@@ -321,53 +358,21 @@ function detectLang(text){
 function isRtlChar(ch){
   return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(ch||"");
 }
-function itemIsRtl(str){
-  return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(String(str||""));
-}
-function isPdfMarkChar(ch){
-  return /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/.test(ch||"");
-}
-function normalizePdfPiece(text){
-  var s=String(text==null?"":text);
-  try{s=s.normalize("NFKC");}catch(e){}
-  return s.replace(/\u00AD/g,"").replace(/[\u200B\u2060]/g,"");
-}
-function isOnlyPdfMarks(text){
-  var s=normalizePdfPiece(text).replace(/[\s]/g,"");
-  return !!s && Array.from(s).every(isPdfMarkChar);
-}
+
 function buildPdfText(items){
   if(!items||!items.length)return "";
-
-  /*
-   * PDF.js gives Arabic/Kurdish letters and tashkeel as separate text items.
-   * The important part is to join a zero-width tashkeel to the correct
-   * letter BEFORE sorting/building the line. Otherwise marks such as َ ْ ِ
-   * can jump to another word and corrupt the extracted text.
-   */
-  var usable=[];
-  for(var i=0;i<items.length;i++){
-    var raw=normalizePdfPiece(items[i]&&items[i].str||"");
-    if(!raw.trim())continue;
-    var copy={item:items[i],text:raw,mark:isOnlyPdfMarks(raw)};
-    var tr=items[i].transform||[];
-    copy.x=Number(tr[4]||0);copy.y=Number(tr[5]||0);
-    copy.w=Math.abs(Number(items[i].width||0));
-    copy.h=Math.abs(Number(items[i].height||10))||10;
-    usable.push(copy);
-  }
+  var usable=items.filter(function(it){return it&&String(it.str||"").trim()!=="";});
   if(!usable.length)return "";
 
   var groups=[];
   usable.forEach(function(it){
-    var found=null;
+    var tr=it.transform||[], y=Number(tr[5]||0), found=null;
     for(var g=0;g<groups.length;g++){
-      var gy=groups[g].y;
-      if(Math.abs(gy-it.y)<=Math.max(2.5,Math.min(it.h,groups[g].h||it.h)*0.35)){
+      if(Math.abs(groups[g].y-y)<=Math.max(2,Number(it.height||10)*0.5)){
         found=groups[g];break;
       }
     }
-    if(!found){found={y:it.y,h:it.h,items:[]};groups.push(found);}
+    if(!found){found={y:y,items:[]};groups.push(found);}
     found.items.push(it);
   });
 
@@ -375,65 +380,60 @@ function buildPdfText(items){
 
   var lines=[];
   groups.forEach(function(g){
-    var bases=g.items.filter(function(it){return !it.mark;});
-    var marks=g.items.filter(function(it){return it.mark;});
-    if(!bases.length){
-      var only=marks.map(function(m){return m.text}).join("");
-      if(only)lines.push(only);
-      return;
-    }
+    var rtlCount=0, ltrCount=0;
 
-    /* Attach every standalone diacritic to the nearest glyph on the same line. */
-    marks.forEach(function(m){
-      var best=null,bestDist=Infinity;
-      bases.forEach(function(b){
-        var left=b.x-3,right=b.x+b.w+3;
-        var dist=m.x<left?left-m.x:(m.x>right?m.x-right:0);
-        var yd=Math.abs(m.y-b.y);
-        var score=dist+yd*1.5;
-        if(score<bestDist){bestDist=score;best=b;}
-      });
-      if(best){best.text += m.text.replace(/\s+/g,"");}
+    g.items.sort(function(a,b){
+      var ax=Number((a.transform||[])[4]||0);
+      var bx=Number((b.transform||[])[4]||0);
+      return ax - bx;
     });
 
-    var rtl=0,ltr=0;
-    bases.forEach(function(it){
-      if(itemIsRtl(it.text))rtl++;else if(/[A-Za-z0-9]/.test(it.text))ltr++;
+    var words = [];
+    var currentWord = "";
+    var prevX = null;
+    var prevW = 0;
+
+    g.items.forEach(function(it){
+       var x = Number((it.transform||[])[4]||0);
+       var w = Math.abs(Number(it.width||0));
+       var h = Math.max(Number(it.height||10), 1);
+       var str = String(it.str);
+       var isRtl = isRtlChar(str);
+
+       if(isRtl) rtlCount++; else if(/[a-zA-Z0-9]/.test(str)) ltrCount++;
+
+       var gap = prevX !== null ? (x - (prevX + prevW)) : 0;
+
+       if(prevX !== null && gap > h * 0.22){
+           if(currentWord) words.push(currentWord);
+           currentWord = str;
+       } else {
+           if(isRtl){
+               currentWord = str + currentWord;
+           } else {
+               currentWord = currentWord + str;
+           }
+       }
+       prevX = x;
+       prevW = w;
     });
-    var isRTL=rtl>=ltr;
 
-    bases.sort(function(a,b){return isRTL ? b.x-a.x : a.x-b.x;});
+    if(currentWord) words.push(currentWord);
 
-    var line="";
-    for(var j=0;j<bases.length;j++){
-      var cur=bases[j],txt=cur.text;
-      if(!txt)continue;
-      if(!line){line=txt;continue;}
-
-      var prev=bases[j-1];
-      var expected=isRTL ? prev.x-prev.w : prev.x+prev.w;
-      var gap=Math.abs(cur.x-expected);
-      var h=Math.max(prev.h,cur.h,10);
-      var explicitSpace=/\s$/.test(line)||/^\s/.test(txt);
-
-      /*
-       * Word gaps in this PDF are much larger than normal glyph gaps.
-       * Never invent spaces between adjacent Arabic glyphs merely because
-       * PDF.js split one word into several items.
-       */
-      var needSpace=!explicitSpace && gap>Math.max(5.5,h*0.62);
-      if(needSpace)line+=" ";
-      line+=txt;
+    if(rtlCount >= ltrCount) {
+        words.reverse();
     }
-    lines.push(line.trim());
+
+    lines.push(words.join(" ").trim());
   });
 
   return lines.join("\n")
-    .replace(/[ \t]+/g," ")
-    .replace(/ *\n */g,"\n")
+    .replace(/[ \t]{2,}/g," ")
     .replace(/\n{3,}/g,"\n\n")
+    .normalize("NFKC")
     .trim();
 }
+
 function cleanPdfText(text){
   return String(text||"")
     .replace(/\u00AD/g,"")
@@ -443,6 +443,7 @@ function cleanPdfText(text){
     .replace(/\n{3,}/g,"\n\n")
     .trim();
 }
+
 function extractPDF(file){
   return new Promise(function(resolve,reject){
     if(!window.pdfjsLib){reject(new Error("PDF engine"));return;}
@@ -478,53 +479,109 @@ function extractPDF(file){
     fr.readAsArrayBuffer(file);
   });
 }
+
 function addPDF(file){
   if(!file)return;
-  toast("PDF خەریکی خوێندنەوەیە...");
+  toast("PDF خەریڪی خوێندنەوەیە...");
   extractPDF(file).then(function(d){
     var usablePages=d.pages.filter(function(p){return p&&p.trim().length>0;});
-    if(!usablePages.length){toast("ئەم PDF ـە تەنیا وێنەیە یان تێکستی دەرنەهاتووە");return;}
-    var b={id:String(Date.now())+"_"+Math.floor(Math.random()*10000),title:file.name.replace(/\.pdf$/i,""),author:"",pages:d.pages,lang:d.lang,pageCount:d.pages.length,currentPage:0,progress:0,favorite:false,addedAt:Date.now()};
-    return dbPut(b).then(function(){books.push(b);renderBooks();toast("کتێبەکە زیادکرا");});
+    if(!usablePages.length){toast("ئەم PDF ـە دەقی دەرنەهاتووە");return;}
+    var b={
+      id:String(Date.now())+"_"+Math.floor(Math.random()*10000),
+      title:file.name.replace(/\.pdf$/i,""),
+      author:"",
+      category:"گشتی",
+      isPublished:true,
+      pages:d.pages,
+      lang:d.lang,
+      pageCount:d.pages.length,
+      currentPage:0,
+      progress:0,
+      favorite:false,
+      addedAt:Date.now()
+    };
+    return dbPut(b).then(function(){books.push(b);renderBooks();toast("ڪتێبەڪە زیادڪرا");});
   }).catch(function(e){console.error(e);toast("نەتوانرا PDF بخوێندرێتەوە");});
   $("pdfInput").value="";
 }
+
 function filtered(){
   var a=books.slice().sort(function(x,y){return y.addedAt-x.addedAt});
-  if(filter==="favorites")a=a.filter(function(x){return x.favorite});
-  if(filter==="recent")a=a.slice(0,8);
-  if(query){var q=query.toLowerCase();a=a.filter(function(x){return (x.title+" "+x.author).toLowerCase().indexOf(q)>=0});}
+  if(filter==="favorites") a=a.filter(function(x){return x.favorite});
+  else if(filter==="recent") a=a.slice(0,8);
+  else if(filter!=="all") a=a.filter(function(x){return (x.category||"گشتی")===filter;});
+
+  if(query){
+    var q=query.toLowerCase();
+    a=a.filter(function(x){return (x.title+" "+(x.author||"")+" "+(x.category||"")).toLowerCase().indexOf(q)>=0;});
+  }
   return a;
 }
+
 function langName(lang){
-  if(lang==="ku") return "کوردی";
+  if(lang==="ku") return "ڪوردی";
   if(lang==="fa") return "فارسی";
   if(lang==="ar") return "عەرەبی";
   return "ئینگلیزی";
 }
+
 function renderBooks(){
   $("bookCount").textContent=books.length;
-  $("favoriteCount").textContent=books.filter(function(b){return b.favorite}).length;
   $("wordCount").textContent=vocab.length;
-  var a=filtered();$("resultHint").textContent=a.length+" کتێب";
-  if(!a.length){$("bookList").innerHTML='<div class="empty"><i class="fa-solid fa-book-open"></i><h3 style="margin:7px 0 3px;color:#dfe8f2;font-size:14px">'+(query?"هیچ ئەنجامێک نییە":"هێشتا کتێبێک نییە")+'</h3><div style="color:var(--muted);font-size:11px">'+(query?"وشەیەکی تر تاقی بکەرەوە":"لە سەرەوە PDF زیاد بکە.")+'</div></div>';return;}
+  var a=filtered();
+  $("resultHint").textContent=a.length+" ڪتێب";
+  if(!a.length){
+    $("bookList").innerHTML='<div class="empty" style="text-align:center;padding:30px;color:var(--muted)"><i class="fa-solid fa-book-open" style="font-size:32px;margin-bottom:8px"></i><h3 style="margin:7px 0 3px;color:#dfe8f2;font-size:14px">'+(query?"هیچ ئەنجامێڪ نەدۆزرایەوە":"لەم پۆلەدا هێشتا ڪتێب نییە")+'</h3><div style="font-size:11px">دەتوانیت لە سەرەوە PDF نوێ زیاد بڪەیت.</div></div>';
+    return;
+  }
   $("bookList").innerHTML=a.map(function(b){
     var p=Math.round((b.progress||0)*100);
-    return '<article class="book" data-book="'+esc(b.id)+'"><button class="fav" data-action="fav"><i class="'+(b.favorite?"fa-solid":"fa-regular")+' fa-heart"></i></button><div class="cover"><i class="fa-solid fa-book-open"></i></div><div class="book-main"><div class="book-title">'+esc(b.title)+'</div><div class="book-author">'+esc(b.author||"کتێبی زیادکراو")+'</div><div class="meta"><span><i class="fa-regular fa-file-lines"></i> '+b.pageCount+' لاپەڕە</span><span><i class="fa-solid fa-language"></i> '+(langName(b.lang))+'</span></div><div class="progress"><span style="width:'+p+'%"></span></div><div class="actions"><button class="small primary" data-action="open-book"><i class="fa-solid fa-book-open"></i> خوێندنەوە</button><button class="small" data-action="del-book"><i class="fa-regular fa-trash-can"></i></button></div></div></article>';
+    return '<article class="book" data-book="'+esc(b.id)+'"><button class="fav" data-action="fav"><i class="'+(b.favorite?"fa-solid":"fa-regular")+' fa-heart"></i></button><div class="cover"><i class="fa-solid fa-book-bookmark"></i></div><div class="book-main"><div class="book-title">'+esc(b.title)+'</div><div class="book-author">'+esc(b.author||"نووسەری دیارینەکراو")+'</div><div class="meta"><span><i class="fa-regular fa-file-lines"></i> '+b.pageCount+' لاپەڕە</span><span><i class="fa-solid fa-language"></i> '+(langName(b.lang))+'</span><span class="tag-badge">'+esc(b.category||"گشتی")+'</span></div><div class="progress"><span style="width:'+p+'%"></span></div><div class="actions"><button class="small primary" data-action="open-book"><i class="fa-solid fa-book-open"></i> خوێندنەوە</button><button class="small" data-action="del-book"><i class="fa-regular fa-trash-can"></i></button></div></div></article>';
   }).join("");
 }
+
+function renderOwnerPanel(){
+  $("ownerTotalBooks").textContent=books.length;
+  $("ownerPublicBooks").textContent=books.filter(function(b){return b.isPublished!==false;}).length;
+  $("ownerPendingBooks").textContent=books.filter(function(b){return b.isPublished===false;}).length;
+  $("ownerTotalAudios").textContent=music.length;
+
+  var list=$("ownerBooksList");
+  if(!books.length){
+    list.innerHTML='<div style="color:var(--muted);font-size:11px;text-align:center;padding:12px">هیچ پەڕتووڪێڪ بۆ بەڕێوەبردن نییە.</div>';
+    return;
+  }
+  list.innerHTML=books.map(function(b){
+    return '<div style="background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px">'+
+      '<div style="min-width:0;flex:1"><strong style="font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+esc(b.title)+'</strong>'+
+      '<span style="font-size:10px;color:var(--muted)">پۆل: </span>'+
+      '<select data-owner-cat="'+esc(b.id)+'" style="font-size:10px;border:1px solid var(--line);background:var(--surface);color:#fff;border-radius:6px;padding:2px 4px">'+
+        CATEGORIES.map(function(c){return '<option value="'+esc(c)+'" '+(b.category===c?"selected":"")+'>'+esc(c)+'</option>'}).join("")+
+      '</select></div>'+
+      '<div style="display:flex;gap:5px">'+
+        '<button data-owner-toggle="'+esc(b.id)+'" class="icon-btn" style="width:32px;height:32px;font-size:11px;color:'+(b.isPublished!==false?"#22c98b":"var(--gold)")+'" title="گۆڕینی دۆخ">'+
+          '<i class="fa-solid '+(b.isPublished!==false?"fa-globe":"fa-lock")+'"></i>'+
+        '</button>'+
+        '<button data-owner-del="'+esc(b.id)+'" class="icon-btn" style="width:32px;height:32px;font-size:11px;color:#ff536d" title="سڕینەوە">'+
+          '<i class="fa-regular fa-trash-can"></i>'+
+        '</button>'+
+      '</div>'+
+    '</div>';
+  }).join("");
+}
+
 function toggleFav(id){var b=books.find(function(x){return x.id===id});if(!b)return;b.favorite=!b.favorite;dbPut(b).then(renderBooks)}
-function delBook(id){var b=books.find(function(x){return x.id===id});if(!b)return;if(!confirm("دڵنیایت لە سڕینەوەی «"+b.title+"»؟"))return;dbDel(id).then(function(){books=books.filter(function(x){return x.id!==id});renderBooks();toast("کتێبەکە سڕایەوە")});}
+function delBook(id){var b=books.find(function(x){return x.id===id});if(!b)return;if(!confirm("دڵنیایت لە سڕینەوەی «"+b.title+"»؟"))return;dbDel(id).then(function(){books=books.filter(function(x){return x.id!==id});renderBooks();renderOwnerPanel();toast("ڪتێبەڪە سڕایەوە")});}
 
 function stopSpeech(){if(window.speechSynthesis)window.speechSynthesis.cancel();speechState="stopped";speechUtterance=null;clearTimeout(speechTimer);clearSpeakHighlight();setSpeakIcon();}
 function clearSpeakHighlight(){var a=document.querySelectorAll(".rw.speaking");for(var i=0;i<a.length;i++)a[i].classList.remove("speaking");}
 function setSpeakIcon(){var b=$("readerSpeak");b.className="rbtn"+(speechState==="playing"?" speaking":"");b.innerHTML=speechState==="playing"?'<i class="fa-solid fa-pause"></i>':'<i class="fa-solid fa-play"></i>';}
 function highlightWord(i){clearSpeakHighlight();var a=document.querySelectorAll(".rw"),w=a[i];if(w){w.classList.add("speaking");try{w.scrollIntoView({block:"center",behavior:"smooth"})}catch(e){}}}
 function startPageSpeech(){
-  if(!window.speechSynthesis){toast("خوێندنەوەی دەنگی لەم براوزەرەدا بەردەست نییە");return;}
+  if(!window.speechSynthesis){toast("خوێندنەوەی دەنگی لەم وێبگەڕەدا بەردەست نییە");return;}
   if(speechState==="playing"){window.speechSynthesis.pause();speechState="paused";setSpeakIcon();return;}
   if(speechState==="paused"){window.speechSynthesis.resume();speechState="playing";setSpeakIcon();return;}
-  var text=$("readerText").innerText.trim();if(!text){toast("دەقی لاپەڕەکە نییە");return}
+  var text=$("readerText").innerText.trim();if(!text){toast("دەقی لاپەڕەڪە نییە");return}
   stopSpeech();speechState="playing";setSpeakIcon();
   var words=document.querySelectorAll(".rw"),u=new SpeechSynthesisUtterance(text);speechUtterance=u;u.lang=(currentBook.lang==="ar"?"ar-SA":currentBook.lang==="fa"?"fa-IR":currentBook.lang==="ku"?"ku-Arab":"en-US");u.volume=speechVolume;u.rate=.95;
   var boundary=false,fallbackIndex=0;
@@ -543,7 +600,7 @@ function paintText(text){
 function renderPage(){
   if(!currentBook)return;
   clearSpeakHighlight();
-  var text=currentBook.pages[currentPage]||"ئەم لاپەڕەیە تێکستی دەرهێنراوی نییە.";
+  var text=currentBook.pages[currentPage]||"ئەم لاپەڕەیە دەقی دەرنەهاتووە.";
   $("readerText").className="rtext"+(["ar","fa","ku"].indexOf(currentBook.lang)>=0?" rtl":" ltr");$("readerText").style.fontSize=readerFont+"px";
   paintText(text);
   $("rTitle").textContent=currentBook.title;$("rSub").textContent="لاپەڕە "+(currentPage+1)+" لە "+currentBook.pageCount;$("pageInput").value=currentPage+1;$("pageTotal").textContent="/ "+currentBook.pageCount;
@@ -571,10 +628,10 @@ function togglePageKurdish(){
   pageKurdish=!pageKurdish;$("readerKurdish").classList.toggle("active",pageKurdish);
   if(!pageKurdish){renderPage();return;}
   var key=currentBook.id+"_"+currentPage;
-  $("rSub").textContent="لاپەڕە "+(currentPage+1)+" • کوردی";
+  $("rSub").textContent="لاپەڕە "+(currentPage+1)+" • ڪوردی";
   if(translatedPages[key]){showTranslatedPage(translatedPages[key]);return;}
-  $("readerText").textContent="خەریکی وەرگێڕانی لاپەڕەکەیە...";
-  translateText(currentBook.pages[currentPage]||"").then(function(t){translatedPages[key]=t;showTranslatedPage(t)}).catch(function(){pageKurdish=false;$("readerKurdish").classList.remove("active");renderPage();toast("وەرگێڕانی لاپەڕە سەرکەوتوو نەبوو")});
+  $("readerText").textContent="خەریڪی وەرگێڕانی لاپەڕەیە...";
+  translateText(currentBook.pages[currentPage]||"").then(function(t){translatedPages[key]=t;showTranslatedPage(t)}).catch(function(){pageKurdish=false;$("readerKurdish").classList.remove("active");renderPage();toast("وەرگێڕان سەرکەوتوو نەبوو")});
 }
 function showTranslatedPage(t){
   $("readerText").className="rtext rtl";
@@ -599,9 +656,9 @@ function openSentenceModal(text){
     $("sentenceKu").textContent="کێشەی ئینتەرنێت";
   });
 }
-function saveWord(){if(!currentWord)return;var exists=vocab.some(function(v){return v.word.toLowerCase()===currentWord.toLowerCase()&&v.lang===currentLang});if(exists){toast("ئەم وشەیە پێشتر خەزنکراوە");return}vocab.unshift({id:String(Date.now()),word:currentWord,lang:currentLang,ku:$("modalKu").textContent,third:$("modalThird").textContent});try{localStorage.setItem("kh_vocab",JSON.stringify(vocab))}catch(e){}renderBooks();closeSheet($("wordBack"),$("wordSheet"));toast("وشەکە خەزنکرا");}
+function saveWord(){if(!currentWord)return;var exists=vocab.some(function(v){return v.word.toLowerCase()===currentWord.toLowerCase()&&v.lang===currentLang});if(exists){toast("ئەم وشەیە پێشتر خەزنڪراوە");return}vocab.unshift({id:String(Date.now()),word:currentWord,lang:currentLang,ku:$("modalKu").textContent,third:$("modalThird").textContent});try{localStorage.setItem("kh_vocab",JSON.stringify(vocab))}catch(e){}renderBooks();closeSheet($("wordBack"),$("wordSheet"));toast("وشەڪە خەزنڪرا");}
 function renderVocab(){
-  var back=document.createElement("div"),sheet=document.createElement("div");back.className="back open";sheet.className="sheet open";sheet.innerHTML='<div class="handle"></div><div class="section-head"><h3>وشەکانم</h3><button class="icon-btn" data-temp-close>×</button></div><div style="margin-top:10px">'+(vocab.length?vocab.map(function(v){return '<div class="field"><div style="font-weight:800;color:#f4c85c;font-size:17px">'+esc(v.word)+'</div><div style="margin-top:5px;line-height:1.8">'+esc(v.ku)+'<br><span style="color:var(--muted)">'+esc(v.third)+'</span></div><div class="hero-actions"><button class="ghost" data-vspeak="'+esc(v.word)+'" data-vlang="'+esc(v.lang)+'">گوێگرتن</button><button class="ghost" data-vdel="'+esc(v.id)+'">سڕینەوە</button></div></div>'}).join(""):'<div style="text-align:center;color:var(--muted);padding:25px">هێشتا وشەیەک نییە</div>')+'</div>';document.body.appendChild(back);document.body.appendChild(sheet);
+  var back=document.createElement("div"),sheet=document.createElement("div");back.className="back open";sheet.className="sheet open";sheet.innerHTML='<div class="handle"></div><div class="section-head"><h3>وشەڪانم</h3><button class="icon-btn" data-temp-close>×</button></div><div style="margin-top:10px">'+(vocab.length?vocab.map(function(v){return '<div class="field"><div style="font-weight:800;color:#f4c85c;font-size:17px">'+esc(v.word)+'</div><div style="margin-top:5px;line-height:1.8">'+esc(v.ku)+'<br><span style="color:var(--muted)">'+esc(v.third)+'</span></div><div class="hero-actions"><button class="ghost" data-vspeak="'+esc(v.word)+'" data-vlang="'+esc(v.lang)+'">گوێگرتن</button><button class="ghost" data-vdel="'+esc(v.id)+'">سڕینەوە</button></div></div>'}).join(""):'<div style="text-align:center;color:var(--muted);padding:25px">هێشتا وشەیەڪ نییە</div>')+'</div>';document.body.appendChild(back);document.body.appendChild(sheet);
   function close(){back.remove();sheet.remove()}back.addEventListener("click",close);sheet.addEventListener("click",function(e){if(e.target.closest("[data-temp-close]"))close();var s=e.target.closest("[data-vspeak]");if(s){speakText(s.getAttribute("data-vspeak"),s.getAttribute("data-vlang"))}var d=e.target.closest("[data-vdel]");if(d){vocab=vocab.filter(function(v){return v.id!==d.getAttribute("data-vdel")});try{localStorage.setItem("kh_vocab",JSON.stringify(vocab))}catch(e){}close();renderVocab();renderBooks()}}); 
 }
 function speakText(text,lang){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang=lang==="en"?"en-US":lang==="fa"?"fa-IR":lang==="ku"?"ku-Arab":"ar-SA";u.volume=speechVolume;window.speechSynthesis.speak(u)}
@@ -610,12 +667,12 @@ function showTools(type){
   var title=$("toolsTitle"),body=$("toolsBody");
   if(type==="volume"){
     title.textContent="کۆنترۆڵی دەنگ";
-    body.innerHTML='<div class="vols"><div class="vol"><label><span>🎵 موزیک</span><b id="mvt">'+Math.round(musicVolume*100)+'%</b></label><input id="mvr" type="range" min="0" max="100" value="'+Math.round(musicVolume*100)+'"></div><div class="vol"><label><span>🔊 خوێندنەوە</span><b id="svt">'+Math.round(speechVolume*100)+'%</b></label><input id="svr" type="range" min="0" max="100" value="'+Math.round(speechVolume*100)+'"></div></div><div class="reader-col-title">ڕەنگی لاپەڕە</div><div class="reader-colors">'+Object.keys(READER_THEMES).map(function(k){var t=READER_THEMES[k];return '<button data-inline-reader-theme="'+k+'" title="'+esc(t.name)+'" style="background:'+t.bg+';outline:'+(k===readerTheme?'2px solid var(--a)':'none')+'"><span style="background:'+t.fg+'"></span></button>'}).join("")+'</div>';
+    body.innerHTML='<div class="vols"><div class="vol"><label><span>🎵 دەنگ</span><b id="mvt">'+Math.round(musicVolume*100)+'%</b></label><input id="mvr" type="range" min="0" max="100" value="'+Math.round(musicVolume*100)+'"></div><div class="vol"><label><span>🔊 خوێندنەوە</span><b id="svt">'+Math.round(speechVolume*100)+'%</b></label><input id="svr" type="range" min="0" max="100" value="'+Math.round(speechVolume*100)+'"></div></div><div class="reader-col-title">ڕەنگی لاپەڕە</div><div class="reader-colors">'+Object.keys(READER_THEMES).map(function(k){var t=READER_THEMES[k];return '<button data-inline-reader-theme="'+k+'" title="'+esc(t.name)+'" style="background:'+t.bg+';outline:'+(k===readerTheme?'2px solid var(--a)':'none')+'"><span style="background:'+t.fg+'"></span></button>'}).join("")+'</div>';
     $("mvr").oninput=function(){musicVolume=Number(this.value)/100;$("audio").volume=musicVolume;$("mvt").textContent=Math.round(musicVolume*100)+"%";try{localStorage.setItem("kh_music_volume",musicVolume)}catch(e){}};$("svr").oninput=function(){speechVolume=Number(this.value)/100;$("svt").textContent=Math.round(speechVolume*100)+"%";try{localStorage.setItem("kh_speech_volume",speechVolume)}catch(e){}};
     $("mvr").focus();
   }else if(type==="music"){
-    title.textContent="گۆرانییەکان";
-    body.innerHTML='<div class="tracks">'+(music.length?music.map(function(t,i){return '<div class="track '+(i===musicIndex?'active':'')+'"><button data-inline-play="'+i+'"><i class="fa-solid '+(i===musicIndex&&!$("audio").paused?'fa-pause':'fa-play')+'"></i></button><span>'+esc(t.name)+'</span></div>'}).join(""):'<div style="color:var(--muted);font-size:11px;padding:12px;text-align:center">هێشتا موزیک زیاد نەکراوە.</div>')+'</div><div class="hero-actions"><button class="primary" data-action="add-music">زیادکردنی گۆرانی</button></div>';
+    title.textContent="فایلە دەنگییەکان";
+    body.innerHTML='<div class="tracks">'+(music.length?music.map(function(t,i){return '<div class="track '+(i===musicIndex?'active':'')+'"><button data-inline-play="'+i+'"><i class="fa-solid '+(i===musicIndex&&!$("audio").paused?'fa-pause':'fa-play')+'"></i></button><span>'+esc(t.name)+'</span></div>'}).join(""):'<div style="color:var(--muted);font-size:11px;padding:12px;text-align:center">هێشتا دەنگ زیاد نەڪراوە.</div>')+'</div><div class="hero-actions"><button class="primary" data-action="add-music">زیادڪردنی دەنگ</button></div>';
   }else{
     title.textContent="ڕەنگی لاپەڕە";
     body.innerHTML='<div class="reader-colors">'+Object.keys(READER_THEMES).map(function(k){var t=READER_THEMES[k];return '<button data-inline-reader-theme="'+k+'" title="'+esc(t.name)+'" style="background:'+t.bg+';outline:'+(k===readerTheme?'2px solid var(--a)':'none')+'"><span style="background:'+t.fg+'"></span></button>'}).join("")+'</div>';
@@ -623,9 +680,9 @@ function showTools(type){
   $("readerTools").classList.add("show");
 }
 function closeTools(){$("readerTools").classList.remove("show");}
-function addMusicFiles(files){for(var i=0;i<files.length;i++)music.push({name:files[i].name,url:URL.createObjectURL(files[i])});if(musicIndex<0&&music.length)loadTrack(0,false);renderTracks();}
-function loadTrack(i,play){if(!music[i])return;musicIndex=i;$("audio").src=music[i].url;$("audio").volume=musicVolume;$("nowName").textContent=music[i].name;$("nowSub").textContent="موزیکی خۆت";renderTracks();if(play)$("audio").play().catch(function(){})}
-function renderTracks(){$("tracks").innerHTML=music.length?music.map(function(t,i){return '<div class="track"><button data-track="'+i+'"><i class="fa-solid '+(i===musicIndex&&!$("audio").paused?'fa-pause':'fa-play')+'"></i></button><span>'+esc(t.name)+'</span><button data-track-del="'+i+'"><i class="fa-regular fa-trash-can"></i></button></div>'}).join(""):'<div style="color:var(--muted);font-size:10px;text-align:center;padding:8px">هیچ گۆرانییەک نییە.</div>';}
+function addMusicFiles(files){for(var i=0;i<files.length;i++)music.push({name:files[i].name,url:URL.createObjectURL(files[i])});if(musicIndex<0&&music.length)loadTrack(0,false);renderTracks();renderOwnerPanel();}
+function loadTrack(i,play){if(!music[i])return;musicIndex=i;$("audio").src=music[i].url;$("audio").volume=musicVolume;$("nowName").textContent=music[i].name;$("nowSub").textContent="دەنگی هەڵبژێردراو";renderTracks();if(play)$("audio").play().catch(function(){})}
+function renderTracks(){$("tracks").innerHTML=music.length?music.map(function(t,i){return '<div class="track"><button data-track="'+i+'"><i class="fa-solid '+(i===musicIndex&&!$("audio").paused?'fa-pause':'fa-play')+'"></i></button><span>'+esc(t.name)+'</span><button data-track-del="'+i+'"><i class="fa-regular fa-trash-can"></i></button></div>'}).join(""):'<div style="color:var(--muted);font-size:10px;text-align:center;padding:8px">هیچ دەنگێڪ نییە.</div>';}
 
 document.addEventListener("click",function(e){
   var a=e.target.closest("[data-action]");
@@ -633,8 +690,10 @@ document.addEventListener("click",function(e){
     var act=a.getAttribute("data-action");
     if(act==="settings"){renderSiteThemes();renderReaderThemes();$("fontSize").value=readerFont;openSheet($("sheetBack"),$("settingsSheet"));return}
     if(act==="close-settings"){closeSheet($("sheetBack"),$("settingsSheet"));return}
+    if(act==="owner-panel"){renderOwnerPanel();openSheet($("ownerBack"),$("ownerSheet"));return}
+    if(act==="close-owner"){closeSheet($("ownerBack"),$("ownerSheet"));return}
     if(act==="add-pdf"){$("pdfInput").click();return}
-    if(act==="continue"){var b=books.slice().sort(function(x,y){return y.progress-x.progress})[0];if(b)openBook(b.id);else toast("هێشتا کتێب نییە");return}
+    if(act==="continue"){var b=books.slice().sort(function(x,y){return y.progress-x.progress})[0];if(b)openBook(b.id);else toast("هێشتا ڪتێب نییە");return}
     if(act==="add-music"){$("musicInput").click();return}
     if(act==="play-pause"){var au=$("audio");if(musicIndex<0&&music.length){loadTrack(0,true)}else if(au.paused){au.play().catch(function(){})}else au.pause();return}
     if(act==="next-track"){if(music.length)loadTrack((musicIndex+1)%music.length,true);return}
@@ -642,7 +701,7 @@ document.addEventListener("click",function(e){
     if(act==="open-book"){var card=a.closest(".book");if(card)openBook(card.getAttribute("data-book"));return}
     if(act==="fav"){var fc=a.closest(".book");if(fc)toggleFav(fc.getAttribute("data-book"));return}
     if(act==="del-book"){var dc=a.closest(".book");if(dc)delBook(dc.getAttribute("data-book"));return}
-    if(act==="clear-vocab"){if(confirm("هەموو وشەکان بسڕدرێنەوە؟")){vocab=[];try{localStorage.setItem("kh_vocab","[]")}catch(e){}renderBooks();toast("وشەکان سڕانەوە")}return}
+    if(act==="clear-vocab"){if(confirm("هەموو وشەڪان بسڕدرێنەوە؟")){vocab=[];try{localStorage.setItem("kh_vocab","[]")}catch(e){}renderBooks();toast("وشەڪان سڕانەوە")}return}
     if(act==="reader-close"){stopSpeech();$("reader").classList.remove("show");currentBook=null;pageKurdish=false;closeTools();return}
     if(act==="reader-speak"){startPageSpeech();return}
     if(act==="reader-kurdish"){togglePageKurdish();return}
@@ -653,12 +712,27 @@ document.addEventListener("click",function(e){
     if(act==="page-prev"){changePage(-1);return}
     if(act==="page-next"){changePage(1);return}
     if(act==="tools-close"){closeTools();return}
-    if(act==="save-progress"){if(currentBook)dbPut(currentBook);toast("شوێنی خوێندن پاشەکەوت کرا");return}
+    if(act==="save-progress"){if(currentBook)dbPut(currentBook);toast("شوێنی خوێندنەوە پاشەکەوت ڪرا");return}
     if(act==="close-word"){closeSheet($("wordBack"),$("wordSheet"));return}
     if(act==="close-sentence"){closeSheet($("sentenceBack"),$("sentenceSheet"));return}
     if(act==="speak-word"){speakText(currentWord,currentLang);return}
     if(act==="save-word"){saveWord();return}
   }
+
+  // دەستکاریکردنی پۆلی کتێب لەلایەن بەڕێوەبەرەوە
+  var od=e.target.closest("[data-owner-del]");
+  if(od){delBook(od.getAttribute("data-owner-del"));return;}
+  var ot=e.target.closest("[data-owner-toggle]");
+  if(ot){
+    var bid=ot.getAttribute("data-owner-toggle");
+    var bk=books.find(function(x){return x.id===bid});
+    if(bk){
+      bk.isPublished = bk.isPublished === false ? true : false;
+      dbPut(bk).then(function(){renderOwnerPanel();renderBooks();toast("دۆخی پەڕتووڪ گۆڕدرا")});
+    }
+    return;
+  }
+
   var n=e.target.closest("[data-nav]");
   if(n){
     var v=n.getAttribute("data-nav");document.querySelectorAll(".nav").forEach(function(x){x.classList.toggle("active",x===n)});
@@ -679,7 +753,7 @@ document.addEventListener("click",function(e){
     return;
   }
   var tp=e.target.closest("[data-track]");if(tp){var i=Number(tp.getAttribute("data-track"));if(i===musicIndex&&!$("audio").paused)$("audio").pause();else loadTrack(i,true);return}
-  var td=e.target.closest("[data-track-del]");if(td){var di=Number(td.getAttribute("data-track-del"));URL.revokeObjectURL(music[di].url);music.splice(di,1);if(musicIndex===di){$("audio").pause();musicIndex=-1;$("audio").src="";$("nowName").textContent="هیچ تراکێک هەڵنەبژێردراوە"}renderTracks();return}
+  var td=e.target.closest("[data-track-del]");if(td){var di=Number(td.getAttribute("data-track-del"));URL.revokeObjectURL(music[di].url);music.splice(di,1);if(musicIndex===di){$("audio").pause();musicIndex=-1;$("audio").src="";$("nowName").textContent="هیچ دەنگێڪ نییە"}renderTracks();renderOwnerPanel();return}
   var vw=e.target.closest("[data-vspeak]");if(vw){speakText(vw.getAttribute("data-vspeak"),vw.getAttribute("data-vlang"));return}
   var vd=e.target.closest("[data-vdel]");if(vd){vocab=vocab.filter(function(v){return v.id!==vd.getAttribute("data-vdel")});try{localStorage.setItem("kh_vocab",JSON.stringify(vocab))}catch(err){}renderBooks();return}
   var w=e.target.closest(".rw");
@@ -699,7 +773,21 @@ document.addEventListener("click",function(e){
     return;
   }
 });
+
+document.addEventListener("change",function(e){
+  var oc=e.target.closest("[data-owner-cat]");
+  if(oc){
+    var bid=oc.getAttribute("data-owner-cat");
+    var bk=books.find(function(x){return x.id===bid});
+    if(bk){
+      bk.category=oc.value;
+      dbPut(bk).then(function(){renderBooks();toast("پۆلی پەڕتووڪ نوێڪرایەوە")});
+    }
+  }
+});
+
 $("sheetBack").addEventListener("click",function(){closeSheet($("sheetBack"),$("settingsSheet"))});
+$("ownerBack").addEventListener("click",function(){closeSheet($("ownerBack"),$("ownerSheet"))});
 $("wordBack").addEventListener("click",function(){closeSheet($("wordBack"),$("wordSheet"))});
 $("sentenceBack").addEventListener("click",function(){closeSheet($("sentenceBack"),$("sentenceSheet"))});
 $("pdfInput").addEventListener("change",function(){addPDF(this.files[0])});
@@ -720,8 +808,13 @@ function init(){
 }
 init();
 
-
 })();
 </script>
+
+<!-- دوگمەی تێلیگرام -->
+<a href="https://t.me/about_Barham" target="_blank" style="position:fixed;left:12px;bottom:88px;z-index:999;width:44px;height:44px;border-radius:50%;background:#229ED9;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 16px rgba(0,0,0,.4);text-decoration:none;transition:0.2s;" title="کەناڵی تێلیگرامەکەم">
+  <i class="fa-brands fa-telegram"></i>
+</a>
+
 </body>
 </html>
