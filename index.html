@@ -409,7 +409,7 @@ function extractPDF(file){
                 return pdf.getPage(pageNo).then(function(page){
                   return page.getTextContent({
                     normalizeWhitespace:false,
-                    disableCombineTextItems:false
+                    disableCombineTextItems:true
                   }).then(function(c){
                     pages.push(cleanPdfText(buildPdfText(c.items)));
                   });
