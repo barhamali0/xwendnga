@@ -8,7 +8,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+ا<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
@@ -683,5 +683,140 @@ window.__KH_DIAGNOSTIC__=function(){
 
 })();
 </script>
+  <script>
+(function(){
+  var btn=document.createElement("button");
+  btn.textContent="🐞";
+  btn.style.cssText="position:fixed;left:12px;bottom:88px;z-index:999;width:44px;height:44px;border-radius:50%;background:#ff536d;color:#fff;border:0;font-size:18px;box-shadow:0 6px 16px rgba(0,0,0,.4)";
+  document.body.appendChild(btn);
+
+  var inp=document.createElement("input");
+  inp.type="file";
+  inp.accept="application/pdf";
+  inp.style.display="none";
+  document.body.appendChild(inp);
+
+  btn.onclick=function(){ inp.click(); };
+
+  inp.addEventListener("change", function(){
+    var f=this.files[0];
+    if(!f) return;
+    this.value="";
+    var fr=new FileReader();
+
+    fr.onload=function(){
+      var data=new Uint8Array(fr.result);
+
+      pdfjsLib.getDocument({data:data}).promise
+      .then(function(pdf){
+        return pdf.getPage(1);
+      })
+      .then(function(page){
+        return page.getTextContent({
+          normalizeWhitespace:false,
+          disableCombineTextItems:true
+        });
+      })
+      .then(function(c){
+        var out=[];
+        var items=c.items;
+        var limit=Math.min(items.length,260);
+
+        out.push("TOTAL ITEMS ON PAGE 1: "+items.length);
+        out.push("");
+
+        for(var i=0;i<limit;i++){
+          var it=items[i];
+          var str=String(it.str||"");
+          var cps=[];
+
+          for(var k=0;k<str.length;k++){
+            cps.push(
+              "U+"+
+              str.charCodeAt(k).toString(16).toUpperCase()
+            );
+          }
+
+          var tr=it.transform||[];
+
+          out.push(
+            i+
+            " str=\""+str+
+            "\" cp=["+cps.join(",")+
+            "] x="+
+            (tr[4]!==undefined?tr[4].toFixed(2):"?")+
+            " y="+
+            (tr[5]!==undefined?tr[5].toFixed(2):"?")+
+            " w="+
+            (it.width!==undefined?Number(it.width).toFixed(3):"?")+
+            " h="+
+            (it.height!==undefined?Number(it.height).toFixed(3):"?")
+          );
+        }
+
+        showOut(out.join("\n"));
+      })
+      .catch(function(e){
+        showOut("ERROR: "+e.message);
+      });
+    };
+
+    fr.readAsArrayBuffer(f);
+  });
+
+  function showOut(text){
+    var back=document.createElement("div");
+
+    back.style.cssText=
+      "position:fixed;inset:0;z-index:1000;"+
+      "background:#0a1525;padding:10px;"+
+      "display:flex;flex-direction:column";
+
+    var head=document.createElement("div");
+
+    head.style.cssText=
+      "display:flex;justify-content:space-between;"+
+      "align-items:center;margin-bottom:8px;"+
+      "color:#fff;font-family:sans-serif";
+
+    head.innerHTML=
+      "<b>دیاگنۆستیک — هەموو دەقەکە هەڵبژێرە و کۆپی بکە</b>";
+
+    var closeBtn=document.createElement("button");
+
+    closeBtn.textContent="داخستن";
+
+    closeBtn.style.cssText=
+      "background:#35bbff;border:0;border-radius:8px;"+
+      "padding:8px 12px;color:#fff";
+
+    closeBtn.onclick=function(){
+      back.remove();
+    };
+
+    head.appendChild(closeBtn);
+
+    var ta=document.createElement("textarea");
+
+    ta.readOnly=true;
+    ta.value=text;
+
+    ta.style.cssText=
+      "flex:1;width:100%;background:#111f34;"+
+      "color:#e8f1fb;border:1px solid #29405d;"+
+      "border-radius:8px;padding:8px;"+
+      "font-family:monospace;font-size:11px;"+
+      "direction:ltr";
+
+    back.appendChild(head);
+    back.appendChild(ta);
+
+    document.body.appendChild(back);
+
+    ta.focus();
+    ta.select();
+  }
+})();
+  </script>
 </body>
 </html>
