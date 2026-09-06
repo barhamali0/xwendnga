@@ -190,7 +190,10 @@
     <button class="rbtn" id="readerSpeak" data-action="reader-speak"><i class="fa-solid fa-play"></i></button>
   </div>
   <div class="reader-bar">
-    <button class="rb kur" id="readerKurdish" data-action="reader-kurdish"><i class="fa-solid fa-language"></i> ڪوردی</button>
+    <button class="rb kur" id="readerKurdish" data-action="reader-kurdish"><i class="fa-solid fa-language"></i></button>
+    
+    <button class="rb" data-action="toggle-view" id="viewToggleBtn" title="دەرهێنانی دەق بە AI"><i class="fa-solid fa-robot"></i></button>
+    
     <button class="rb" data-action="reader-tools"><i class="fa-solid fa-sliders"></i></button>
     <button class="rb" data-action="reader-music"><i class="fa-solid fa-music"></i></button>
     <button class="rb" data-action="font-down"><i class="fa-solid fa-minus"></i></button>
@@ -199,7 +202,14 @@
     <button class="rb" data-action="page-prev"><i class="fa-solid fa-chevron-right"></i></button>
     <button class="rb" data-action="page-next"><i class="fa-solid fa-chevron-left"></i></button>
   </div>
-  <div id="readerBody" class="rbody"><div class="paper"><div id="readerText" class="rtext"></div></div></div>
+  
+  <div id="readerBody" class="rbody">
+    <div class="paper">
+      <canvas id="pdfCanvas"></canvas>
+      <div id="readerText" class="rtext"></div>
+    </div>
+  </div>
+  
   <div class="reader-bottom"><button data-action="save-progress"><i class="fa-solid fa-bookmark"></i> پاشەکەوتڪردنی شوێن</button></div>
 </div>
 
