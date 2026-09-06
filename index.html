@@ -64,7 +64,19 @@ main{max-width:760px;margin:auto;padding:15px}.section{margin-top:16px}
 .bottom{position:fixed;bottom:0;right:0;left:0;z-index:30;height:78px;background:rgba(6,14,26,.97);border-top:1px solid rgba(255,255,255,.06);padding:7px 10px max(7px,env(safe-area-inset-bottom));backdrop-filter:blur(16px)}.bottom-in{max-width:760px;margin:auto;height:100%;display:grid;grid-template-columns:repeat(4,1fr)}.nav{border:0;background:transparent;color:#7789a2;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;font-size:10px;font-weight:700}.nav i{font-size:18px}.nav.active{color:var(--a)}
 
 .back{position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.55);opacity:0;pointer-events:none;transition:.2s}.back.open{opacity:1;pointer-events:auto}
-.sheet{position:fixed;left:0;right:0;bottom:0;z-index:91;max-height:88vh;overflow:auto;transform:translateY(105%);transition:.22s;background:var(--bg2);border-top:1px solid var(--line);border-radius:25px 25px 0 0;padding:17px 15px max(16px,env(safe-area-inset-bottom))}.sheet.open{transform:translateY(0)}.handle{width:40px;height:5px;background:#3a4e6c;border-radius:99px;margin:0 auto 14px}.sheet h3{margin:0;font-size:17px}.field{margin-top:11px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface)}.field label{display:block;font-size:10px;color:var(--muted);margin-bottom:6px}.field select,.field input[type=text]{width:100%;border:0;outline:0;background:transparent;color:#fff}.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.theme{height:54px;border:1px solid rgba(255,255,255,.13);border-radius:13px;position:relative}.theme i{position:absolute;right:7px;top:7px;width:19px;height:19px;border-radius:50%}.theme b{position:absolute;left:7px;right:7px;bottom:7px;height:7px;border-radius:7px}.theme.active{outline:2px solid var(--a);outline-offset:1px}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:91;max-height:88vh;overflow:auto;transform:translateY(105%);transition:.22s;background:var(--bg2);border-top:1px solid var(--line);border-radius:25px 25px 0 0;padding:17px 15px max(16px,env(safe-area-inset-bottom))}.sheet.open{transform:translateY(0)}.handle{width:40px;height:5px;background:#3a4e6c;border-radius:99px;margin:0 auto 14px}.sheet h3{margin:0;font-size:17px}.field{margin-top:11px;padding:10px 12px;border-radius:14px;border:1px solid var(--line);background:var(--surface)}.field label{display:block;font-size:10px;color:var(--muted);margin-bottom:6px}.field select,.field input[type=text]{width:100%;border:0;outline:0;background:transparent;color:#fff}
+
+/* دیزاینی نوێی ڕێکخستنەکان (Accordion Style) */
+.setting-accordion{margin-top:11px;border:1px solid var(--line);border-radius:14px;background:var(--surface);overflow:hidden;transition:.2s}
+.setting-header{width:100%;padding:13px 14px;background:transparent;border:0;color:#fff;display:flex;justify-content:space-between;align-items:center;cursor:pointer;font-size:12px;font-weight:700}
+.setting-sub-label{font-size:11px;color:var(--muted);font-weight:400}
+.arrow-icon{font-size:10px;color:var(--muted);transition:transform .2s}
+.setting-header.open .arrow-icon{transform:rotate(180deg)}
+.color-dot{width:12px;height:12px;border-radius:50%;display:inline-block;border:1px solid rgba(255,255,255,.2)}
+.setting-collapse{padding:0 12px 12px;transition:.2s}
+.setting-collapse.hidden{display:none}
+
+.theme-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}.theme{height:54px;border:1px solid rgba(255,255,255,.13);border-radius:13px;position:relative}.theme i{position:absolute;right:7px;top:7px;width:19px;height:19px;border-radius:50%}.theme b{position:absolute;left:7px;right:7px;bottom:7px;height:7px;border-radius:7px}.theme.active{outline:2px solid var(--a);outline-offset:1px}
 
 .reader{display:none;position:fixed;inset:0;z-index:70;background:var(--reader-bg);color:var(--reader-fg);flex-direction:column}.reader.show{display:flex}
 .reader-top{display:flex;align-items:center;gap:8px;padding:10px 12px;background:#0a1525;color:#fff}.rbtn{width:39px;height:39px;border-radius:11px;background:#13233a;color:#fff;border:1px solid #2a3d59}.rtitle{flex:1;min-width:0}.rtitle strong{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rtitle span{font-size:9px;color:#92a5bc}
@@ -110,7 +122,7 @@ main{max-width:760px;margin:auto;padding:15px}.section{margin-top:16px}
       <div class="stat"><i class="fa-solid fa-language"></i><strong id="wordCount">0</strong><span>وشە</span></div>
     </div></section>
 
-    <!-- پۆلەکانی کتێبخانە (Categories) -->
+    <!-- پۆلەکانی کتێبخانە -->
     <section class="section">
       <div class="chips" id="filters">
         <button class="chip active" data-filter="all">هەموو</button>
@@ -147,14 +159,64 @@ main{max-width:760px;margin:auto;padding:15px}.section{margin-top:16px}
   </div></div>
 </div>
 
-<!-- پەڕەی ڕێکخستن -->
+<!-- پەڕەی ڕێکخستنی نوێ (دیزاینی خاوێن بە دوگمەی Accordion) -->
 <div id="sheetBack" class="back"></div>
 <div id="settingsSheet" class="sheet">
-  <div class="handle"></div><h3>ڕێکخستن</h3>
-  <div class="field"><label>ڕەنگی پلاتفۆرم</label><div id="siteThemes" class="theme-grid"></div></div>
-  <div class="field"><label>قەبارەی فۆنتی خوێنەر</label><select id="fontSize"><option value="18">ڪەم</option><option value="20">ئاسایی</option><option value="23">گەورە</option><option value="26">زۆر گەورە</option></select></div>
-  <div class="field"><label>ڕەنگی لاپەڕە</label><div id="readerThemes" class="theme-grid"></div></div>
-  <div class="hero-actions"><button class="ghost" data-action="clear-vocab">سڕینەوەی وشەڪان</button><button class="primary" data-action="close-settings">تەواو</button></div>
+  <div class="handle"></div>
+  <div class="section-head">
+    <h3><i class="fa-solid fa-sliders" style="color:var(--a)"></i> ڕێکخستن</h3>
+    <button class="icon-btn" data-action="close-settings" style="width:34px;height:34px"><i class="fa-solid fa-xmark"></i></button>
+  </div>
+
+  <!-- قەبارەی فۆنت وەک پێشوو بە دوگمەی پوخت -->
+  <div class="field">
+    <label>قەبارەی فۆنتی خوێنەر</label>
+    <select id="fontSize">
+      <option value="18">ڪەم (18px)</option>
+      <option value="20">ئاسایی (20px)</option>
+      <option value="23">گەورە (23px)</option>
+      <option value="26">زۆر گەورە (26px)</option>
+    </select>
+  </div>
+
+  <!-- ڕەنگی پلاتفۆرم بە دوگمەی کشاوە -->
+  <div class="setting-accordion">
+    <button class="setting-header" data-toggle-target="siteThemesWrap">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="siteThemeDot" class="color-dot"></span>
+        <span>ڕەنگی پلاتفۆرم</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span id="siteThemeLabel" class="setting-sub-label">شینی ئاسمانی</span>
+        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+      </div>
+    </button>
+    <div id="siteThemesWrap" class="setting-collapse hidden">
+      <div id="siteThemes" class="theme-grid" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <!-- ڕەنگی لاپەڕەی خوێنەر بە دوگمەی کشاوە -->
+  <div class="setting-accordion">
+    <button class="setting-header" data-toggle-target="readerThemesWrap">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span id="readerThemeDot" class="color-dot"></span>
+        <span>ڕەنگی لاپەڕە</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <span id="readerThemeLabel" class="setting-sub-label">سپی</span>
+        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+      </div>
+    </button>
+    <div id="readerThemesWrap" class="setting-collapse hidden">
+      <div id="readerThemes" class="theme-grid" style="margin-top:6px"></div>
+    </div>
+  </div>
+
+  <div class="hero-actions" style="margin-top:16px">
+    <button class="ghost" data-action="clear-vocab">سڕینەوەی وشەڪان</button>
+    <button class="primary" data-action="close-settings">تەواو</button>
+  </div>
 </div>
 
 <!-- پەڕەی بەڕێوەبەر (Owner Panel) -->
@@ -295,6 +357,15 @@ function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){retur
 function openSheet(back,sheet){back.classList.add("open");sheet.classList.add("open");}
 function closeSheet(back,sheet){back.classList.remove("open");sheet.classList.remove("open");}
 
+function updateThemeBadges(){
+  var st=SITE_THEMES[siteTheme]||SITE_THEMES.cyan;
+  var rt=READER_THEMES[readerTheme]||READER_THEMES.paper;
+  if($("siteThemeLabel")) $("siteThemeLabel").textContent=st.name;
+  if($("siteThemeDot")) $("siteThemeDot").style.background=st.a;
+  if($("readerThemeLabel")) $("readerThemeLabel").textContent=rt.name;
+  if($("readerThemeDot")) $("readerThemeDot").style.background=rt.bg;
+}
+
 function setSiteTheme(k){
   var t=SITE_THEMES[k]||SITE_THEMES.cyan;
   siteTheme=k;
@@ -303,11 +374,13 @@ function setSiteTheme(k){
   r.style.setProperty("--bg",t.bg);r.style.setProperty("--bg2",t.bg2);r.style.setProperty("--surface",t.surface);r.style.setProperty("--surface2",t.surface2);r.style.setProperty("--line",t.line);
   try{localStorage.setItem("kh_site_theme",k)}catch(e){}
   renderSiteThemes();
+  updateThemeBadges();
 }
 function applyReaderTheme(){
   var t=READER_THEMES[readerTheme]||READER_THEMES.paper;
   var r=$("reader");
   r.style.setProperty("--reader-bg",t.bg);r.style.setProperty("--paper",t.paper);r.style.setProperty("--reader-fg",t.fg);
+  updateThemeBadges();
 }
 function renderSiteThemes(){
   var box=$("siteThemes"),out="";
@@ -659,7 +732,7 @@ function openSentenceModal(text){
 function saveWord(){if(!currentWord)return;var exists=vocab.some(function(v){return v.word.toLowerCase()===currentWord.toLowerCase()&&v.lang===currentLang});if(exists){toast("ئەم وشەیە پێشتر خەزنڪراوە");return}vocab.unshift({id:String(Date.now()),word:currentWord,lang:currentLang,ku:$("modalKu").textContent,third:$("modalThird").textContent});try{localStorage.setItem("kh_vocab",JSON.stringify(vocab))}catch(e){}renderBooks();closeSheet($("wordBack"),$("wordSheet"));toast("وشەڪە خەزنڪرا");}
 function renderVocab(){
   var back=document.createElement("div"),sheet=document.createElement("div");back.className="back open";sheet.className="sheet open";sheet.innerHTML='<div class="handle"></div><div class="section-head"><h3>وشەڪانم</h3><button class="icon-btn" data-temp-close>×</button></div><div style="margin-top:10px">'+(vocab.length?vocab.map(function(v){return '<div class="field"><div style="font-weight:800;color:#f4c85c;font-size:17px">'+esc(v.word)+'</div><div style="margin-top:5px;line-height:1.8">'+esc(v.ku)+'<br><span style="color:var(--muted)">'+esc(v.third)+'</span></div><div class="hero-actions"><button class="ghost" data-vspeak="'+esc(v.word)+'" data-vlang="'+esc(v.lang)+'">گوێگرتن</button><button class="ghost" data-vdel="'+esc(v.id)+'">سڕینەوە</button></div></div>'}).join(""):'<div style="text-align:center;color:var(--muted);padding:25px">هێشتا وشەیەڪ نییە</div>')+'</div>';document.body.appendChild(back);document.body.appendChild(sheet);
-  function close(){back.remove();sheet.remove()}back.addEventListener("click",close);sheet.addEventListener("click",function(e){if(e.target.closest("[data-temp-close]"))close();var s=e.target.closest("[data-vspeak]");if(s){speakText(s.getAttribute("data-vspeak"),s.getAttribute("data-vlang"))}var d=e.target.closest("[data-vdel]");if(d){vocab=vocab.filter(function(v){return v.id!==d.getAttribute("data-vdel")});try{localStorage.setItem("kh_vocab",JSON.stringify(vocab))}catch(e){}close();renderVocab();renderBooks()}}); 
+  function close(){back.remove();sheet.remove()}back.addEventListener("click",close);sheet.addEventListener("click",function(e){if(e.target.closest("[data-temp-close]"))close();var s=e.target.closest("[data-vspeak]");if(s){speakText(s.getAttribute("data-vspeak"),s.getAttribute("data-vlang"))}var d=e.target.closest("[data-vdel]");if(d){vocab=vocab.filter(function(v){return v.id!==vd.getAttribute("data-vdel")});try{localStorage.setItem("kh_vocab",JSON.stringify(vocab))}catch(e){}close();renderVocab();renderBooks()}}); 
 }
 function speakText(text,lang){if(!window.speechSynthesis)return;window.speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(text);u.lang=lang==="en"?"en-US":lang==="fa"?"fa-IR":lang==="ku"?"ku-Arab":"ar-SA";u.volume=speechVolume;window.speechSynthesis.speak(u)}
 
@@ -688,7 +761,7 @@ document.addEventListener("click",function(e){
   var a=e.target.closest("[data-action]");
   if(a){
     var act=a.getAttribute("data-action");
-    if(act==="settings"){renderSiteThemes();renderReaderThemes();$("fontSize").value=readerFont;openSheet($("sheetBack"),$("settingsSheet"));return}
+    if(act==="settings"){renderSiteThemes();renderReaderThemes();updateThemeBadges();$("fontSize").value=readerFont;openSheet($("sheetBack"),$("settingsSheet"));return}
     if(act==="close-settings"){closeSheet($("sheetBack"),$("settingsSheet"));return}
     if(act==="owner-panel"){renderOwnerPanel();openSheet($("ownerBack"),$("ownerSheet"));return}
     if(act==="close-owner"){closeSheet($("ownerBack"),$("ownerSheet"));return}
@@ -719,7 +792,23 @@ document.addEventListener("click",function(e){
     if(act==="save-word"){saveWord();return}
   }
 
-  // دەستکاریکردنی پۆلی کتێب لەلایەن بەڕێوەبەرەوە
+  // دوگمەی کشاندنی ڕێکخستنەکان (Accordion Toggle)
+  var th=e.target.closest("[data-toggle-target]");
+  if(th){
+    var targetId=th.getAttribute("data-toggle-target");
+    var wrap=$(targetId);
+    if(wrap){
+      var isHidden=wrap.classList.contains("hidden");
+      document.querySelectorAll(".setting-collapse").forEach(function(c){c.classList.add("hidden")});
+      document.querySelectorAll(".setting-header").forEach(function(h){h.classList.remove("open")});
+      if(isHidden){
+        wrap.classList.remove("hidden");
+        th.classList.add("open");
+      }
+    }
+    return;
+  }
+
   var od=e.target.closest("[data-owner-del]");
   if(od){delBook(od.getAttribute("data-owner-del"));return;}
   var ot=e.target.closest("[data-owner-toggle]");
@@ -803,7 +892,7 @@ $("fontSize").addEventListener("change",function(){readerFont=Number(this.value)
 function init(){
   loadLocal();
   try{musicVolume=Number(localStorage.getItem("kh_music_volume")||.32);speechVolume=Number(localStorage.getItem("kh_speech_volume")||.85)}catch(e){}
-  setSiteTheme(siteTheme);applyReaderTheme();renderSiteThemes();renderReaderThemes();setSpeakIcon();renderTracks();
+  setSiteTheme(siteTheme);applyReaderTheme();renderSiteThemes();renderReaderThemes();updateThemeBadges();setSpeakIcon();renderTracks();
   dbAll().then(function(a){books=a||[];renderBooks()}).catch(function(e){console.error(e);books=[];renderBooks()});
 }
 init();
