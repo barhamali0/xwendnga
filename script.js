@@ -28,7 +28,6 @@ var speechRate=0.85;
 var translatedPages={};
 var pageKurdish=false;
 
-// گۆڕاوە نوێیەکان بۆ وێنەی PDF
 var currentPdfDoc=null;
 var viewMode='canvas'; 
 
@@ -238,6 +237,9 @@ function buildPdfText(items){
 
 function cleanPdfText(text){
   return String(text||"")
+    .replace(/[\uFE70-\uFEFC\uFB50-\uFDFF]/g, function(ch){
+      return ch.normalize("NFKD");
+    })
     .replace(/\u00AD/g,"")
     .replace(/\u200B/g,"")
     .replace(/\u2060/g,"")
@@ -272,7 +274,6 @@ function extractPDF(file){
           }
 
           chain.then(function(){
-            // لێرەدا فایلی PDFـەکە بەتەواوی دەگەڕێنینەوە بۆ ئەوەی دواتر وێنەکەی پیشان بدەین
             resolve({pages:pages,lang:detectLang(pages.join("\n")), pdfData: data});
           }).catch(reject);
         }).catch(reject);
@@ -296,7 +297,7 @@ function addPDF(file){
       category:"گشتی",
       isPublished:true,
       pages:d.pages,
-      pdfData:d.pdfData, // پاشەکەوتکردنی فایلی ڕەسەن
+      pdfData:d.pdfData, 
       lang:d.lang,
       pageCount:d.pages.length,
       currentPage:0,
@@ -510,7 +511,30 @@ function paintText(text){
   box.appendChild(frag);
 }
 
-// دەرخستنی لاپەڕە چ بە شێوەی وێنە (Canvas) یان شێوازی دەق (Text)
+// فانکشنی نوێ بۆ ناردنی وێنەکە بۆ Google Lens
+function shareToLens() {
+  var canvas = $("pdfCanvas");
+  if(!canvas) return;
+  toast("ئامادەڪردنی وێنەڪە...");
+  canvas.toBlob(function(blob) {
+      var file = new File([blob], "page.jpg", {type: "image/jpeg"});
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          navigator.share({
+              title: 'پشڪنینی لاپەڕە بە Google Lens',
+              text: 'دەرهێنانی دەق و وەرگێڕان بە Google Lens',
+              files: [file]
+          }).catch(function(e) { console.log("Share failed:", e); });
+      } else {
+          // ئەگەر مۆبایلەکە پشتگیری نەبوو، وێنەکە دادەبەزێنێت
+          var a = document.createElement("a");
+          a.href = canvas.toDataURL("image/jpeg");
+          a.download = "Xwendnga_Page_Lens.jpg";
+          a.click();
+          toast("وێنەڪە دابەزێنرا، دەتوانیت لە ئەپی Google بیڪەیتەوە.");
+      }
+  }, "image/jpeg", 0.9);
+}
+
 function renderPage(){
   if(!currentBook)return;
   clearSpeakHighlight();
@@ -534,7 +558,7 @@ function renderPage(){
      }
 
      currentPdfDoc.getPage(currentPage + 1).then(function(page) {
-        var scale = 2.0; // کوالێتی وێنەکە بەرز دەکاتەوە بۆ مۆبایل
+        var scale = 2.0; 
         var viewport = page.getViewport({scale: scale});
         canvas.width = viewport.width;
         canvas.height = viewport.height;
@@ -551,10 +575,20 @@ function renderPage(){
          toggleBtn.classList.add("active");
      }
 
-     var text=currentBook.pages[currentPage]||"ئەم لاپەڕەیە دەقی دەرنەهاتووە.";
-     $("readerText").className="rtext"+(["ar","fa","ku"].indexOf(currentBook.lang)>=0?" rtl":" ltr");
-     $("readerText").style.fontSize=readerFont+"px";
-     paintText(text);
+     var text=currentBook.pages[currentPage]||"";
+     // پاککردنەوەی لۆگۆی سکانەر و دەقە بێماناکان
+     var cleanTextForCheck = text.replace(/Scanned by CamScanner/gi, "").replace(/[\W_]+/g, "").trim();
+
+     // ئەگەر دەقەکە لە 30 پیت کەمتر بوو، یان تەنیا لۆگۆی سکانەر بوو
+     if(cleanTextForCheck.length < 30) {
+        $("readerText").className="rtext rtl";
+        $("readerText").style.fontSize=""; 
+        $("readerText").innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px 20px;"><i class="fa-solid fa-camera-retro" style="font-size:48px;color:var(--muted);margin-bottom:15px;"></i><h3 style="color:var(--reader-fg);margin:0 0 10px;font-size:18px;">ئەم لاپەڕەیە وێنەیە</h3><p style="color:var(--muted);font-size:13px;line-height:1.8;max-width:300px;margin:0 auto 20px;">دەقی دیجیتاڵی لەم لاپەڕەیەدا نەدۆزرایەوە. بۆ دەرهێنانی دەقی ناو وێنەڪە و وەرگێڕانی وشەڪان، دەتوانیت Google Lens بەڪاربهێنیت.</p><button class="primary" data-action="share-lens" style="padding:12px 20px;border-radius:12px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto;"><i class="fa-solid fa-expand"></i> ناردن بۆ Google Lens</button></div>';
+     } else {
+        $("readerText").className="rtext"+(["ar","fa","ku"].indexOf(currentBook.lang)>=0?" rtl":" ltr");
+        $("readerText").style.fontSize=readerFont+"px";
+        paintText(text);
+     }
   }
 
   currentBook.currentPage=currentPage;
@@ -573,7 +607,6 @@ function openBook(id){
   $("reader").classList.add("show");
   applyReaderTheme();
 
-  // بۆ کوردی، عەرەبی یان فارسی ڕاستەوخۆ دەیکاتە شێوازی وێنە (Canvas)
   viewMode = (currentBook.lang === 'ku' || currentBook.lang === 'ar' || currentBook.lang === 'fa') ? 'canvas' : 'text';
 
   if(currentBook.pdfData){
@@ -719,6 +752,13 @@ document.addEventListener("click",function(e){
   var a=e.target.closest("[data-action]");
   if(a){
     var act=a.getAttribute("data-action");
+    
+    // دوگمەی ناردن بۆ گووگڵ لێنس
+    if(act==="share-lens"){
+        shareToLens();
+        return;
+    }
+
     if(act==="settings"){renderSiteThemes();renderReaderThemes();updateThemeBadges();$("fontSize").value=readerFont;openSheet($("sheetBack"),$("settingsSheet"));return}
     if(act==="close-settings"){closeSheet($("sheetBack"),$("settingsSheet"));return}
     if(act==="owner-panel"){renderOwnerPanel();openSheet($("ownerBack"),$("ownerSheet"));return}
@@ -734,15 +774,12 @@ document.addEventListener("click",function(e){
     if(act==="del-book"){var dc=a.closest(".book");if(dc)delBook(dc.getAttribute("data-book"));return}
     if(act==="clear-vocab"){if(confirm("هەموو وشەڪان بسڕدرێنەوە؟")){vocab=[];try{localStorage.setItem("kh_vocab","[]")}catch(e){}renderBooks();toast("وشەڪان سڕانەوە")}return}
     
-    // دوگمەی گۆڕینی شێوازی وێنە بۆ دەق (AI Text)
     if(act==="toggle-view"){
         if(!currentPdfDoc){
             toast("وێنەی ڕەسەنی ئەم پەڕتووڪە بەردەست نییە");
             return;
         }
         viewMode = (viewMode === 'canvas') ? 'text' : 'canvas';
-        if(viewMode === 'text') toast("دەقی زیرەکی دەستڪرد ڪرایەوە 🤖");
-        else toast("شێوازی وێنەی ڕەسەن 🖼️");
         renderPage();
         return;
     }
