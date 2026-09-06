@@ -321,20 +321,53 @@ function detectLang(text){
 function isRtlChar(ch){
   return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(ch||"");
 }
+function itemIsRtl(str){
+  return /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF]/.test(String(str||""));
+}
+function isPdfMarkChar(ch){
+  return /[\u0610-\u061A\u064B-\u065F\u0670\u06D6-\u06ED]/.test(ch||"");
+}
+function normalizePdfPiece(text){
+  var s=String(text==null?"":text);
+  try{s=s.normalize("NFKC");}catch(e){}
+  return s.replace(/\u00AD/g,"").replace(/[\u200B\u2060]/g,"");
+}
+function isOnlyPdfMarks(text){
+  var s=normalizePdfPiece(text).replace(/[\s]/g,"");
+  return !!s && Array.from(s).every(isPdfMarkChar);
+}
 function buildPdfText(items){
   if(!items||!items.length)return "";
-  var usable=items.filter(function(it){return it&&String(it.str||"").trim()!=="";});
+
+  /*
+   * PDF.js gives Arabic/Kurdish letters and tashkeel as separate text items.
+   * The important part is to join a zero-width tashkeel to the correct
+   * letter BEFORE sorting/building the line. Otherwise marks such as َ ْ ِ
+   * can jump to another word and corrupt the extracted text.
+   */
+  var usable=[];
+  for(var i=0;i<items.length;i++){
+    var raw=normalizePdfPiece(items[i]&&items[i].str||"");
+    if(!raw.trim())continue;
+    var copy={item:items[i],text:raw,mark:isOnlyPdfMarks(raw)};
+    var tr=items[i].transform||[];
+    copy.x=Number(tr[4]||0);copy.y=Number(tr[5]||0);
+    copy.w=Math.abs(Number(items[i].width||0));
+    copy.h=Math.abs(Number(items[i].height||10))||10;
+    usable.push(copy);
+  }
   if(!usable.length)return "";
 
   var groups=[];
   usable.forEach(function(it){
-    var tr=it.transform||[], y=Number(tr[5]||0), found=null;
+    var found=null;
     for(var g=0;g<groups.length;g++){
-      if(Math.abs(groups[g].y-y)<=Math.max(2,Number(it.height||10)*0.5)){
+      var gy=groups[g].y;
+      if(Math.abs(gy-it.y)<=Math.max(2.5,Math.min(it.h,groups[g].h||it.h)*0.35)){
         found=groups[g];break;
       }
     }
-    if(!found){found={y:y,items:[]};groups.push(found);}
+    if(!found){found={y:it.y,h:it.h,items:[]};groups.push(found);}
     found.items.push(it);
   });
 
@@ -342,57 +375,63 @@ function buildPdfText(items){
 
   var lines=[];
   groups.forEach(function(g){
-    var rtlCount=0, ltrCount=0;
-
-    g.items.sort(function(a,b){
-      var ax=Number((a.transform||[])[4]||0);
-      var bx=Number((b.transform||[])[4]||0);
-      return ax - bx;
-    });
-
-    var words = [];
-    var currentWord = "";
-    var prevX = null;
-    var prevW = 0;
-
-    g.items.forEach(function(it){
-       var x = Number((it.transform||[])[4]||0);
-       var w = Math.abs(Number(it.width||0));
-       var h = Math.max(Number(it.height||10), 1);
-       var str = String(it.str);
-       var isRtl = isRtlChar(str);
-
-       if(isRtl) rtlCount++; else if(/[a-zA-Z0-9]/.test(str)) ltrCount++;
-
-       var gap = prevX !== null ? (x - (prevX + prevW)) : 0;
-
-       if(prevX !== null && gap > h * 0.22){
-           if(currentWord) words.push(currentWord);
-           currentWord = str;
-       } else {
-           if(isRtl){
-               currentWord = str + currentWord;
-           } else {
-               currentWord = currentWord + str;
-           }
-       }
-       prevX = x;
-       prevW = w;
-    });
-
-    if(currentWord) words.push(currentWord);
-
-    if(rtlCount >= ltrCount) {
-        words.reverse();
+    var bases=g.items.filter(function(it){return !it.mark;});
+    var marks=g.items.filter(function(it){return it.mark;});
+    if(!bases.length){
+      var only=marks.map(function(m){return m.text}).join("");
+      if(only)lines.push(only);
+      return;
     }
 
-    lines.push(words.join(" ").trim());
+    /* Attach every standalone diacritic to the nearest glyph on the same line. */
+    marks.forEach(function(m){
+      var best=null,bestDist=Infinity;
+      bases.forEach(function(b){
+        var left=b.x-3,right=b.x+b.w+3;
+        var dist=m.x<left?left-m.x:(m.x>right?m.x-right:0);
+        var yd=Math.abs(m.y-b.y);
+        var score=dist+yd*1.5;
+        if(score<bestDist){bestDist=score;best=b;}
+      });
+      if(best){best.text += m.text.replace(/\s+/g,"");}
+    });
+
+    var rtl=0,ltr=0;
+    bases.forEach(function(it){
+      if(itemIsRtl(it.text))rtl++;else if(/[A-Za-z0-9]/.test(it.text))ltr++;
+    });
+    var isRTL=rtl>=ltr;
+
+    bases.sort(function(a,b){return isRTL ? b.x-a.x : a.x-b.x;});
+
+    var line="";
+    for(var j=0;j<bases.length;j++){
+      var cur=bases[j],txt=cur.text;
+      if(!txt)continue;
+      if(!line){line=txt;continue;}
+
+      var prev=bases[j-1];
+      var expected=isRTL ? prev.x-prev.w : prev.x+prev.w;
+      var gap=Math.abs(cur.x-expected);
+      var h=Math.max(prev.h,cur.h,10);
+      var explicitSpace=/\s$/.test(line)||/^\s/.test(txt);
+
+      /*
+       * Word gaps in this PDF are much larger than normal glyph gaps.
+       * Never invent spaces between adjacent Arabic glyphs merely because
+       * PDF.js split one word into several items.
+       */
+      var needSpace=!explicitSpace && gap>Math.max(5.5,h*0.62);
+      if(needSpace)line+=" ";
+      line+=txt;
+    }
+    lines.push(line.trim());
   });
 
   return lines.join("\n")
-    .replace(/[ \t]{2,}/g," ")
+    .replace(/[ \t]+/g," ")
+    .replace(/ *\n */g,"\n")
     .replace(/\n{3,}/g,"\n\n")
-    .normalize("NFKC")
     .trim();
 }
 function cleanPdfText(text){
@@ -682,23 +721,7 @@ function init(){
 init();
 
 
-window.__KH_DIAGNOSTIC__=function(){
-  return {
-    pdfjs:!!window.pdfjsLib,
-    indexedDB:!!window.indexedDB,
-    speech:!!window.speechSynthesis,
-    bookCount:books.length,
-    currentBook:currentBook?currentBook.title:null
-  };
-};
-
 })();
 </script>
-
-<!-- دوگمەی تێلیگرام لێرە دانراوە -->
-<a href="https://t.me/about_Barham" target="_blank" style="position:fixed;left:12px;bottom:88px;z-index:999;width:44px;height:44px;border-radius:50%;background:#229ED9;color:#fff;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 6px 16px rgba(0,0,0,.4);text-decoration:none;transition:0.2s;" title="کەناڵی تێلیگرامەکەم">
-  <i class="fa-brands fa-telegram"></i>
-</a>
-
 </body>
 </html>
