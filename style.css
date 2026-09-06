@@ -86,6 +86,14 @@ body:has(.reader.show) #telegramBtn,
 body:has(.sheet.open) #telegramBtn{
   display:none!important;
 }
+/* دیزاینی وێنەی ڕەسەنی PDF (Canvas) */
+#pdfCanvas {
+  width: 100%;
+  height: auto;
+  border-radius: 8px;
+  display: none;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+}
 
 @media(min-width:640px){.grid{grid-template-columns:1fr 1fr}.cover{width:98px;flex-basis:98px}}
 @media(max-width:480px){.vols{grid-template-columns:1fr}}
