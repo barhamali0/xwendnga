@@ -288,11 +288,33 @@ function renderOwnerPanel(){
   }).join("");
 }
 
-// زیادکردنی وەرگێڕانی فرە زمان بۆ وشەکان
+// سیستەمی وەرگێڕانی خێرا بەبێ وەستان لەسەر «چاوەڕوانی...»
 function translateText(text, targetLang){
   var tl = targetLang || "ckb";
-  var url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + tl + "&dt=t&q=" + encodeURIComponent(text);
-  return fetch(url).then(function(r){ return r.json(); }).then(function(j){ return (j[0]||[]).map(function(x){return x[0]||"";}).join("")||"—"; });
+  var url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + encodeURIComponent(tl) + "&dt=t&q=" + encodeURIComponent(text);
+
+  return fetch(url)
+    .then(function(r){
+      if(!r.ok) throw new Error("HTTP " + r.status);
+      return r.json();
+    })
+    .then(function(j){
+      var res = (j[0]||[]).map(function(x){ return x[0]||""; }).join("").trim();
+      return res || "—";
+    })
+    .catch(function(){
+      // ئەگەر گووگڵ بلۆک بوو بەهۆی ڤی‌پی‌ئین یان هێڵ، ڕاستەوخۆ سێرڤەری دووەم کار دەکات
+      var pair = "auto|" + (tl === "ckb" ? "ku" : tl);
+      var fbUrl = "https://api.mymemory.translated.net/get?q=" + encodeURIComponent(text) + "&langpair=" + pair;
+      return fetch(fbUrl)
+        .then(function(r){ return r.json(); })
+        .then(function(data){
+          return (data && data.responseData && data.responseData.translatedText) || "نەتوانرا وەربگێڕدرێت";
+        })
+        .catch(function(){
+          return "کێشەی هێڵ";
+        });
+    });
 }
 
 function openWordModal(word){
@@ -302,19 +324,25 @@ function openWordModal(word){
   if(sheet){
     sheet.innerHTML = '<div class="handle"></div>' +
       '<div class="section-head"><h3>فەرهەنگ</h3><button class="icon-btn" data-action="close-word"><i class="fa-solid fa-xmark"></i></button></div>' +
-      '<div class="field"><label>وشە</label><div id="modalWord" style="font-size:20px;font-weight:800;color:#f4c85c;display:flex;justify-content:space-between;align-items:center;">'+esc(word)+'<button class="icon-btn" data-vspeak="'+esc(word)+'" data-vlang="en" style="width:30px;height:30px;font-size:12px;"><i class="fa-solid fa-volume-high"></i></button></div></div>' +
-      '<div class="field"><label>بە ڪوردی</label><div id="modalKu">چاوەڕوانی...</div></div>' +
-      '<div class="field"><label>بە عەرەبی</label><div id="modalAr" style="display:flex;justify-content:space-between;align-items:center;"><span>چاوەڕوانی...</span><button class="icon-btn" data-vspeak-ar="loading" style="width:30px;height:30px;font-size:12px;"><i class="fa-solid fa-volume-high"></i></button></div></div>' +
-      '<div class="hero-actions" style="margin-top:10px;"><button class="primary" data-action="save-word">خەزنڪردنی وشەڪە</button></div>';
+      '<div class="field"><label>وشە</label><div id="modalWord" style="font-size:20px;font-weight:800;color:#f4c85c;display:flex;justify-content:space-between;align-items:center;">'+esc(word)+'<button class="icon-btn" data-vspeak="'+esc(word)+'" data-vlang="en" style="width:32px;height:32px;font-size:13px;color:var(--a);"><i class="fa-solid fa-volume-high"></i></button></div></div>' +
+      '<div class="field"><label>بە ڪوردی</label><div id="modalKu" style="font-size:15px;color:#fff;">چاوەڕوانی...</div></div>' +
+      '<div class="field"><label>بە عەرەبی</label><div id="modalAr" style="display:flex;justify-content:space-between;align-items:center;font-size:15px;color:#fff;"><span id="modalArText">چاوەڕوانی...</span><button class="icon-btn" id="modalArSpeakBtn" style="width:32px;height:32px;font-size:13px;color:#22c98b;"><i class="fa-solid fa-volume-high"></i></button></div></div>' +
+      '<div class="hero-actions" style="margin-top:14px;"><button class="primary" data-action="save-word">خەزنڪردنی وشەڪە</button></div>';
   }
 
   openSheet($("wordBack"), $("wordSheet"));
 
-  translateText(word, "ckb").then(function(t){ if($("modalKu")) $("modalKu").textContent = t; });
-  translateText(word, "ar").then(function(t){ 
-    var mAr = $("modalAr");
-    if(mAr){
-      mAr.innerHTML = '<span>'+esc(t)+'</span><button class="icon-btn" data-vspeak="'+esc(t)+'" data-vlang="ar" style="width:30px;height:30px;font-size:12px;"><i class="fa-solid fa-volume-high"></i></button>';
+  translateText(word, "ckb").then(function(t){
+    if($("modalKu")) $("modalKu").textContent = t;
+  });
+
+  translateText(word, "ar").then(function(t){
+    var mArText = $("modalArText");
+    var mArBtn = $("modalArSpeakBtn");
+    if(mArText) mArText.textContent = t;
+    if(mArBtn) {
+      mArBtn.setAttribute("data-vspeak", t);
+      mArBtn.setAttribute("data-vlang", "ar");
     }
   });
 }
@@ -325,7 +353,9 @@ function openSentenceModal(text){
   if($("sentenceOriginal")) $("sentenceOriginal").textContent = clean;
   if($("sentenceKu")) $("sentenceKu").textContent = "چاوەڕوانی...";
   openSheet($("sentenceBack"), $("sentenceSheet"));
-  translateText(clean, "ckb").then(function(t){ if($("sentenceKu")) $("sentenceKu").textContent = t; }).catch(function(){ if($("sentenceKu")) $("sentenceKu").textContent = "کێشەی ئینتەرنێت"; });
+  translateText(clean, "ckb").then(function(t){
+    if($("sentenceKu")) $("sentenceKu").textContent = t;
+  });
 }
 
 function saveWord(){
@@ -334,7 +364,7 @@ function saveWord(){
   if(exists){ toast("ئەم وشەیە پێشتر خەزنڪراوە"); return; }
   
   var kuText = $("modalKu") ? $("modalKu").textContent : "";
-  var arText = $("modalAr") ? $("modalAr").querySelector("span").textContent : "";
+  var arText = $("modalArText") ? $("modalArText").textContent : "";
   
   vocab.unshift({id:String(Date.now()), word:currentWord, ku:kuText, third:arText});
   try { localStorage.setItem("kh_vocab", JSON.stringify(vocab)); } catch(e){}
@@ -344,11 +374,11 @@ function saveWord(){
 }
 
 function speakText(text, lang){
-  if(!window.speechSynthesis) return;
+  if(!window.speechSynthesis) { toast("دەنگ بەردەست نییە"); return; }
   window.speechSynthesis.cancel();
   var u = new SpeechSynthesisUtterance(text);
   u.lang = lang === "ar" ? "ar-SA" : "en-US";
-  u.volume = 0.9;
+  u.volume = 1.0;
   u.rate = 0.85;
   window.speechSynthesis.speak(u);
 }
@@ -358,7 +388,7 @@ function renderVocab(){
   back.className = "back open"; sheet.className = "sheet open";
   sheet.innerHTML = '<div class="handle"></div><div class="section-head"><h3>وشەڪانم</h3><button class="icon-btn" data-temp-close>×</button></div><div style="margin-top:10px;max-height:350px;overflow:auto;">' +
     (vocab.length ? vocab.map(function(v){
-      return '<div class="field" style="margin-bottom:10px"><div style="font-weight:800;color:#f4c85c;font-size:17px;display:flex;justify-content:space-between;">'+esc(v.word)+'<button class="icon-btn" data-vspeak="'+esc(v.word)+'" data-vlang="en" style="width:28px;height:28px;font-size:11px"><i class="fa-solid fa-volume-high"></i></button></div><div style="margin-top:5px;line-height:1.8">'+esc(v.ku)+'<br><span style="color:var(--muted);display:flex;justify-content:space-between;align-items:center;">'+esc(v.third)+'<button class="icon-btn" data-vspeak="'+esc(v.third)+'" data-vlang="ar" style="width:28px;height:28px;font-size:11px"><i class="fa-solid fa-volume-high"></i></button></span></div><div class="hero-actions" style="margin-top:8px"><button class="ghost" data-vdel="'+esc(v.id)+'">سڕینەوە</button></div></div>';
+      return '<div class="field" style="margin-bottom:10px"><div style="font-weight:800;color:#f4c85c;font-size:17px;display:flex;justify-content:space-between;align-items:center;">'+esc(v.word)+'<button class="icon-btn" data-vspeak="'+esc(v.word)+'" data-vlang="en" style="width:28px;height:28px;font-size:11px"><i class="fa-solid fa-volume-high"></i></button></div><div style="margin-top:5px;line-height:1.8">'+esc(v.ku)+'<br><span style="color:var(--muted);display:flex;justify-content:space-between;align-items:center;">'+esc(v.third)+'<button class="icon-btn" data-vspeak="'+esc(v.third)+'" data-vlang="ar" style="width:28px;height:28px;font-size:11px"><i class="fa-solid fa-volume-high"></i></button></span></div><div class="hero-actions" style="margin-top:8px"><button class="ghost" data-vdel="'+esc(v.id)+'">سڕینەوە</button></div></div>';
     }).join("") : '<div style="text-align:center;color:var(--muted);padding:25px">هێشتا وشەیەڪ نییە</div>') + '</div>';
   
   document.body.appendChild(back); document.body.appendChild(sheet);
@@ -373,10 +403,6 @@ function renderVocab(){
       try { localStorage.setItem("kh_vocab", JSON.stringify(vocab)); } catch(err){}
       close(); renderVocab(); renderBooks();
     }
-    var vs = e.target.closest("[data-vspeak]");
-    if(vs){
-      speakText(vs.getAttribute("data-vspeak"), vs.getAttribute("data-vlang"));
-    }
   });
 }
 
@@ -385,6 +411,7 @@ function addMusicFiles(files){
   if(musicIndex < 0 && music.length) loadTrack(0, false);
   renderTracks();
 }
+
 function loadTrack(i, play){
   if(!music[i]) return;
   musicIndex = i;
@@ -397,15 +424,31 @@ function loadTrack(i, play){
   if($("nowSub")) $("nowSub").textContent = "دەنگی هەڵبژێردراو";
   renderTracks();
   updatePlayButtonUI();
-  if(play && au) au.play().catch(function(){});
+  if(play && au) {
+    au.play().then(updatePlayButtonUI).catch(function(){});
+  }
 }
 
+// هاوسەنگکردنی تەواوی ئایکۆنی ▶️ و ⏸️ بۆ ئەوەی پێچەوانە نەبنەوە
 function updatePlayButtonUI(){
   var mainBtn = document.querySelector(".music-btn.big[data-action='play-pause']");
-  if(!mainBtn) return;
   var au = $("audio");
   var isPlaying = au && !au.paused && musicIndex >= 0;
-  mainBtn.innerHTML = isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+  if(mainBtn) {
+    mainBtn.innerHTML = isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+  }
+  var trackBtns = document.querySelectorAll("[data-track]");
+  trackBtns.forEach(function(tb){
+    var idx = Number(tb.getAttribute("data-track"));
+    var icon = tb.querySelector("i");
+    if(icon){
+      if(idx === musicIndex && isPlaying){
+        icon.className = "fa-solid fa-pause";
+      } else {
+        icon.className = "fa-solid fa-play";
+      }
+    }
+  });
 }
 
 function renderTracks(){
@@ -414,18 +457,24 @@ function renderTracks(){
   box.innerHTML = music.length ? music.map(function(t, i){
     var au = $("audio");
     var isPlaying = (i === musicIndex && au && !au.paused);
-    return '<div class="track"><button data-track="'+i+'"><i class="fa-solid '+(isPlaying?'fa-pause':'fa-play')+'"></i></button><span>'+esc(t.name)+'</span></div>';
+    return '<div class="track" data-track-card="'+i+'" style="cursor:pointer;"><button data-track="'+i+'"><i class="fa-solid '+(isPlaying?'fa-pause':'fa-play')+'"></i></button><span>'+esc(t.name)+'</span></div>';
   }).join("") : '<div style="color:var(--muted);font-size:10px;text-align:center;padding:8px">هیچ دەنگێڪ نییە.</div>';
 }
 
 document.addEventListener("click", function(e){
+  var vs = e.target.closest("[data-vspeak]");
+  if(vs){
+    speakText(vs.getAttribute("data-vspeak"), vs.getAttribute("data-vlang"));
+    return;
+  }
+
   var a = e.target.closest("[data-action]");
   if(a){
     var act = a.getAttribute("data-action");
 
     if(act === "owner-panel"){
       openSheet($("ownerBack"), $("ownerSheet"));
-      try { renderOwnerPanel(); } catch(err){ console.error(err); }
+      try { renderOwnerPanel(); } catch(err){}
       return;
     }
     if(act === "close-owner"){ closeSheet($("ownerBack"), $("ownerSheet")); return; }
@@ -461,17 +510,24 @@ document.addEventListener("click", function(e){
     }
     if(act === "add-pdf"){ if($("pdfInput")) $("pdfInput").click(); return; }
     if(act === "add-music"){ if($("musicInput")) $("musicInput").click(); return; }
+    
     if(act === "play-pause"){
       var au = $("audio");
       if(au){
-        if(musicIndex < 0 && music.length){ loadTrack(0, true); }
-        else if(au.paused){ au.play().catch(function(){}); }
-        else { au.pause(); }
+        if(musicIndex < 0 && music.length){
+          loadTrack(0, true);
+        } else if(au.paused){
+          au.play().then(updatePlayButtonUI).catch(function(){});
+        } else {
+          au.pause();
+          updatePlayButtonUI();
+        }
       }
       return;
     }
     if(act === "next-track"){ if(music.length) loadTrack((musicIndex+1)%music.length, true); return; }
     if(act === "prev-track"){ if(music.length) loadTrack((musicIndex-1+music.length)%music.length, true); return; }
+    
     if(act === "settings"){
       renderSiteThemes();
       renderReaderThemes();
@@ -490,9 +546,17 @@ document.addEventListener("click", function(e){
     if(act === "close-sentence"){ closeSheet($("sentenceBack"), $("sentenceSheet")); return; }
   }
 
-  var vs = e.target.closest("[data-vspeak]");
-  if(vs){
-    speakText(vs.getAttribute("data-vspeak"), vs.getAttribute("data-vlang"));
+  // کلیک لەسەر تڕاک بۆ لێدان یان وەستان
+  var tc = e.target.closest("[data-track-card]");
+  if(tc){
+    var tIdx = Number(tc.getAttribute("data-track-card"));
+    var audioEl = $("audio");
+    if(tIdx === musicIndex && audioEl && !audioEl.paused){
+      audioEl.pause();
+      updatePlayButtonUI();
+    } else {
+      loadTrack(tIdx, true);
+    }
     return;
   }
 
@@ -541,15 +605,6 @@ document.addEventListener("click", function(e){
     return;
   }
 
-  var tp = e.target.closest("[data-track]");
-  if(tp){
-    var trackIdx = Number(tp.getAttribute("data-track"));
-    var au = $("audio");
-    if(trackIdx === musicIndex && au && !au.paused) au.pause();
-    else loadTrack(trackIdx, true);
-    return;
-  }
-
   var w = e.target.closest(".rw");
   if(w && w.getAttribute("data-word")){
     if(window.getSelection && !window.getSelection().isCollapsed){
@@ -589,9 +644,8 @@ if(au){
   au.addEventListener("ended", function(){
     if(music.length) loadTrack((musicIndex+1)%music.length, true);
   });
-  // گۆڕینی دوگمەکانی مۆسیقا ڕاستەوخۆ کاتێک لێدەدرێت یان دەوەستێت
-  au.addEventListener("play", function(){ renderTracks(); updatePlayButtonUI(); });
-  au.addEventListener("pause", function(){ renderTracks(); updatePlayButtonUI(); });
+  au.addEventListener("play", updatePlayButtonUI);
+  au.addEventListener("pause", updatePlayButtonUI);
 }
 
 if($("audioRange")){
