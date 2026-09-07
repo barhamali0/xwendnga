@@ -8,7 +8,7 @@
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 <link rel="stylesheet" href="style.css">
 
@@ -190,38 +190,42 @@
 <div id="toast" class="toast"></div>
 
 <!-- ژینگەی تەواوی خوێنەر -->
-<div id="reader" class="reader">
-  <div class="reader-top">
-    <button class="rbtn" data-action="reader-close"><i class="fa-solid fa-arrow-right"></i></button>
-    <div class="rtitle"><strong id="rTitle">ڪتێب</strong><span id="rSub">لاپەڕە 1</span></div>
-    <button class="rbtn" id="readerSpeak" data-action="reader-speak"><i class="fa-solid fa-play"></i></button>
-  </div>
-  
-  <div class="reader-bar">
-    <button class="rb kur" id="readerKurdish" data-action="reader-kurdish" title="وەرگێڕانی لاپەڕە"><i class="fa-solid fa-language"></i></button>
-    <button class="rb" data-action="toggle-view" id="viewToggleBtn" title="دەرهێنانی دەقی کوردی بە Gemini"><i class="fa-solid fa-robot"></i></button>
-    <button class="rb" data-action="reader-tools" title="دەنگ و ڕەنگی لاپەڕە"><i class="fa-solid fa-sliders"></i></button>
-    <button class="rb" data-action="reader-music" title="مۆسیقا"><i class="fa-solid fa-music"></i></button>
-    <button class="rb" data-action="font-down" title="بچووککردنی فۆنت"><i class="fa-solid fa-minus"></i></button>
-    <button class="rb" data-action="font-up" title="گەورەکردنی فۆنت"><i class="fa-solid fa-plus"></i></button>
-    <div class="pagebox"><span>لاپەڕە</span><input id="pageInput" type="number" min="1" value="1"><span id="pageTotal">/ 1</span></div>
-    <button class="rb" data-action="page-prev"><i class="fa-solid fa-chevron-right"></i></button>
-    <button class="rb" data-action="page-next"><i class="fa-solid fa-chevron-left"></i></button>
-  </div>
-  
-  <div id="readerBody" class="rbody">
-    <div class="paper">
-      <canvas id="pdfCanvas" style="display:none;"></canvas>
-      <div id="readerText" class="rtext"></div>
+<div id="reader" class="reader" role="dialog" aria-modal="true" aria-label="خوێنەری کتێب">
+  <header class="reader-top reader-chrome">
+    <button class="rbtn" data-action="reader-close" aria-label="داخستنی خوێنەر" title="گەڕانەوە"><i class="fa-solid fa-arrow-right"></i></button>
+    <div class="rtitle"><strong id="rTitle">کتێب</strong><span id="rSub" aria-live="polite">لاپەڕە 1</span></div>
+    <button class="rbtn audio-control" id="readerSpeak" data-action="reader-speak" aria-label="دەستپێکردنی خوێندنەوە بە دەنگ" title="خوێندنەوە بە دەنگ"><i class="fa-solid fa-play"></i></button>
+  </header>
+  <div class="reader-progress reader-chrome" aria-hidden="true"><span id="readerProgress"></span></div>
+  <nav class="reader-bar reader-chrome" aria-label="ئامرازەکانی خوێندنەوە">
+    <button class="rb kur" id="readerKurdish" data-action="reader-kurdish" aria-label="وەرگێڕانی لاپەڕە بۆ کوردی" title="وەرگێڕانی لاپەڕە"><i class="fa-solid fa-language"></i><span>کوردی</span></button>
+    <button class="rb" data-action="toggle-view" id="viewToggleBtn" aria-label="گۆڕینی شێوازی پیشاندان" title="دەقی زیرەک"><i class="fa-solid fa-robot"></i><span>دەق</span></button>
+    <button class="rb" data-action="reader-tools" aria-label="ڕێکخستنەکانی خوێندنەوە" title="ڕێکخستن"><i class="fa-solid fa-sliders"></i><span>ڕێکخستن</span></button>
+    <button class="rb" data-action="reader-music" aria-label="کۆنترۆڵی مۆسیقا" title="مۆسیقا"><i class="fa-solid fa-music"></i><span>مۆسیقا</span></button>
+    <span class="tool-separator" aria-hidden="true"></span>
+    <button class="rb zoom-control" id="zoomOut" data-action="font-down" aria-label="بچووککردنەوە" title="بچووککردنەوە"><i class="fa-solid fa-minus"></i></button>
+    <span class="zoom-readout" id="zoomReadout" aria-live="polite">100%</span>
+    <button class="rb zoom-control" id="zoomIn" data-action="font-up" aria-label="گەورەکردن" title="گەورەکردن"><i class="fa-solid fa-plus"></i></button>
+  </nav>
+  <main id="readerBody" class="rbody" tabindex="0" aria-label="لاپەڕەی کتێب">
+    <div class="reading-stage">
+      <div class="paper">
+        <canvas id="pdfCanvas" style="display:none;"></canvas>
+        <div id="readerText" class="rtext"></div>
+      </div>
     </div>
-  </div>
-  
-  <div class="reader-bottom"><button data-action="save-progress"><i class="fa-solid fa-bookmark"></i> پاشەکەوتڪردنی شوێن</button></div>
+  </main>
+  <footer class="reader-bottom reader-chrome">
+    <button class="page-nav" id="pagePrev" data-action="page-prev" aria-label="لاپەڕەی پێشوو"><i class="fa-solid fa-chevron-right"></i></button>
+    <div class="pagebox"><label for="pageInput">لاپەڕە</label><input id="pageInput" type="number" min="1" value="1" inputmode="numeric" aria-label="ژمارەی لاپەڕە"><span id="pageTotal">/ 1</span></div>
+    <button class="page-nav" id="pageNext" data-action="page-next" aria-label="لاپەڕەی داهاتوو"><i class="fa-solid fa-chevron-left"></i></button>
+    <button class="bookmark-control" id="bookmarkButton" data-action="save-progress" aria-label="پاشەکەوتکردنی شوێنی خوێندنەوە" aria-pressed="false" title="نیشانەکردن"><i class="fa-regular fa-bookmark"></i></button>
+  </footer>
 </div>
 
 <!-- پەڕەی کۆنتڕۆڵی ڕەنگ و مۆسیقای خوێنەر -->
-<div id="readerTools" class="reader-tools">
-  <div class="tools-head"><strong id="toolsTitle">کۆنترۆڵی خوێندنەوە</strong><button class="tools-close" data-action="tools-close"><i class="fa-solid fa-xmark"></i></button></div>
+<div id="readerTools" class="reader-tools" role="dialog" aria-modal="true" aria-label="کۆنترۆڵی خوێندنەوە">
+  <div class="tools-head"><strong id="toolsTitle">کۆنترۆڵی خوێندنەوە</strong><button class="tools-close" data-action="tools-close" aria-label="داخستن"><i class="fa-solid fa-xmark"></i></button></div>
   <div id="toolsBody"></div>
 </div>
 
