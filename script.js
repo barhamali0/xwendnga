@@ -1,7 +1,7 @@
 (function(){
 "use strict";
 
-// مۆدێلی Gemini - دەتوانیت ناوەکەی لەم دێڕەدا بگۆڕیت
+// مۆدێلی فەرمیی Gemini
 var GEMINI_MODEL = "gemini-1.5-flash"; 
 
 if(window.pdfjsLib){
@@ -61,7 +61,7 @@ var READER_THEMES={
  sky:{name:"ئاسمانی",bg:"#dceef4",paper:"#f2fbff",fg:"#24414b",toolbar:"#eaf7fa"},
  rose:{name:"پەمەیی",bg:"#f0dfe2",paper:"#fff5f6",fg:"#4a2d33",toolbar:"#fff0f2"},
  lavender:{name:"مۆری",bg:"#e6def4",paper:"#fbf8ff",fg:"#332b46",toolbar:"#f2ecfb"},
- sand:{name:"خۆڵەمێشی",bg:"#e7ded2",paper:"#fbf4eb",fg:"#493b2e",toolbar:"#f4ebdf"},
+ sand:{name:"خۆڵەمێشی",bg:"#e7ded2",paper:"#f4fbf7",fg:"#493b2e",toolbar:"#f4ebdf"},
  forest:{name:"دارستان",bg:"#dee8de",paper:"#f5fbf3",fg:"#213525",toolbar:"#edf6eb"},
  sepia:{name:"ڪتێبی کۆن",bg:"#e6dbc6",paper:"#f7eddb",fg:"#4a3925",toolbar:"#f0e4d0"},
  slate:{name:"سڵەیت",bg:"#dce1e7",paper:"#eef1f5",fg:"#263341",toolbar:"#e8ecf1"},
@@ -165,7 +165,6 @@ function detectLang(text){
   return "en";
 }
 
-// پاراستنی داتای ڕەسەنی PDF لە کاتی وەرگرتن بە کلۆنکردن
 function extractPDF(file){
   return new Promise(function(resolve,reject){
     if(!window.pdfjsLib){reject(new Error("PDF engine"));return;}
@@ -430,7 +429,7 @@ function paintText(text){
   box.appendChild(frag);
 }
 
-// بزوێنەری ژیریی دەستکردی Gemini
+// بزوێنەری ژیریی دەستکردی Gemini بە فۆرماتی دروستی CamelCase
 function extractTextWithGemini(){
   if(!geminiApiKey){
      toast("تڪایە سەرەتا کلیلی Gemini لە ڕێکخستنەکان دابنێ!");
@@ -461,7 +460,12 @@ function extractTextWithGemini(){
            contents: [{
               parts: [
                  { text: "ئەم دەقە وەڪو خۆی بەزمانی ڪوردی سۆرانی پاراو بەبێ هەڵە دەربڪە. تەنیا خودی دەقەڪە بنووسەوە بەبێ هیچ پێشەکی و پەیامێکی تر." },
-                 { inline_data: { mime_type: "image/jpeg", data: base64Img } }
+                 { 
+                    inlineData: { 
+                       mimeType: "image/jpeg", 
+                       data: base64Img 
+                    } 
+                 }
               ]
            }]
         };
@@ -575,7 +579,7 @@ function openBook(id){
      $("pdfCanvas").style.display = "none";
      $("readerText").style.display = "block";
      
-     // بەکارهێنانی کۆپی (Clone) بۆ ئەوەی داتاکە پووچەڵ نەبێتەوە
+     // بەکارهێنانی کۆپی (Clone) بۆ ئەوەی داتاکە لە میمۆریدا لەناو نەچێت
      var dataToRender = new Uint8Array(currentBook.pdfData).slice(0);
      pdfjsLib.getDocument({data: dataToRender}).promise.then(function(pdf){
         currentPdfDoc = pdf;
@@ -673,7 +677,7 @@ function renderVocab(){
     var d=e.target.closest("[data-vdel]");
     if(d){
       vocab=vocab.filter(function(v){return v.id!==d.getAttribute("data-vdel")});
-      try{localStorage.setItem("kh_vocab",JSON.stringify(vocab))}catch(e){}
+      try{localStorage.setItem("kh_vocab",JSON.stringify(vocab))}catch(err){}
       close();renderVocab();renderBooks();
     }
   }); 
@@ -716,7 +720,7 @@ document.addEventListener("click",function(e){
   if(a){
     var act=a.getAttribute("data-action");
     
-    // کلیل لێدانی دوگمەی 🤖 بۆ گۆڕینی دۆخی Canvas و دەقی Gemini
+    // دوگمەی 🤖 بۆ گۆڕینی دۆخەکان یان دەرهێنانی دەقی کوردی
     if(act==="toggle-view" || act==="run-gemini"){
         var key = currentBook ? (currentBook.id + "_" + currentPage) : "";
         if(viewMode === 'canvas'){
