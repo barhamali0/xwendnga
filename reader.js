@@ -27,18 +27,18 @@ var speechWordIndex = 0;
 var speechRate = 0.85;
 
 var READER_THEMES = {
-  paper:{name:"سپی",bg:"#f4f6f9",paper:"#ffffff",fg:"#1d2a3d",toolbar:"#ffffff"},
-  cream:{name:"ڪرێمی",bg:"#eee5d1",paper:"#fff9e7",fg:"#403728",toolbar:"#f7edd8"},
-  mint:{name:"سەوزی کاڵ",bg:"#dfece5",paper:"#f4fbf7",fg:"#203c31",toolbar:"#edf7f1"},
-  sky:{name:"ئاسمانی",bg:"#dceef4",paper:"#f2fbff",fg:"#24414b",toolbar:"#eaf7fa"},
-  rose:{name:"پەمەیی",bg:"#f0dfe2",paper:"#fff5f6",fg:"#4a2d33",toolbar:"#fff0f2"},
-  lavender:{name:"مۆری",bg:"#e6def4",paper:"#fbf8ff",fg:"#332b46",toolbar:"#f2ecfb"},
-  sand:{name:"خۆڵەمێشی",bg:"#e7ded2",paper:"#fbf4eb",fg:"#493b2e",toolbar:"#f4ebdf"},
-  forest:{name:"دارستان",bg:"#dee8de",paper:"#f5fbf3",fg:"#213525",toolbar:"#edf6eb"},
-  sepia:{name:"ڪتێبی کۆن",bg:"#e6dbc6",paper:"#f7eddb",fg:"#4a3925",toolbar:"#f0e4d0"},
-  slate:{name:"سڵەیت",bg:"#dce1e7",paper:"#eef1f5",fg:"#263341",toolbar:"#e8ecf1"},
-  night:{name:"شەو",bg:"#0b1420",paper:"#101b2c",fg:"#e9f2fc",toolbar:"#122035"},
-  black:{name:"ڕەش",bg:"#050505",paper:"#0b0b0b",fg:"#f1f1f1",toolbar:"#101010"}
+  paper:{name:"سپی",bg:"#f4f6f9",paper:"#ffffff",fg:"#1d2a3d"},
+  cream:{name:"ڪرێمی",bg:"#eee5d1",paper:"#fff9e7",fg:"#403728"},
+  mint:{name:"سەوزی کاڵ",bg:"#dfece5",paper:"#f4fbf7",fg:"#203c31"},
+  sky:{name:"ئاسمانی",bg:"#dceef4",paper:"#f2fbff",fg:"#24414b"},
+  rose:{name:"پەمەیی",bg:"#f0dfe2",paper:"#fff5f6",fg:"#4a2d33"},
+  lavender:{name:"مۆری",bg:"#e6def4",paper:"#fbf8ff",fg:"#332b46"},
+  sand:{name:"خۆڵەمێشی",bg:"#e7ded2",paper:"#fbf4eb",fg:"#493b2e"},
+  forest:{name:"دارستان",bg:"#dee8de",paper:"#f5fbf3",fg:"#213525"},
+  sepia:{name:"ڪتێبی کۆن",bg:"#e6dbc6",paper:"#f7eddb",fg:"#4a3925"},
+  slate:{name:"سڵەیت",bg:"#dce1e7",paper:"#eef1f5",fg:"#263341"},
+  night:{name:"شەو",bg:"#0b1420",paper:"#101b2c",fg:"#e9f2fc"},
+  black:{name:"ڕەش",bg:"#050505",paper:"#0b0b0b",fg:"#f1f1f1"}
 };
 
 function $(id){ return document.getElementById(id); }
@@ -171,8 +171,8 @@ function startPageSpeech(){
     speakRemainingText(speechWordIndex);
     return;
   }
-  var text = $("readerText").innerText.trim();
-  if(!text || viewMode === 'canvas'){ toast("تکایە سەرەتا بە 🤖 دەقەڪە بڪەرەوە"); return; }
+  var text = $("readerText") ? $("readerText").innerText.trim() : "";
+  if(!text || viewMode === 'canvas'){ toast("تکایە سەرەتا بە 🤖 دەقەڪە دەربڪە"); return; }
   speechState = "playing";
   speechWordIndex = 0;
   setSpeakIcon();
@@ -181,6 +181,7 @@ function startPageSpeech(){
 
 function paintText(text){
   var box = $("readerText");
+  if(!box) return;
   box.innerHTML = "";
   var arr = text.match(/\S+/g) || [];
   var frag = document.createDocumentFragment();
@@ -207,7 +208,7 @@ function extractTextWithGemini(){
   if(isAiLoading) return;
 
   isAiLoading = true;
-  toast("Gemini خەریڪی دەرهێنانی دەقەڪەیە بە کوردی... 🤖");
+  toast("Gemini خەریڪی دەرهێنانی دەقەڪەیە... 🤖");
 
   currentPdfDoc.getPage(currentPage + 1).then(function(page){
     var viewport = page.getViewport({scale: 2.0});
@@ -235,7 +236,7 @@ function extractTextWithGemini(){
         body: JSON.stringify(payload)
       })
       .then(function(res){
-        if(!res.ok) throw new Error("کێشە لە پەیوەندی بە جێمینای (" + res.status + ")");
+        if(!res.ok) throw new Error("Status: " + res.status);
         return res.json();
       })
       .then(function(data){
@@ -249,12 +250,12 @@ function extractTextWithGemini(){
 
         viewMode = 'text';
         renderPage();
-        toast("دەقەکە بە سەرکەوتوویی لە ڕێگەی Gemini دەرهێنرا! ✨");
+        toast("دەقەکە دەرهێنرا! ✨");
       })
       .catch(function(err){
         isAiLoading = false;
         console.error(err);
-        toast("هەڵە: کلیلەکەت نادروستە یان ئینتەرنێت کێشەی هەیە");
+        toast("هەڵە لە جێمینای: کلیلەکەت لە ڕێکخستنەکان بپشکنە");
       });
     });
   });
@@ -273,13 +274,13 @@ function togglePageKurdish(){
   if(!pageKurdish){ renderPage(); return; }
 
   var key = currentBook.id + "_" + currentPage;
-  $("rSub").textContent = "لاپەڕە " + (currentPage + 1) + " • ڪوردی";
+  if($("rSub")) $("rSub").textContent = "لاپەڕە " + (currentPage + 1) + " • ڪوردی";
   if(translatedPages[key]){
     showTranslatedPage(translatedPages[key]);
     return;
   }
-  $("readerText").textContent = "خەریڪی وەرگێڕانی لاپەڕەیە...";
-  translateText(currentBook.pages[currentPage] || "").then(function(t){
+  if($("readerText")) $("readerText").textContent = "خەریڪی وەرگێڕانی لاپەڕەیە...";
+  translateText((currentBook.pages && currentBook.pages[currentPage]) || "").then(function(t){
     translatedPages[key] = t;
     showTranslatedPage(t);
   }).catch(function(){
@@ -291,8 +292,10 @@ function togglePageKurdish(){
 }
 
 function showTranslatedPage(t){
-  $("readerText").className = "rtext rtl";
-  $("readerText").style.fontSize = readerFont + "px";
+  var rText = $("readerText");
+  if(!rText) return;
+  rText.className = "rtext rtl";
+  rText.style.fontSize = readerFont + "px";
   paintText(t);
 }
 
@@ -321,12 +324,13 @@ function showReaderTools(type){
     if(svr){
       svr.oninput = function(){
         speechVolume = Number(this.value) / 100;
-        $("svt").textContent = Math.round(speechVolume * 100) + "%";
+        if($("svt")) $("svt").textContent = Math.round(speechVolume * 100) + "%";
         try { localStorage.setItem("kh_speech_volume", speechVolume); } catch(e){}
       };
     }
   }
-  $("readerTools").classList.add("show");
+  var rt = $("readerTools");
+  if(rt) rt.classList.add("show");
 }
 
 function closeReaderTools(){
@@ -338,10 +342,10 @@ function renderPage(){
   if(!currentBook) return;
   clearSpeakHighlight();
 
-  $("rTitle").textContent = currentBook.title;
-  $("rSub").textContent = "لاپەڕە " + (currentPage + 1) + " لە " + currentBook.pageCount;
-  $("pageInput").value = currentPage + 1;
-  $("pageTotal").textContent = "/ " + currentBook.pageCount;
+  if($("rTitle")) $("rTitle").textContent = currentBook.title;
+  if($("rSub")) $("rSub").textContent = "لاپەڕە " + (currentPage + 1) + " لە " + currentBook.pageCount;
+  if($("pageInput")) $("pageInput").value = currentPage + 1;
+  if($("pageTotal")) $("pageTotal").textContent = "/ " + currentBook.pageCount;
 
   var canvas = $("pdfCanvas");
   var textBox = $("readerText");
@@ -350,12 +354,13 @@ function renderPage(){
   var key = currentBook.id + "_" + currentPage;
   var aiText = aiExtractedPages[key];
 
+  // دۆخی سەرەکی: نیشاندانی لاپەڕەی ڕەسەن لەسەر Canvas بەبێ هیچ بەربەستێک
   if(viewMode === 'canvas' && currentPdfDoc) {
-    canvas.style.display = "block";
-    textBox.style.display = "none";
+    if(canvas) canvas.style.display = "block";
+    if(textBox) textBox.style.display = "none";
     if(toggleBtn){
       toggleBtn.innerHTML = '<i class="fa-solid fa-robot"></i>';
-      toggleBtn.style.color = aiText ? "#22c98b" : "#f05bd5";
+      toggleBtn.style.color = aiText ? "#22c98b" : "";
       toggleBtn.classList.remove("active");
     }
 
@@ -368,24 +373,27 @@ function renderPage(){
       page.render({ canvasContext: ctx, viewport: viewport });
     });
   } else {
-    canvas.style.display = "none";
-    textBox.style.display = "block";
+    // دۆخی دەق (تەنیا کاتێک بەکارهێنەر کلیک لە دوگمەی ڕۆبۆت دەکات)
+    if(canvas) canvas.style.display = "none";
+    if(textBox) textBox.style.display = "block";
     if(toggleBtn){
       toggleBtn.innerHTML = '<i class="fa-regular fa-image"></i>';
-      toggleBtn.style.color = "";
+      toggleBtn.style.color = "#f05bd5";
       toggleBtn.classList.add("active");
     }
 
-    var text = aiText || currentBook.pages[currentPage] || "";
-    var cleanTextForCheck = text.replace(/Scanned by CamScanner/gi, "").replace(/[\W_]+/g, "").trim();
-
-    if(!aiText && cleanTextForCheck.length < 30) {
-      $("readerText").className = "rtext rtl";
-      $("readerText").style.fontSize = ""; 
-      $("readerText").innerHTML = '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;text-align:center;padding:40px 20px;"><i class="fa-solid fa-robot" style="font-size:48px;color:var(--b);margin-bottom:15px;"></i><h3 style="color:var(--reader-fg);margin:0 0 10px;font-size:18px;">ئەم لاپەڕەیە سکانکراوە</h3><p style="color:var(--muted);font-size:13px;line-height:1.8;max-width:300px;margin:0 auto 20px;">دەقی دیجیتاڵی لەم لاپەڕەیەدا نییە. دەست لە دوگمەی خوارەوە بدە تاوەکوو بە زیرەکی دەستکردی Gemini دەقەکەت بە کوردییەکی پاراو بۆ دەربکات.</p><button class="primary" data-action="run-gemini" style="padding:12px 20px;border-radius:12px;font-size:12px;display:flex;align-items:center;justify-content:center;gap:8px;margin:0 auto;"><i class="fa-solid fa-robot"></i> دەرهێنانی دەق بە Gemini</button></div>';
+    var text = aiText || (currentBook.pages ? currentBook.pages[currentPage] : "") || "";
+    if(!text.trim()){
+      textBox.className = "rtext rtl";
+      textBox.style.fontSize = "14px";
+      textBox.innerHTML = '<div style="text-align:center;padding:60px 20px;color:var(--muted);line-height:2;">' +
+        '<i class="fa-solid fa-robot" style="font-size:36px;color:var(--b);display:block;margin-bottom:12px;"></i>' +
+        'دەقی دیجیتاڵی لەسەر ئەم لاپەڕەیە نییە.<br>' +
+        'دەست لە دوگمەی سەرەوە بدە بۆ گەڕانەوە بۆ وێنەی ڕەسەن، یان دەقی کوردی دەربهێنە.' +
+        '</div>';
     } else {
-      $("readerText").className = "rtext" + (["ar","fa","ku"].indexOf(currentBook.lang)>=0 ? " rtl" : " ltr");
-      $("readerText").style.fontSize = readerFont + "px";
+      textBox.className = "rtext" + (["ar","fa","ku"].indexOf(currentBook.lang)>=0 ? " rtl" : " ltr");
+      textBox.style.fontSize = readerFont + "px";
       paintText(text);
     }
   }
@@ -416,14 +424,17 @@ window.ReaderEngine = {
     currentPage = Math.max(0, Math.min(currentBook.pageCount - 1, currentBook.currentPage || 0));
     pageKurdish = false;
     if($("readerKurdish")) $("readerKurdish").classList.remove("active");
-    $("reader").classList.add("show");
+    if($("reader")) $("reader").classList.add("show");
     
-    viewMode = (currentBook.lang === 'ku' || currentBook.lang === 'ar' || currentBook.lang === 'fa') ? 'canvas' : 'text';
+    // هەمیشە دەستپێکردن بە Canvasـی ڕەسەن ئەگەر فایلی PDF هەبێت
+    viewMode = currentBook.pdfData ? 'canvas' : 'text';
 
     if(currentBook.pdfData){
-      $("readerText").innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">خەریڪی بارڪردنی لاپەڕە...</div>';
-      $("pdfCanvas").style.display = "none";
-      $("readerText").style.display = "block";
+      if($("readerText")){
+        $("readerText").innerHTML = '<div style="text-align:center;padding:40px;color:var(--muted)">خەریڪی بارڪردنی لاپەڕە...</div>';
+        $("readerText").style.display = "block";
+      }
+      if($("pdfCanvas")) $("pdfCanvas").style.display = "none";
 
       var dataToRender = new Uint8Array(currentBook.pdfData).slice(0);
       pdfjsLib.getDocument({data: dataToRender}).promise.then(function(pdf){
@@ -444,7 +455,7 @@ window.ReaderEngine = {
   },
   close: function(){
     stopSpeech();
-    $("reader").classList.remove("show");
+    if($("reader")) $("reader").classList.remove("show");
     currentBook = null;
     currentPdfDoc = null;
     pageKurdish = false;
@@ -458,6 +469,7 @@ document.addEventListener("click", function(e){
   if(a){
     var act = a.getAttribute("data-action");
 
+    // گۆڕینی دۆخی Canvas و دەق تەنیا لە ڕێگەی دوگمەی سەرەوە
     if(act === "toggle-view" || act === "run-gemini"){
       var key = currentBook ? (currentBook.id + "_" + currentPage) : "";
       if(viewMode === 'canvas'){
