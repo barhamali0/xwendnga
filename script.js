@@ -1,2457 +1,3188 @@
-/* script.js */
-(function(){
-"use strict";
-
-var books = [];
-var vocab = [];
-var filter = "all";
-var query = "";
-var siteTheme = "cyan";
-var readerTheme = "paper";
-var music = [];
-var musicIndex = -1;
-var musicVolume = 0.32;
-var currentWord = "";
-var currentLang = "en";
-var currentWordLang = "en";
-var currentWordMeanings = { ku: [], ar: [] };
-
-var CATEGORIES = ["گشتی","زمان","ئەدەب","مێژوو","زانست","فەلسەفە","ئایین","ئینگلیزی"];
-
-var SITE_THEMES = {
-  cyan:{name:"شینی ئاسمانی",a:"#35bbff",b:"#7b61ff",bg:"#07111f",bg2:"#0d182a",surface:"#111f34",surface2:"#182943",line:"#29405d"},
-  violet:{name:"مۆری",a:"#8b6cff",b:"#d35cff",bg:"#0b081b",bg2:"#160f2a",surface:"#1d1735",surface2:"#282047",line:"#47386a"},
-  emerald:{name:"سەوزی",a:"#22c98b",b:"#0ca6a0",bg:"#061611",bg2:"#0c241d",surface:"#102b23",surface2:"#173b30",line:"#2b5849"},
-  sunset:{name:"خۆرئاوابوون",a:"#ff8a4c",b:"#ff4f81",bg:"#190b09",bg2:"#291410",surface:"#351914",surface2:"#48231d",line:"#693b30"},
-  ruby:{name:"سووری",a:"#ff536d",b:"#c93dff",bg:"#18070d",bg2:"#280d19",surface:"#361421",surface2:"#451b2d",line:"#623247"},
-  royal:{name:"شینی قووڵ",a:"#4c7dff",b:"#36c4ff",bg:"#061029",bg2:"#0b1940",surface:"#10204a",surface2:"#17295a",line:"#304a80"},
-  gold:{name:"زێڕی",a:"#f2bf4a",b:"#ff8554",bg:"#160f05",bg2:"#281809",surface:"#34230e",surface2:"#452d12",line:"#66491f"},
-  rose:{name:"پەمەیی",a:"#f05bd5",b:"#ff7b8e",bg:"#150714",bg2:"#250e22",surface:"#34152f",surface2:"#451c3f",line:"#623457"},
-  ocean:{name:"دەریایی",a:"#20d6d6",b:"#3a7bff",bg:"#041216",bg2:"#06242b",surface:"#0c3038",surface2:"#10434e",line:"#255b67"},
-  graphite:{name:"گرافایت",a:"#aab7c8",b:"#62728a",bg:"#0a0e13",bg2:"#141923",surface:"#1c242e",surface2:"#27303d",line:"#3c4858"},
-  lime:{name:"لایمی",a:"#a7df45",b:"#24c68a",bg:"#0d1605",bg2:"#17260a",surface:"#223613",surface2:"#30471b",line:"#4d652b"},
-  midnight:{name:"میدناو",a:"#607dff",b:"#8b5cf6",bg:"#050817",bg2:"#0a1025",surface:"#101833",surface2:"#182344",line:"#2f4069"}
-};
-
-var READER_THEMES = {
-  paper:{name:"سپی",bg:"#f4f6f9",paper:"#ffffff",fg:"#1d2a3d"},
-  cream:{name:"کرێمی",bg:"#eee5d1",paper:"#fff9e7",fg:"#403728"},
-  mint:{name:"سەوزی کاڵ",bg:"#dfece5",paper:"#f4fbf7",fg:"#203c31"},
-  sky:{name:"ئاسمانی",bg:"#dceef4",paper:"#f2fbff",fg:"#24414b"},
-  rose:{name:"پەمەیی",bg:"#f0dfe2",paper:"#fff5f6",fg:"#4a2d33"},
-  lavender:{name:"مۆری",bg:"#e6def4",paper:"#fbf8ff",fg:"#332b46"},
-  sand:{name:"خۆڵەمێشی",bg:"#e7ded2",paper:"#fbf4eb",fg:"#493b2e"},
-  forest:{name:"دارستان",bg:"#dee8de",paper:"#f5fbf3",fg:"#213525"},
-  sepia:{name:"کەتیبی کۆن",bg:"#e6dbc6",paper:"#f7eddb",fg:"#4a3925"},
-  slate:{name:"سڵەیت",bg:"#dce1e7",paper:"#eef1f5",fg:"#263341"},
-  night:{name:"شەو",bg:"#0b1420",paper:"#101b2c",fg:"#e9f2fc"},
-  black:{name:"ڕەش",bg:"#050505",paper:"#0b0b0b",fg:"#f1f1f1"}
-};
-
-function $(id){
-  return document.getElementById(id);
-}
-
-function toast(t){
-  var x=$("toast");
-  if(!x)return;
-  x.textContent=t;
-  x.className="toast show";
-  clearTimeout(toast._t);
-  toast._t=setTimeout(function(){
-    x.className="toast";
-  },2400);
-}
-
-function esc(s){
-  return String(s==null?"":s).replace(/[&<>"']/g,function(c){
-    return({
-      "&":"&amp;",
-      "<":"&lt;",
-      ">":"&gt;",
-      '"':"&quot;",
-      "'":"&#039;"
-    })[c];
-  });
-}
-
-function updateTelegramBtn(){
-  var btn=$("telegramBtn");
-  if(!btn)return;
-
-  var readerOpen=
-    $("reader") &&
-    $("reader").classList.contains("show");
-
-  var sheetOpen=
-    document.querySelector(".sheet.open, .back.open");
-
-  var activeNav=
-    document.querySelector(".nav.active");
-
-  var isHome=
-    activeNav &&
-    activeNav.getAttribute("data-nav")==="home";
-
-  btn.style.display=
-    (isHome&&!readerOpen&&!sheetOpen)?"flex":"none";
-}
-
-function openSheet(back,sheet){
-  if(!back||!sheet)return;
-  back.classList.add("open");
-  sheet.classList.add("open");
-  updateTelegramBtn();
-}
-
-function closeSheet(back,sheet){
-  if(!back||!sheet)return;
-  back.classList.remove("open");
-  sheet.classList.remove("open");
-  updateTelegramBtn();
-}
-
-function dbOpen(){
-  return new Promise(function(resolve,reject){
-    var req=indexedDB.open("kh_reader_v10",1);
-
-    req.onupgradeneeded=function(){
-      if(!req.result.objectStoreNames.contains("books")){
-        req.result.createObjectStore("books",{keyPath:"id"});
-      }
-    };
-
-    req.onsuccess=function(){
-      resolve(req.result);
-    };
-
-    req.onerror=function(){
-      reject(req.error);
-    };
-  });
-}
-
-function dbAll(){
-  return dbOpen().then(function(db){
-    return new Promise(function(resolve,reject){
-      var q=
-        db.transaction("books","readonly")
-          .objectStore("books")
-          .getAll();
-
-      q.onsuccess=function(){
-        resolve(q.result||[]);
-      };
-
-      q.onerror=function(){
-        reject(q.error);
-      };
-    });
-  });
-}
-
-function dbPut(b){
-  return dbOpen().then(function(db){
-    return new Promise(function(resolve,reject){
-      var tx=
-        db.transaction("books","readwrite");
-
-      tx.objectStore("books").put(b);
-
-      tx.oncomplete=resolve;
-
-      tx.onerror=function(){
-        reject(tx.error);
-      };
-    });
-  });
-}
-
-function dbDel(id){
-  return dbOpen().then(function(db){
-    return new Promise(function(resolve,reject){
-      var tx=
-        db.transaction("books","readwrite");
-
-      tx.objectStore("books").delete(id);
-
-      tx.oncomplete=resolve;
-
-      tx.onerror=function(){
-        reject(tx.error);
-      };
-    });
-  });
-}
-
-window.AppLib={
-  dbPut:dbPut,
-
-  updateTelegram:updateTelegramBtn,
-
-  openSettings:function(){
-    openSheet(
-      $("sheetBack"),
-      $("settingsSheet")
-    );
-  },
-
-  getMusicVolume:function(){
-    return musicVolume;
-  },
-
-  setMusicVolume:function(v){
-    musicVolume=v;
-
-    var au=$("audio");
-    if(au)au.volume=v;
-
-    try{
-      localStorage.setItem(
-        "kh_music_volume",
-        v
-      );
-    }catch(e){}
-  }
-};
-
-function updateThemeBadges(){
-  var st=
-    SITE_THEMES[siteTheme]||
-    SITE_THEMES.cyan;
-
-  var rt=
-    READER_THEMES[readerTheme]||
-    READER_THEMES.paper;
-
-  if($("siteThemeLabel")){
-    $("siteThemeLabel").textContent=
-      st.name;
-  }
-
-  if($("siteThemeDot")){
-    $("siteThemeDot").style.background=
-      st.a;
-  }
-
-  if($("readerThemeLabel")){
-    $("readerThemeLabel").textContent=
-      rt.name;
-  }
-
-  if($("readerThemeDot")){
-    $("readerThemeDot").style.background=
-      rt.bg;
-  }
-}
-
-function setSiteTheme(k){
-  var t=
-    SITE_THEMES[k]||
-    SITE_THEMES.cyan;
-
-  siteTheme=k;
-
-  var r=document.documentElement;
-
-  r.style.setProperty("--a",t.a);
-  r.style.setProperty("--b",t.b);
-  r.style.setProperty("--accent",t.a);
-  r.style.setProperty("--bg",t.bg);
-  r.style.setProperty("--bg2",t.bg2);
-  r.style.setProperty("--surface",t.surface);
-  r.style.setProperty("--surface2",t.surface2);
-  r.style.setProperty("--line",t.line);
-
-  try{
-    localStorage.setItem(
-      "kh_site_theme",
-      k
-    );
-  }catch(e){}
-
-  renderSiteThemes();
-  updateThemeBadges();
-}
-
-function renderSiteThemes(){
-  var box=$("siteThemes");
-  if(!box)return;
-
-  var out="";
-
-  for(var k in SITE_THEMES){
-    var t=SITE_THEMES[k];
-
-    out+=
-      '<button class="theme '+
-      (k===siteTheme?"active":"")+
-      '" data-site-theme="'+k+
-      '" title="'+esc(t.name)+
-      '" style="background:linear-gradient(145deg,'+
-      t.bg2+','+t.bg+')">'+
-      '<i style="background:'+t.a+'"></i>'+
-      '<b style="background:linear-gradient(90deg,'+
-      t.a+','+t.b+')"></b>'+
-      '</button>';
-  }
-
-  box.innerHTML=out;
-}
-
-function renderReaderThemes(){
-  var box=$("readerThemes");
-  if(!box)return;
-
-  var out="";
-
-  for(var k in READER_THEMES){
-    var t=READER_THEMES[k];
-
-    out+=
-      '<button class="theme '+
-      (k===readerTheme?"active":"")+
-      '" data-set-reader-theme="'+k+
-      '" title="'+esc(t.name)+
-      '" style="background:'+t.bg+'">'+
-      '<i style="background:'+t.fg+'"></i>'+
-      '<b style="background:'+t.fg+'"></b>'+
-      '</button>';
-  }
-
-  box.innerHTML=out;
-}
-
-function detectLang(text){
-  var t=
-    String(text||"").slice(
-      0,
-      20000
-    );
-
-  var kuChars=
-    (
-      t.match(
-        /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7\u06F6]/g
-      )||[]
-    ).length;
-
-  var faChars=
-    (
-      t.match(
-        /[\u067E\u0686\u0698\u06AF]/g
-      )||[]
-    ).length;
-
-  if(kuChars>=2)return "ku";
-  if(faChars>=2)return "fa";
-  if(/[\u0600-\u06FF]/.test(t))return "ar";
-
-  return "en";
-}
-
-function extractPDF(file){
-  return new Promise(function(resolve,reject){
-
-    if(!window.pdfjsLib){
-      reject(
-        new Error("PDF engine")
-      );
-      return;
-    }
-
-    var fr=
-      new FileReader();
-
-    fr.onload=function(){
-
-      try{
-
-        var rawBuffer=
-          fr.result;
-
-        var dataForWorker=
-          new Uint8Array(
-            rawBuffer.slice(0)
-          );
-
-        var dataToStore=
-          new Uint8Array(
-            rawBuffer
-          );
-
-        pdfjsLib.getDocument({
-          data:dataForWorker
-        }).promise.then(function(pdf){
-
-          var pages=[];
-          var chain=
-            Promise.resolve();
-
-          for(
-            let i=1;
-            i<=pdf.numPages;
-            i++
-          ){
-
-            (function(pNo){
-
-              chain=
-                chain.then(function(){
-
-                  return pdf
-                    .getPage(pNo)
-                    .then(function(page){
-
-                      return page
-                        .getTextContent({
-                          normalizeWhitespace:false,
-                          disableCombineTextItems:true
-                        })
-                        .then(function(c){
-
-                          pages.push(
-                            (c.items||[])
-                              .map(function(x){
-                                return x.str||"";
-                              })
-                              .join(" ")
-                              .trim()
-                          );
-
-                        });
-
-                    });
-
-                });
-
-            })(i);
-          }
-
-          chain.then(function(){
-
-            resolve({
-              pages:pages,
-              lang:detectLang(
-                pages.join("\n")
-              ),
-              pdfData:dataToStore
-            });
-
-          }).catch(reject);
-
-        }).catch(reject);
-
-      }catch(e){
-        reject(e);
-      }
-    };
-
-    fr.onerror=function(){
-      reject(fr.error);
-    };
-
-    fr.readAsArrayBuffer(file);
-  });
-}
-
-function addPDF(file){
-  if(!file)return;
-
-  toast(
-    "PDF خەریکی خوێندنەوەیە..."
-  );
-
-  extractPDF(file)
-    .then(function(d){
-
-      var b={
-        id:
-          String(Date.now())+
-          "_"+
-          Math.floor(
-            Math.random()*10000
-          ),
-
-        title:
-          file.name.replace(
-            /\.pdf$/i,
-            ""
-          ),
-
-        author:"",
-        category:"گشتی",
-        isPublished:true,
-        pages:d.pages,
-        pdfData:d.pdfData,
-        lang:d.lang,
-        pageCount:d.pages.length,
-        currentPage:0,
-        progress:0,
-        favorite:false,
-        addedAt:Date.now()
-      };
-
-      return dbPut(b)
-        .then(function(){
-
-          books.push(b);
-
-          renderBooks();
-
-          toast(
-            "کتێبەکە زیادکرا"
-          );
-
-        });
-
-    })
-    .catch(function(e){
-
-      console.error(e);
-
-      toast(
-        "نەتوانرا PDF بخوێندرێتەوە"
-      );
-    });
-
-  if($("pdfInput")){
-    $("pdfInput").value="";
-  }
-}
-
-function filtered(){
-
-  var a=
-    books
-      .slice()
-      .sort(function(x,y){
-        return y.addedAt-x.addedAt;
-      });
-
-  if(filter==="favorites"){
-    a=
-      a.filter(function(x){
-        return x.favorite;
-      });
-
-  }else if(filter==="recent"){
-    a=a.slice(0,8);
-
-  }else if(filter!=="all"){
-
-    a=
-      a.filter(function(x){
-        return (
-          x.category||"گشتی"
-        )===filter;
-      });
-  }
-
-  if(query){
-
-    var q=
-      query.toLowerCase();
-
-    a=
-      a.filter(function(x){
-
-        return (
-          x.title+" "+
-          (x.author||"")+" "+
-          (x.category||"")
-        )
-        .toLowerCase()
-        .indexOf(q)>=0;
-      });
-  }
-
-  return a;
-}
-
-function langName(lang){
-  if(lang==="ku")return "کوردی";
-  if(lang==="fa")return "فارسی";
-  if(lang==="ar")return "عەرەبی";
-  return "ئینگلیزی";
-}
-
-function renderBooks(){
-
-  if($("bookCount")){
-    $("bookCount").textContent=
-      books.length;
-  }
-
-  if($("wordCount")){
-    $("wordCount").textContent=
-      vocab.length;
-  }
-
-  var a=
-    filtered();
-
-  if($("resultHint")){
-    $("resultHint").textContent=
-      a.length+" کتێب";
-  }
-
-  var bList=
-    $("bookList");
-
-  if(!bList)return;
-
-  if(!a.length){
-
-    bList.innerHTML=
-      '<div class="empty" style="text-align:center;padding:30px;color:var(--muted)">'+
-      '<i class="fa-solid fa-book-open" style="font-size:32px;margin-bottom:8px"></i>'+
-      '<h3 style="margin:7px 0 3px;color:#dfe8f2;font-size:14px">'+
-      (
-        query?
-        "هیچ ئەنجامێک نەدۆزرایەوە":
-        "لەم پۆلەدا هێشتا کتێب نییە"
-      )+
-      '</h3>'+
-      '<div style="font-size:11px">دەتوانیت لە سەرەوە PDF نوێ زیاد بکەیت.</div>'+
-      '</div>';
-
-    return;
-  }
-
-  bList.innerHTML=
-    a.map(function(b){
-
-      var p=
-        Math.round(
-          (b.progress||0)*100
-        );
-
-      return (
-        '<article class="book" data-book="'+
-        esc(b.id)+
-        '">'+
-
-        '<button class="fav" data-action="fav">'+
-        '<i class="'+
-        (b.favorite?"fa-solid":"fa-regular")+
-        ' fa-heart"></i>'+
-        '</button>'+
-
-        '<div class="cover">'+
-        '<i class="fa-solid fa-book-bookmark"></i>'+
-        '</div>'+
-
-        '<div class="book-main">'+
-        '<div class="book-title">'+
-        esc(b.title)+
-        '</div>'+
-
-        '<div class="book-author">'+
-        esc(
-          b.author||
-          "نووسەری دیارینەکراو"
-        )+
-        '</div>'+
-
-        '<div class="meta">'+
-        '<span><i class="fa-regular fa-file-lines"></i> '+
-        b.pageCount+
-        ' لاپەڕە</span>'+
-
-        '<span><i class="fa-solid fa-language"></i> '+
-        langName(b.lang)+
-        '</span>'+
-
-        '<span class="tag-badge">'+
-        esc(
-          b.category||
-          "گشتی"
-        )+
-        '</span>'+
-
-        '</div>'+
-
-        '<div class="progress">'+
-        '<span style="width:'+p+'%"></span>'+
-        '</div>'+
-
-        '<div class="actions">'+
-
-        '<button class="small primary" data-action="open-book">'+
-        '<i class="fa-solid fa-book-open"></i> خوێندنەوە'+
-        '</button>'+
-
-        '<button class="small" data-action="del-book">'+
-        '<i class="fa-regular fa-trash-can"></i>'+
-        '</button>'+
-
-        '</div>'+
-
-        '</div>'+
-        '</article>'
-      );
-
-    }).join("");
-}
-
-function openBook(id){
-
-  var b=
-    books.find(function(x){
-      return x.id===id;
-    });
-
-  if(!b)return;
-
-  if(
-    window.ReaderEngine&&
-    window.ReaderEngine.open
-  ){
-    window.ReaderEngine.open(b);
-  }
-}
-
-function renderOwnerPanel(){
-
-  if($("ownerTotalBooks")){
-    $("ownerTotalBooks").textContent=
-      books.length;
-  }
-
-  if($("ownerPublicBooks")){
-    $("ownerPublicBooks").textContent=
-      books.filter(function(b){
-        return b.isPublished!==false;
-      }).length;
-  }
-
-  if($("ownerPendingBooks")){
-    $("ownerPendingBooks").textContent=
-      books.filter(function(b){
-        return b.isPublished===false;
-      }).length;
-  }
-
-  if($("ownerTotalAudios")){
-    $("ownerTotalAudios").textContent=
-      music.length;
-  }
-
-  var list=
-    $("ownerBooksList");
-
-  if(!list)return;
-
-  if(!books||!books.length){
-
-    list.innerHTML=
-      '<div style="color:var(--muted);font-size:11px;text-align:center;padding:12px">'+
-      'هیچ پەڕتووکێک بۆ بەڕێوەبردن نییە.'+
-      '</div>';
-
-    return;
-  }
-
-  list.innerHTML=
-    books.map(function(b){
-
-      var cat=
-        b.category||
-        "گشتی";
-
-      return (
-        '<div style="background:var(--surface2);border:1px solid var(--line);border-radius:12px;padding:8px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px">'+
-
-        '<div style="min-width:0;flex:1">'+
-
-        '<strong style="font-size:12px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+
-        esc(b.title)+
-        '</strong>'+
-
-        '<span style="font-size:10px;color:var(--muted)">پۆل: </span>'+
-
-        '<select data-owner-cat="'+
-        esc(b.id)+
-        '" style="font-size:10px;border:1px solid var(--line);background:var(--surface);color:#fff;border-radius:6px;padding:2px 4px">'+
-
-        CATEGORIES.map(function(c){
-
-          return (
-            '<option value="'+
-            esc(c)+
-            '" '+
-            (
-              cat===c?
-              "selected":
-              ""
-            )+
-            '>'+
-            esc(c)+
-            '</option>'
-          );
-
-        }).join("")+
-
-        '</select>'+
-        '</div>'+
-
-        '<div style="display:flex;gap:5px">'+
-
-        '<button data-owner-del="'+
-        esc(b.id)+
-        '" class="icon-btn" style="width:32px;height:32px;font-size:11px;color:#ff536d" title="سڕینەوە">'+
-
-        '<i class="fa-regular fa-trash-can"></i>'+
-
-        '</button>'+
-
-        '</div>'+
-        '</div>'
-      );
-
-    }).join("");
-}
-
-function toggleFav(id){
-
-  var b=
-    books.find(function(x){
-      return x.id===id;
-    });
-
-  if(!b)return;
-
-  b.favorite=
-    !b.favorite;
-
-  dbPut(b).then(
-    renderBooks
-  );
-}
-
-function delBook(id){
-
-  var b=
-    books.find(function(x){
-      return x.id===id;
-    });
-
-  if(!b)return;
-
-  if(
-    !confirm(
-      "دڵنیایت لە سڕینەوەی «"+
-      b.title+
-      "»؟"
-    )
-  ){
-    return;
-  }
-
-  dbDel(id).then(function(){
-
-    books=
-      books.filter(
-        function(x){
-          return x.id!==id;
-        }
-      );
-
-    renderBooks();
-
-    toast(
-      "کتێبەکە سڕایەوە"
-    );
-  });
-}
-
-function detectSourceLang(text){
-
-  var s=
-    String(text||"").trim();
-
-  if(!s)return "en";
-
-  var ku=
-    (
-      s.match(
-        /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7\u06F6]/g
-      )||[]
-    ).length;
-
-  var fa=
-    (
-      s.match(
-        /[\u067E\u0686\u0698\u06AF]/g
-      )||[]
-    ).length;
-
-  var ar=
-    (
-      s.match(
-        /[\u0600-\u06FF]/g
-      )||[]
-    ).length;
-
-  var en=
-    (
-      s.match(
-        /[A-Za-z]/g
-      )||[]
-    ).length;
-
-  if(ku>=1)return "ku";
-  if(fa>=1&&en===0)return "fa";
-  if(en>0&&en>=ar)return "en";
-  if(ar>0)return "ar";
-
-  return "en";
-}
-
-function mapTranslationLang(
-  lang,
-  forMyMemory
-){
-
-  var l=
-    String(lang||"")
-      .toLowerCase();
-
-  if(
-    l==="ckb"||
-    l==="ku-arab"||
-    l==="ku"
-  ){
-    return forMyMemory?
-      "ku":
-      "ckb";
-  }
-
-  if(
-    l==="ar"||
-    l==="ar-sa"
-  ){
-    return "ar";
-  }
-
-  if(
-    l==="fa"||
-    l==="fa-ir"
-  ){
-    return "fa";
-  }
-
-  if(
-    l==="en"||
-    l==="en-us"
-  ){
-    return "en";
-  }
-
-  return forMyMemory?
-    "en":
-    "ckb";
-}
-
-function looksLikeBadSorani(text){
-
-  var s=
-    String(text||"").trim();
-
-  if(!s)return true;
-
-  var letters=
-    (
-      s.match(
-        /[A-Za-z]/g
-      )||[]
-    ).length;
-
-  var arabic=
-    (
-      s.match(
-        /[\u0600-\u06FF]/g
-      )||[]
-    ).length;
-
-  if(
-    letters>0&&
-    letters>arabic
-  ){
-    return true;
-  }
-
-  return false;
-}
-
-function cleanTranslationResult(
-  text,
-  targetLang
-){
-
-  var s=
-    String(text||"").trim();
-
-  if(!s)return "";
-
-  if(
-    mapTranslationLang(
-      targetLang,
-      false
-    )==="ckb"
-  ){
-
-    if(
-      looksLikeBadSorani(s)
-    ){
-      return "";
-    }
-  }
-
-  return s;
-}
-
-function googleTranslateText(
-  text,
-  sourceLang,
-  targetLang
-){
-
-  var clean=
-    String(text||"").trim();
-
-  var sl=
-    mapTranslationLang(
-      sourceLang||
-      detectSourceLang(clean),
-      false
-    );
-
-  var tl=
-    mapTranslationLang(
-      targetLang||"ckb",
-      false
-    );
-
-  if(!clean){
-    return Promise.resolve("");
-  }
-
-  if(sl===tl){
-    return Promise.resolve(
-      clean
-    );
-  }
-
-  var url=
-    "https://translate.googleapis.com/translate_a/single"+
-    "?client=gtx"+
-    "&sl="+
-    encodeURIComponent(sl)+
-    "&tl="+
-    encodeURIComponent(tl)+
-    "&dt=t"+
-    "&q="+
-    encodeURIComponent(clean);
-
-  return fetch(url)
-    .then(function(r){
-
-      if(!r.ok){
-        throw new Error(
-          "Google HTTP "+
-          r.status
-        );
-      }
-
-      return r.json();
-    })
-    .then(function(j){
-
-      var result=
-        (j[0]||[])
-          .map(function(x){
-            return x[0]||"";
-          })
-          .join("")
-          .trim();
-
-      result=
-        cleanTranslationResult(
-          result,
-          tl
-        );
-
-      if(!result){
-        throw new Error(
-          "Google returned invalid translation"
-        );
-      }
-
-      return result;
-    });
-}
-
-function myMemoryTranslateText(
-  text,
-  sourceLang,
-  targetLang
-){
-
-  var clean=
-    String(text||"").trim();
-
-  var sl=
-    mapTranslationLang(
-      sourceLang||
-      detectSourceLang(clean),
-      true
-    );
-
-  var tl=
-    mapTranslationLang(
-      targetLang||"ckb",
-      true
-    );
-
-  if(!clean){
-    return Promise.resolve("");
-  }
-
-  if(sl===tl){
-    return Promise.resolve(
-      clean
-    );
-  }
-
-  var pair=
-    sl+"|"+tl;
-
-  var url=
-    "https://api.mymemory.translated.net/get"+
-    "?q="+
-    encodeURIComponent(
-      clean.slice(0,500)
-    )+
-    "&langpair="+
-    encodeURIComponent(pair);
-
-  return fetch(url)
-    .then(function(r){
-
-      if(!r.ok){
-        throw new Error(
-          "MyMemory HTTP "+
-          r.status
-        );
-      }
-
-      return r.json();
-    })
-    .then(function(data){
-
-      if(
-        data&&
-        data.responseStatus&&
-        Number(
-          data.responseStatus
-        )!==200
-      ){
-
-        throw new Error(
-          "MyMemory "+
-          data.responseStatus
-        );
-      }
-
-      var result=
-        data&&
-        data.responseData&&
-        data.responseData.translatedText;
-
-      result=
-        cleanTranslationResult(
-          result,
-          targetLang
-        );
-
-      if(!result){
-        throw new Error(
-          "MyMemory returned invalid translation"
-        );
-      }
-
-      return result;
-    });
-}
-
-function uniqueMeanings(list){
-
-  var out=[];
-  var seen={};
-
-  (list||[]).forEach(function(item){
-
-    var s=
-      String(item||"")
-        .replace(/\s+/g," ")
-        .trim();
-
-    if(!s)return;
-
-    var key=
-      s.toLowerCase();
-
-    if(!seen[key]){
-      seen[key]=true;
-      out.push(s);
-    }
-  });
-
-  return out.slice(
-    0,
-    5
-  );
-}
-
-function geminiDictionaryMeanings(
-  word,
-  targetLang
-){
-
-  var key=
-    (
-      localStorage.getItem(
-        "kh_gemini_key"
-      )||""
-    ).trim();
-
-  if(!key){
-
-    return Promise.reject(
-      new Error(
-        "NO_GEMINI_KEY"
-      )
-    );
-  }
-
-  var target=
-    targetLang==="ckb"?
-    "کوردی سۆرانیی ستاندارد":
-    targetLang==="ar"?
-    "عەرەبیی ستاندارد":
-    targetLang;
-
-  var prompt=
-    "وشەی \""+
-    String(word||"").trim()+
-    "\" بۆم وەربگێڕە بۆ "+
-    target+
-    "."+
-    "\n"+
-    "تا 5 مانا یان هاوواتای جیاواز بدە، بە پێی مانا و بەکارهێنان."+
-    "\n"+
-    (
-      targetLang==="ckb"?
-      "تەنها کوردی سۆرانی بە الفوبێی عەرەبیی کوردی بەکاربهێنە. هیچ بادینی/کورمانجی، لاتینی، فارسیی زۆر، یان شێوەزارێکی تر مەنووسە.":
-      "تەنها ئەو زمانەی داواکراوە بەکاربهێنە."
-    )+
-    "\n"+
-    "وەڵام تەنها JSON بێت بەم شێوەیە: {\"meanings\":[\"...\"]}";
-
-  var url=
-    "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key="+
-    encodeURIComponent(
-      key
-    );
-
-  return fetch(
-    url,
-    {
-      method:"POST",
-      headers:{
-        "Content-Type":
-          "application/json"
-      },
-      body:
-        JSON.stringify({
-          contents:[
-            {
-              parts:[
-                {
-                  text:
-                    prompt
-                }
-              ]
-            }
-          ]
-        })
-    }
-  )
-  .then(function(r){
-
-    if(!r.ok){
-      throw new Error(
-        "Gemini HTTP "+
-        r.status
-      );
-    }
-
-    return r.json();
-  })
-  .then(function(data){
-
-    var raw=
-      data&&
-      data.candidates&&
-      data.candidates[0]&&
-      data.candidates[0].content&&
-      data.candidates[0].content.parts&&
-      data.candidates[0].content.parts[0]&&
-      data.candidates[0].content.parts[0].text;
-
-    if(!raw){
-      throw new Error(
-        "Gemini empty"
-      );
-    }
-
-    raw=
-      String(raw)
-        .trim()
-        .replace(
-          /^```json\s*/i,
-          ""
-        )
-        .replace(
-          /^```\s*/i,
-          ""
-        )
-        .replace(
-          /\s*```$/,
-          ""
-        )
-        .trim();
-
-    var obj=
-      JSON.parse(raw);
-
-    var meanings=
-      uniqueMeanings(
-        obj.meanings||[]
-      );
-
-    if(!meanings.length){
-      throw new Error(
-        "Gemini no meanings"
-      );
-    }
-
-    if(targetLang==="ckb"){
-
-      meanings=
-        meanings.filter(function(x){
-          return !looksLikeBadSorani(x);
-        });
-    }
-
-    if(!meanings.length){
-      throw new Error(
-        "Gemini non-Sorani output"
-      );
-    }
-
-    return meanings;
-  });
-}
-
-function translateText(
-  text,
-  targetLang
-){
-
-  var clean=
-    String(text||"").trim();
-
-  if(!clean){
-    return Promise.resolve("");
-  }
-
-  var source=
-    detectSourceLang(
-      clean
-    );
-
-  return googleTranslateText(
-    clean,
-    source,
-    targetLang||"ckb"
-  )
-  .catch(function(){
-
-    return myMemoryTranslateText(
-      clean,
-      source,
-      targetLang||"ckb"
-    );
-  });
-}
-
-function getTranslationMeanings(
-  word,
-  targetLang
-){
-
-  var tl=
-    targetLang||
-    "ckb";
-
-  var clean=
-    String(word||"").trim();
-
-  if(!clean){
-    return Promise.resolve([]);
-  }
-
-  return geminiDictionaryMeanings(
-    clean,
-    tl
-  )
-  .catch(function(){
-
-    return Promise.all([
-
-      googleTranslateText(
-        clean,
-        detectSourceLang(clean),
-        tl
-      )
-      .catch(function(){
-        return "";
-      }),
-
-      myMemoryTranslateText(
-        clean,
-        detectSourceLang(clean),
-        tl
-      )
-      .catch(function(){
-        return "";
-      })
-
-    ])
-    .then(function(results){
-
-      return uniqueMeanings(
-        results
-      );
-    });
-  });
-}
-
-function renderMeaningList(
-  list,
-  langClass
-){
-
-  var arr=
-    uniqueMeanings(list);
-
-  if(!arr.length){
-
-    return (
-      '<span class="translation-empty">'+
-      'وەرگێڕان بەردەست نەبوو'+
-      '</span>'
-    );
-  }
-
-  return (
-    '<div class="meaning-list '+
-    (langClass||"")+
-    '">'+
-
-    arr.map(function(item){
-
-      return (
-        '<div class="meaning-item">'+
-        esc(item)+
-        '</div>'
-      );
-
-    }).join("")+
-
-    '</div>'
-  );
-}
-
-function openWordModal(word){
-
-  currentWord=
-    word;
-
-  currentWordLang=
-    detectSourceLang(word);
-
-  currentLang=
-    currentWordLang;
-
-  currentWordMeanings={
-    ku:[],
-    ar:[]
+/* =========================================================
+   script.js
+   خوێندنگە — Core App
+   ========================================================= */
+
+(function () {
+  "use strict";
+
+  var books = [];
+  var vocab = [];
+  var music = [];
+  var musicIndex = -1;
+
+  var filter = "all";
+  var query = "";
+
+  var siteTheme = "cyan";
+  var readerTheme = "paper";
+
+  var musicVolume = 0.32;
+
+  var currentWord = "";
+  var currentWordLang = "en";
+  var currentWordMeanings = {
+    ku: [],
+    ar: []
   };
 
-  var sheet=
-    $("wordSheet");
+  var CATEGORIES = [
+    "گشتی",
+    "زمان",
+    "ئەدەب",
+    "مێژوو",
+    "زانست",
+    "فەلسەفە",
+    "ئایین",
+    "ئینگلیزی"
+  ];
 
-  if(sheet){
-
-    sheet.innerHTML=
-      '<div class="handle"></div>'+
-
-      '<div class="section-head">'+
-      '<h3>فەرهەنگ</h3>'+
-      '<button class="icon-btn" data-action="close-word">'+
-      '<i class="fa-solid fa-xmark"></i>'+
-      '</button>'+
-      '</div>'+
-
-      '<div class="field">'+
-      '<label>وشە</label>'+
-
-      '<div id="modalWord" class="source-word '+
-      (
-        currentWordLang==="en"?
-        "english-text":
-        currentWordLang==="ar"?
-        "arabic-text":
-        currentWordLang==="ku"?
-        "kurdish-text":
-        currentWordLang==="fa"?
-        "persian-text":
-        ""
-      )+
-      '" style="display:flex;justify-content:space-between;align-items:center;">'+
-
-      '<span>'+
-      esc(word)+
-      '</span>'+
-
-      '<button class="icon-btn" data-vspeak="'+
-      esc(word)+
-      '" data-vlang="'+
-      esc(currentWordLang)+
-      '" style="width:32px;height:32px;font-size:13px;color:var(--a);">'+
-
-      '<i class="fa-solid fa-volume-high"></i>'+
-
-      '</button>'+
-
-      '</div>'+
-      '</div>'+
-
-      '<div class="field">'+
-      '<label>بە کوردی</label>'+
-      '<div id="modalKu" class="translation-box ku-translation">چاوەڕوانی...</div>'+
-      '</div>'+
-
-      '<div class="field">'+
-      '<label>بە عەرەبی</label>'+
-
-      '<div id="modalAr" class="translation-box ar-translation">'+
-
-      '<div id="modalArText">چاوەڕوانی...</div>'+
-
-      '<button class="icon-btn" id="modalArSpeakBtn" style="width:32px;height:32px;font-size:13px;color:#22c98b;margin-top:8px;">'+
-
-      '<i class="fa-solid fa-volume-high"></i>'+
-
-      '</button>'+
-
-      '</div>'+
-      '</div>'+
-
-      '<div class="hero-actions" style="margin-top:14px;">'+
-      '<button class="primary" data-action="save-word">خەزنکردنی وشەکە</button>'+
-      '</div>';
-  }
-
-  openSheet(
-    $("wordBack"),
-    $("wordSheet")
-  );
-
-  getTranslationMeanings(
-    word,
-    "ckb"
-  )
-  .then(function(list){
-
-    currentWordMeanings.ku=
-      uniqueMeanings(list);
-
-    if($("modalKu")){
-
-      $("modalKu").innerHTML=
-        renderMeaningList(
-          currentWordMeanings.ku,
-          "ku-translation"
-        );
+  var SITE_THEMES = {
+    cyan: {
+      name: "شینی ئاسمانی",
+      a: "#35bbff",
+      b: "#7b61ff",
+      bg: "#07111f",
+      bg2: "#0d182a",
+      surface: "#111f34",
+      surface2: "#182943",
+      line: "#29405d"
+    },
+    violet: {
+      name: "مۆری",
+      a: "#8b6cff",
+      b: "#d35cff",
+      bg: "#0b081b",
+      bg2: "#160f2a",
+      surface: "#1d1735",
+      surface2: "#282047",
+      line: "#47386a"
+    },
+    emerald: {
+      name: "سەوزی",
+      a: "#22c98b",
+      b: "#0ca6a0",
+      bg: "#061611",
+      bg2: "#0c241d",
+      surface: "#102b23",
+      surface2: "#173b30",
+      line: "#2b5849"
+    },
+    sunset: {
+      name: "خۆرئاوابوون",
+      a: "#ff8a4c",
+      b: "#ff4f81",
+      bg: "#190b09",
+      bg2: "#291410",
+      surface: "#351914",
+      surface2: "#48231d",
+      line: "#693b30"
+    },
+    ruby: {
+      name: "سووری",
+      a: "#ff536d",
+      b: "#c93dff",
+      bg: "#18070d",
+      bg2: "#280d19",
+      surface: "#361421",
+      surface2: "#451b2d",
+      line: "#623247"
+    },
+    royal: {
+      name: "شینی قووڵ",
+      a: "#4c7dff",
+      b: "#36c4ff",
+      bg: "#061029",
+      bg2: "#0b1940",
+      surface: "#10204a",
+      surface2: "#17295a",
+      line: "#304a80"
+    },
+    gold: {
+      name: "زێڕی",
+      a: "#f2bf4a",
+      b: "#ff8554",
+      bg: "#160f05",
+      bg2: "#281809",
+      surface: "#34230e",
+      surface2: "#452d12",
+      line: "#66491f"
+    },
+    rose: {
+      name: "پەمەیی",
+      a: "#f05bd5",
+      b: "#ff7b8e",
+      bg: "#150714",
+      bg2: "#250e22",
+      surface: "#34152f",
+      surface2: "#451c3f",
+      line: "#623457"
+    },
+    ocean: {
+      name: "دەریایی",
+      a: "#20d6d6",
+      b: "#3a7bff",
+      bg: "#041216",
+      bg2: "#06242b",
+      surface: "#0c3038",
+      surface2: "#10434e",
+      line: "#255b67"
+    },
+    graphite: {
+      name: "گرافایت",
+      a: "#aab7c8",
+      b: "#62728a",
+      bg: "#0a0e13",
+      bg2: "#141923",
+      surface: "#1c242e",
+      surface2: "#27303d",
+      line: "#3c4858"
+    },
+    lime: {
+      name: "لایمی",
+      a: "#a7df45",
+      b: "#24c68a",
+      bg: "#0d1605",
+      bg2: "#17260a",
+      surface: "#223613",
+      surface2: "#30471b",
+      line: "#4d652b"
+    },
+    midnight: {
+      name: "میدناو",
+      a: "#607dff",
+      b: "#8b5cf6",
+      bg: "#050817",
+      bg2: "#0a1025",
+      surface: "#101833",
+      surface2: "#182344",
+      line: "#2f4069"
     }
-  })
-  .catch(function(){
+  };
 
-    if($("modalKu")){
-      $("modalKu").textContent=
-        "وەرگێڕان بەردەست نەبوو";
+  var READER_THEMES = {
+    paper: {
+      name: "سپی",
+      bg: "#f4f6f9",
+      paper: "#ffffff",
+      fg: "#1d2a3d"
+    },
+    cream: {
+      name: "کرێمی",
+      bg: "#eee5d1",
+      paper: "#fff9e7",
+      fg: "#403728"
+    },
+    mint: {
+      name: "سەوزی کاڵ",
+      bg: "#dfece5",
+      paper: "#f4fbf7",
+      fg: "#203c31"
+    },
+    sky: {
+      name: "ئاسمانی",
+      bg: "#dceef4",
+      paper: "#f2fbff",
+      fg: "#24414b"
+    },
+    rose: {
+      name: "پەمەیی",
+      bg: "#f0dfe2",
+      paper: "#fff5f6",
+      fg: "#4a2d33"
+    },
+    lavender: {
+      name: "مۆری",
+      bg: "#e6def4",
+      paper: "#fbf8ff",
+      fg: "#332b46"
+    },
+    sand: {
+      name: "خۆڵەمێشی",
+      bg: "#e7ded2",
+      paper: "#fbf4eb",
+      fg: "#493b2e"
+    },
+    forest: {
+      name: "دارستان",
+      bg: "#dee8de",
+      paper: "#f5fbf3",
+      fg: "#213525"
+    },
+    sepia: {
+      name: "کەتیبی کۆن",
+      bg: "#e6dbc6",
+      paper: "#f7eddb",
+      fg: "#4a3925"
+    },
+    slate: {
+      name: "سڵەیت",
+      bg: "#dce1e7",
+      paper: "#eef1f5",
+      fg: "#263341"
+    },
+    night: {
+      name: "شەو",
+      bg: "#0b1420",
+      paper: "#101b2c",
+      fg: "#e9f2fc"
+    },
+    black: {
+      name: "ڕەش",
+      bg: "#050505",
+      paper: "#0b0b0b",
+      fg: "#f1f1f1"
     }
-  });
+  };
 
-  getTranslationMeanings(
-    word,
-    "ar"
-  )
-  .then(function(list){
-
-    currentWordMeanings.ar=
-      uniqueMeanings(list);
-
-    var mArText=
-      $("modalArText");
-
-    var mArBtn=
-      $("modalArSpeakBtn");
-
-    if(mArText){
-
-      mArText.innerHTML=
-        renderMeaningList(
-          currentWordMeanings.ar,
-          "ar-translation"
-        );
-    }
-
-    if(mArBtn){
-
-      mArBtn.setAttribute(
-        "data-vspeak",
-        currentWordMeanings.ar.join("، ")
-      );
-
-      mArBtn.setAttribute(
-        "data-vlang",
-        "ar"
-      );
-    }
-  })
-  .catch(function(){
-
-    if($("modalArText")){
-
-      $("modalArText").textContent=
-        "وەرگێڕان بەردەست نەبوو";
-    }
-  });
-}
-
-function openSentenceModal(text){
-
-  var clean=
-    String(text||"").trim();
-
-  if(
-    !clean||
-    clean.length<2
-  ){
-    return;
+  function $(id) {
+    return document.getElementById(id);
   }
 
-  if($("sentenceOriginal")){
-    $("sentenceOriginal").textContent=
-      clean;
+  function esc(value) {
+    return String(value == null ? "" : value).replace(
+      /[&<>"']/g,
+      function (c) {
+        return {
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;"
+        }[c];
+      }
+    );
   }
 
-  if($("sentenceKu")){
-    $("sentenceKu").textContent=
-      "چاوەڕوانی...";
+  function toast(message) {
+    var el = $("toast");
+    if (!el) return;
+
+    el.textContent = message;
+    el.className = "toast show";
+
+    clearTimeout(toast._timer);
+
+    toast._timer = setTimeout(function () {
+      el.className = "toast";
+    }, 2500);
   }
 
-  openSheet(
-    $("sentenceBack"),
-    $("sentenceSheet")
-  );
-
-  translateText(
-    clean,
-    "ckb"
-  )
-  .then(function(t){
-
-    if($("sentenceKu")){
-      $("sentenceKu").textContent=
-        t;
-    }
-  })
-  .catch(function(){
-
-    if($("sentenceKu")){
-      $("sentenceKu").textContent=
-        "وەرگێڕان بەردەست نەبوو";
-    }
-  });
-}
-
-function saveWord(){
-
-  if(!currentWord){
-    return;
-  }
-
-  var exists=
-    vocab.some(function(v){
-
-      return (
-        v.word.toLowerCase()===
-        currentWord.toLowerCase()
-      );
-
-    });
-
-  if(exists){
-
-    toast(
-      "ئەم وشەیە پێشتر خەزنکراوە"
-    );
-
-    return;
-  }
-
-  var kuText=
-    currentWordMeanings.ku.length?
-    currentWordMeanings.ku.join("\n"):
-    (
-      $("modalKu")?
-      $("modalKu").textContent:
-      ""
-    );
-
-  var arText=
-    currentWordMeanings.ar.length?
-    currentWordMeanings.ar.join("\n"):
-    (
-      $("modalArText")?
-      $("modalArText").textContent:
-      ""
-    );
-
-  vocab.unshift({
-    id:String(Date.now()),
-    word:currentWord,
-    lang:currentWordLang,
-    ku:kuText,
-    third:arText
-  });
-
-  try{
-
-    localStorage.setItem(
-      "kh_vocab",
-      JSON.stringify(vocab)
-    );
-
-  }catch(e){}
-
-  renderBooks();
-
-  closeSheet(
-    $("wordBack"),
-    $("wordSheet")
-  );
-
-  toast(
-    "وشەکە خەزنکرا"
-  );
-}
-
-function speakText(
-  text,
-  lang
-){
-
-  if(!window.speechSynthesis){
-
-    toast(
-      "دەنگ بەردەست نییە"
-    );
-
-    return;
-  }
-
-  var value=
-    String(text||"").trim();
-
-  if(!value)return;
-
-  window.speechSynthesis.cancel();
-
-  var u=
-    new SpeechSynthesisUtterance(
-      value
-    );
-
-  var l=
-    String(lang||"").toLowerCase();
-
-  if(
-    l==="ar"||
-    l==="ar-sa"
-  ){
-
-    u.lang=
-      "ar-SA";
-
-  }else if(
-
-    l==="ku"||
-    l==="ckb"||
-    /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7\u06F6]/.test(value)
-
-  ){
-
-    u.lang=
-      "ku-Arab";
-
-  }else if(
-    l==="fa"||
-    l==="fa-ir"
-  ){
-
-    u.lang=
-      "fa-IR";
-
-  }else{
-
-    u.lang=
-      "en-US";
-  }
-
-  u.volume=
-    1.0;
-
-  u.rate=
-    0.85;
-
-  window.speechSynthesis.speak(u);
-}
-
-function renderVocab(){
-
-  var back=
-    document.createElement(
-      "div"
-    );
-
-  var sheet=
-    document.createElement(
-      "div"
-    );
-
-  back.className=
-    "back open";
-
-  sheet.className=
-    "sheet open";
-
-  sheet.innerHTML=
-    '<div class="handle"></div>'+
-
-    '<div class="section-head">'+
-    '<h3>وشەکانم</h3>'+
-    '<button class="icon-btn" data-temp-close>×</button>'+
-    '</div>'+
-
-    '<div style="margin-top:10px;max-height:350px;overflow:auto;">'+
-
-    (
-      vocab.length?
-
-      vocab.map(function(v){
-
-        var sourceLang=
-          v.lang||
-          detectSourceLang(
-            v.word
-          );
-
-        return (
-
-          '<div class="field" style="margin-bottom:10px">'+
-
-          '<div style="font-weight:800;color:#f4c85c;font-size:17px;display:flex;justify-content:space-between;align-items:center;">'+
-
-          esc(v.word)+
-
-          '<button class="icon-btn" data-vspeak="'+
-          esc(v.word)+
-          '" data-vlang="'+
-          esc(sourceLang)+
-          '" style="width:28px;height:28px;font-size:11px">'+
-
-          '<i class="fa-solid fa-volume-high"></i>'+
-
-          '</button>'+
-
-          '</div>'+
-
-          '<div style="margin-top:5px;line-height:1.9">'+
-
-          '<div class="saved-meanings ku-translation">'+
-          esc(
-            String(v.ku||"")
-              .replace(/\n/g,"، ")
-          )+
-          '</div>'+
-
-          '<div style="margin-top:8px;color:var(--muted);display:flex;justify-content:space-between;align-items:flex-start;gap:8px;">'+
-
-          '<div class="saved-meanings ar-translation">'+
-          esc(
-            String(v.third||"")
-              .replace(/\n/g,"، ")
-          )+
-          '</div>'+
-
-          '<button class="icon-btn" data-vspeak="'+
-          esc(v.third)+
-          '" data-vlang="ar" style="width:28px;height:28px;font-size:11px;flex:0 0 28px">'+
-
-          '<i class="fa-solid fa-volume-high"></i>'+
-
-          '</button>'+
-
-          '</div>'+
-
-          '</div>'+
-
-          '<div class="hero-actions" style="margin-top:8px">'+
-
-          '<button class="ghost" data-vdel="'+
-          esc(v.id)+
-          '">سڕینەوە</button>'+
-
-          '</div>'+
-
-          '</div>'
-        );
-
-      }).join(""):
-
-      '<div style="text-align:center;color:var(--muted);padding:25px">هێشتا وشەیەک نییە</div>'
-    )+
-
-    '</div>';
-
-  document.body.appendChild(
-    back
-  );
-
-  document.body.appendChild(
-    sheet
-  );
-
-  updateTelegramBtn();
-
-  function close(){
-
-    back.remove();
-    sheet.remove();
+  function openSheet(back, sheet) {
+    if (!back || !sheet) return;
+
+    back.classList.add("open");
+    sheet.classList.add("open");
 
     updateTelegramBtn();
   }
 
-  back.addEventListener(
-    "click",
-    close
-  );
+  function closeSheet(back, sheet) {
+    if (!back || !sheet) return;
 
-  sheet.addEventListener(
-    "click",
-    function(e){
+    back.classList.remove("open");
+    sheet.classList.remove("open");
 
-      if(
-        e.target.closest(
-          "[data-temp-close]"
-        )
-      ){
-        close();
+    updateTelegramBtn();
+  }
+
+  function updateTelegramBtn() {
+    var btn = $("telegramBtn");
+    if (!btn) return;
+
+    var reader = $("reader");
+    var readerOpen =
+      reader &&
+      reader.classList.contains("show");
+
+    var activeNav = document.querySelector(
+      ".nav.active"
+    );
+
+    var isHome =
+      activeNav &&
+      activeNav.getAttribute("data-nav") === "home";
+
+    var sheetOpen = document.querySelector(
+      ".sheet.open,.back.open"
+    );
+
+    btn.style.display =
+      isHome &&
+      !readerOpen &&
+      !sheetOpen
+        ? "flex"
+        : "none";
+  }
+
+  function dbOpen() {
+    return new Promise(function (resolve, reject) {
+      if (!window.indexedDB) {
+        reject(new Error("IndexedDB بەردەست نییە"));
+        return;
       }
 
-      var d=
-        e.target.closest(
-          "[data-vdel]"
-        );
+      var request = indexedDB.open(
+        "kh_reader_v10",
+        1
+      );
 
-      if(d){
+      request.onupgradeneeded = function () {
+        var db = request.result;
 
-        vocab=
-          vocab.filter(function(v){
-
-            return (
-              v.id!==
-              d.getAttribute(
-                "data-vdel"
-              )
-            );
-
+        if (!db.objectStoreNames.contains("books")) {
+          db.createObjectStore("books", {
+            keyPath: "id"
           });
+        }
+      };
 
-        try{
+      request.onsuccess = function () {
+        resolve(request.result);
+      };
 
-          localStorage.setItem(
-            "kh_vocab",
-            JSON.stringify(vocab)
-          );
-
-        }catch(err){}
-
-        close();
-        renderVocab();
-        renderBooks();
-      }
-    }
-  );
-}
-
-function addMusicFiles(
-  files
-){
-
-  for(
-    var i=0;
-    i<files.length;
-    i++
-  ){
-
-    music.push({
-      name:files[i].name,
-      url:URL.createObjectURL(
-        files[i]
-      )
+      request.onerror = function () {
+        reject(
+          request.error ||
+            new Error("نەتوانرا داتابەیس بکرێتەوە")
+        );
+      };
     });
   }
 
-  if(
-    musicIndex<0&&
-    music.length
-  ){
+  function dbAll() {
+    return dbOpen().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var transaction;
 
-    loadTrack(
-      0,
-      false
-    );
+        try {
+          transaction = db.transaction(
+            "books",
+            "readonly"
+          );
+        } catch (e) {
+          reject(e);
+          return;
+        }
+
+        var req = transaction
+          .objectStore("books")
+          .getAll();
+
+        req.onsuccess = function () {
+          resolve(req.result || []);
+        };
+
+        req.onerror = function () {
+          reject(req.error);
+        };
+      });
+    });
   }
 
-  renderTracks();
-}
+  function dbPut(book) {
+    return dbOpen().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx;
 
-function loadTrack(
-  i,
-  play
-){
+        try {
+          tx = db.transaction(
+            "books",
+            "readwrite"
+          );
+        } catch (e) {
+          reject(e);
+          return;
+        }
 
-  if(!music[i]){
-    return;
+        tx.objectStore("books").put(book);
+
+        tx.oncomplete = function () {
+          resolve(book);
+        };
+
+        tx.onerror = function () {
+          reject(
+            tx.error ||
+              new Error("نەتوانرا کتێبەکە پاشەکەوت بکرێت")
+          );
+        };
+
+        tx.onabort = function () {
+          reject(
+            tx.error ||
+              new Error("پاشەکەوتکردن هەڵوەشایەوە")
+          );
+        };
+      });
+    });
   }
 
-  musicIndex=i;
+  function dbDelete(id) {
+    return dbOpen().then(function (db) {
+      return new Promise(function (resolve, reject) {
+        var tx;
 
-  var au=$("audio");
+        try {
+          tx = db.transaction(
+            "books",
+            "readwrite"
+          );
+        } catch (e) {
+          reject(e);
+          return;
+        }
 
-  if(au){
+        tx.objectStore("books").delete(id);
 
-    au.src=
-      music[i].url;
+        tx.oncomplete = resolve;
 
-    au.volume=
-      musicVolume;
+        tx.onerror = function () {
+          reject(tx.error);
+        };
+      });
+    });
   }
 
-  if($("nowName")){
-    $("nowName").textContent=
-      music[i].name;
-  }
-
-  if($("nowSub")){
-    $("nowSub").textContent=
-      "دەنگی هەڵبژێردراو";
-  }
-
-  renderTracks();
-  updatePlayButtonUI();
-
-  if(play&&au){
-
-    au.play()
-      .then(
-        updatePlayButtonUI
-      )
-      .catch(function(){});
-  }
-}
-
-function updatePlayButtonUI(){
-
-  var mainBtn=
-    document.querySelector(
-      ".music-btn.big[data-action='play-pause']"
-    );
-
-  var au=$("audio");
-
-  var isPlaying=
-    au&&
-    !au.paused&&
-    musicIndex>=0;
-
-  if(mainBtn){
-
-    mainBtn.innerHTML=
-      isPlaying?
-      '<i class="fa-solid fa-pause"></i>':
-      '<i class="fa-solid fa-play"></i>';
-  }
-
-  var trackBtns=
-    document.querySelectorAll(
-      "[data-track]"
-    );
-
-  trackBtns.forEach(function(tb){
-
-    var idx=
-      Number(
-        tb.getAttribute(
-          "data-track"
-        )
+  function saveJSON(key, value) {
+    try {
+      localStorage.setItem(
+        key,
+        JSON.stringify(value)
       );
+    } catch (e) {}
+  }
 
-    var icon=
-      tb.querySelector("i");
+  function loadJSON(key, fallback) {
+    try {
+      var value = localStorage.getItem(key);
 
-    if(icon){
+      if (!value) return fallback;
 
-      if(
-        idx===musicIndex&&
-        isPlaying
-      ){
-
-        icon.className=
-          "fa-solid fa-pause";
-
-      }else{
-
-        icon.className=
-          "fa-solid fa-play";
-      }
+      return JSON.parse(value);
+    } catch (e) {
+      return fallback;
     }
-  });
-}
+  }
 
-function renderTracks(){
+  function updateThemeBadges() {
+    var site =
+      SITE_THEMES[siteTheme] ||
+      SITE_THEMES.cyan;
 
-  var box=
-    $("tracks");
+    var reader =
+      READER_THEMES[readerTheme] ||
+      READER_THEMES.paper;
 
-  if(!box)return;
+    var siteLabel =
+      $("siteThemeLabel");
 
-  box.innerHTML=
-    music.length?
+    if (siteLabel) {
+      siteLabel.textContent = site.name;
+    }
 
-    music.map(function(t,i){
+    var siteDot =
+      $("siteThemeDot");
 
-      var au=
-        $("audio");
+    if (siteDot) {
+      siteDot.style.background = site.a;
+    }
 
-      var isPlaying=
-        i===musicIndex&&
-        au&&
-        !au.paused;
+    var readerLabel =
+      $("readerThemeLabel");
 
-      return (
-        '<div class="track" data-track-card="'+
-        i+
-        '" style="cursor:pointer;">'+
+    if (readerLabel) {
+      readerLabel.textContent = reader.name;
+    }
 
-        '<button data-track="'+
-        i+
-        '">'+
+    var readerDot =
+      $("readerThemeDot");
 
-        '<i class="fa-solid '+
-        (
-          isPlaying?
-          "fa-pause":
-          "fa-play"
-        )+
-        '"></i>'+
+    if (readerDot) {
+      readerDot.style.background = reader.bg;
+    }
+  }
 
-        '</button>'+
+  function setSiteTheme(key) {
+    var theme =
+      SITE_THEMES[key] ||
+      SITE_THEMES.cyan;
 
-        '<span>'+
-        esc(t.name)+
-        '</span>'+
+    siteTheme = key;
 
-        '</div>'
+    var root =
+      document.documentElement;
+
+    root.style.setProperty(
+      "--a",
+      theme.a
+    );
+
+    root.style.setProperty(
+      "--b",
+      theme.b
+    );
+
+    root.style.setProperty(
+      "--accent",
+      theme.a
+    );
+
+    root.style.setProperty(
+      "--bg",
+      theme.bg
+    );
+
+    root.style.setProperty(
+      "--bg2",
+      theme.bg2
+    );
+
+    root.style.setProperty(
+      "--surface",
+      theme.surface
+    );
+
+    root.style.setProperty(
+      "--surface2",
+      theme.surface2
+    );
+
+    root.style.setProperty(
+      "--line",
+      theme.line
+    );
+
+    try {
+      localStorage.setItem(
+        "kh_site_theme",
+        key
+      );
+    } catch (e) {}
+
+    renderSiteThemes();
+    updateThemeBadges();
+  }
+
+  function renderSiteThemes() {
+    var box = $("siteThemes");
+    if (!box) return;
+
+    var html = "";
+
+    Object.keys(SITE_THEMES).forEach(function (key) {
+      var theme = SITE_THEMES[key];
+
+      html +=
+        '<button class="theme ' +
+        (key === siteTheme ? "active" : "") +
+        '" data-site-theme="' +
+        esc(key) +
+        '" title="' +
+        esc(theme.name) +
+        '" style="background:linear-gradient(145deg,' +
+        theme.bg2 +
+        "," +
+        theme.bg +
+        ')">' +
+        '<i style="background:' +
+        theme.a +
+        '"></i>' +
+        '<b style="background:linear-gradient(90deg,' +
+        theme.a +
+        "," +
+        theme.b +
+        ')"></b>' +
+        "</button>";
+    });
+
+    box.innerHTML = html;
+  }
+
+  function renderReaderThemes() {
+    var box = $("readerThemes");
+    if (!box) return;
+
+    var html = "";
+
+    Object.keys(READER_THEMES).forEach(
+      function (key) {
+        var theme =
+          READER_THEMES[key];
+
+        html +=
+          '<button class="theme ' +
+          (key === readerTheme
+            ? "active"
+            : "") +
+          '" data-set-reader-theme="' +
+          esc(key) +
+          '" title="' +
+          esc(theme.name) +
+          '" style="background:' +
+          theme.bg +
+          '">' +
+          '<i style="background:' +
+          theme.fg +
+          '"></i>' +
+          '<b style="background:' +
+          theme.fg +
+          '"></b>' +
+          "</button>";
+      }
+    );
+
+    box.innerHTML = html;
+  }
+
+  function detectLang(text) {
+    var sample =
+      String(text || "").slice(
+        0,
+        20000
       );
 
-    }).join(""):
+    var kurdish =
+      (
+        sample.match(
+          /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7\u06F6]/g
+        ) || []
+      ).length;
 
-    '<div style="color:var(--muted);font-size:10px;text-align:center;padding:8px">هیچ دەنگێک نییە.</div>';
-}
+    var persian =
+      (
+        sample.match(
+          /[\u067E\u0686\u0698\u06AF]/g
+        ) || []
+      ).length;
 
-document.addEventListener(
-  "click",
-  function(e){
+    var english =
+      (
+        sample.match(
+          /[A-Za-z]/g
+        ) || []
+      ).length;
 
-    var vs=
-      e.target.closest(
-        "[data-vspeak]"
+    var arabic =
+      (
+        sample.match(
+          /[\u0600-\u06FF]/g
+        ) || []
+      ).length;
+
+    if (kurdish >= 2) return "ku";
+
+    if (
+      persian >= 2 &&
+      english === 0
+    ) {
+      return "fa";
+    }
+
+    if (
+      english > 0 &&
+      english >= arabic
+    ) {
+      return "en";
+    }
+
+    if (arabic > 0) {
+      return "ar";
+    }
+
+    return "en";
+  }
+
+  function normalizePdfText(items) {
+    if (!items || !items.length) {
+      return "";
+    }
+
+    return items
+      .map(function (item) {
+        return String(
+          item && item.str
+            ? item.str
+            : ""
+        );
+      })
+      .join(" ")
+      .replace(/[ \t]+/g, " ")
+      .trim();
+  }
+
+  function extractPDF(file) {
+    return new Promise(function (resolve, reject) {
+      if (!file) {
+        reject(
+          new Error("PDF file نەدۆزرایەوە")
+        );
+        return;
+      }
+
+      if (!window.pdfjsLib) {
+        reject(
+          new Error("PDF.js بەردەست نییە")
+        );
+        return;
+      }
+
+      var reader =
+        new FileReader();
+
+      reader.onload = function () {
+        try {
+          var buffer =
+            reader.result;
+
+          if (
+            !buffer ||
+            !buffer.byteLength
+          ) {
+            reject(
+              new Error(
+                "PDF buffer بەتاڵە"
+              )
+            );
+            return;
+          }
+
+          /*
+           * دوو copy دروست دەکەین:
+           * یەکێک بۆ PDF.js
+           * یەکێکی تر بۆ IndexedDB
+           *
+           * ئەمە کێشەی detached ArrayBuffer چارەسەر دەکات.
+           */
+          var pdfBytes =
+            new Uint8Array(
+              buffer.slice(0)
+            );
+
+          var storedBytes =
+            new Uint8Array(
+              buffer.slice(0)
+            );
+
+          pdfjsLib
+            .getDocument({
+              data: pdfBytes
+            })
+            .promise
+            .then(function (pdf) {
+              var pages = [];
+              var chain =
+                Promise.resolve();
+
+              for (
+                let pageNumber = 1;
+                pageNumber <= pdf.numPages;
+                pageNumber++
+              ) {
+                (function (pageNo) {
+                  chain = chain.then(
+                    function () {
+                      return pdf
+                        .getPage(pageNo)
+                        .then(function (page) {
+                          return page
+                            .getTextContent({
+                              normalizeWhitespace: false,
+                              disableCombineTextItems: true
+                            })
+                            .then(function (content) {
+                              pages.push(
+                                normalizePdfText(
+                                  content.items
+                                )
+                              );
+                            });
+                        });
+                    }
+                  );
+                })(pageNumber);
+              }
+
+              return chain.then(
+                function () {
+                  resolve({
+                    pages: pages,
+                    lang: detectLang(
+                      pages.join("\n")
+                    ),
+                    pageCount:
+                      pdf.numPages,
+                    pdfData:
+                      storedBytes
+                  });
+                }
+              );
+            })
+            .catch(reject);
+        } catch (error) {
+          reject(error);
+        }
+      };
+
+      reader.onerror = function () {
+        reject(
+          reader.error ||
+            new Error(
+              "PDF خوێندرایەوە نەبوو"
+            )
+        );
+      };
+
+      reader.readAsArrayBuffer(file);
+    });
+  }
+
+  function addPDF(file) {
+    if (!file) return;
+
+    toast(
+      "PDF خەریکی بارکردنە..."
+    );
+
+    extractPDF(file)
+      .then(function (data) {
+        var book = {
+          id:
+            String(Date.now()) +
+            "_" +
+            Math.floor(
+              Math.random() *
+                100000
+            ),
+
+          title:
+            file.name.replace(
+              /\.pdf$/i,
+              ""
+            ),
+
+          author: "",
+
+          category:
+            "گشتی",
+
+          isPublished:
+            true,
+
+          pages:
+            data.pages || [],
+
+          pdfData:
+            data.pdfData,
+
+          lang:
+            data.lang || "en",
+
+          pageCount:
+            data.pageCount ||
+            (data.pages
+              ? data.pages.length
+              : 0),
+
+          currentPage: 0,
+
+          progress: 0,
+
+          favorite: false,
+
+          addedAt:
+            Date.now()
+        };
+
+        return dbPut(book);
+      })
+      .then(function (savedBook) {
+        books.push(savedBook);
+
+        renderBooks();
+        renderOwnerPanel();
+
+        toast(
+          "کتێبەکە بە سەرکەوتوویی زیادکرا"
+        );
+      })
+      .catch(function (error) {
+        console.error(
+          "addPDF:",
+          error
+        );
+
+        toast(
+          "نەتوانرا PDF زیاد بکرێت"
+        );
+      });
+
+    var input = $("pdfInput");
+    if (input) {
+      input.value = "";
+    }
+  }
+
+  function langName(lang) {
+    if (lang === "ku") return "کوردی";
+    if (lang === "ar") return "عەرەبی";
+    if (lang === "fa") return "فارسی";
+    return "ئینگلیزی";
+  }
+
+  function filteredBooks() {
+    var list =
+      books
+        .slice()
+        .sort(function (a, b) {
+          return (
+            (b.addedAt || 0) -
+            (a.addedAt || 0)
+          );
+        });
+
+    if (filter === "favorites") {
+      list = list.filter(function (book) {
+        return !!book.favorite;
+      });
+    } else if (filter === "recent") {
+      list = list.slice(
+        0,
+        8
       );
+    } else if (
+      filter !== "all"
+    ) {
+      list = list.filter(function (book) {
+        return (
+          book.category ||
+          "گشتی"
+        ) === filter;
+      });
+    }
 
-    if(vs){
+    if (query) {
+      var q =
+        query.toLowerCase();
 
-      speakText(
-        vs.getAttribute(
-          "data-vspeak"
-        ),
-        vs.getAttribute(
-          "data-vlang"
-        )
-      );
+      list = list.filter(function (book) {
+        var text =
+          [
+            book.title,
+            book.author,
+            book.category
+          ]
+            .filter(Boolean)
+            .join(" ")
+            .toLowerCase();
+
+        return (
+          text.indexOf(q) >= 0
+        );
+      });
+    }
+
+    return list;
+  }
+
+  function renderBooks() {
+    var list =
+      filteredBooks();
+
+    var count =
+      $("bookCount");
+
+    if (count) {
+      count.textContent =
+        books.length;
+    }
+
+    var words =
+      $("wordCount");
+
+    if (words) {
+      words.textContent =
+        vocab.length;
+    }
+
+    var hint =
+      $("resultHint");
+
+    if (hint) {
+      hint.textContent =
+        list.length +
+        " کتێب";
+    }
+
+    var container =
+      $("bookList");
+
+    if (!container) return;
+
+    if (!list.length) {
+      container.innerHTML =
+        '<div class="empty" style="grid-column:1/-1;text-align:center;padding:35px;color:var(--muted)">' +
+        '<i class="fa-solid fa-book-open" style="font-size:32px;margin-bottom:9px"></i>' +
+        '<h3 style="margin:5px 0;color:#e9f2fb;font-size:14px">' +
+        (query
+          ? "هیچ ئەنجامێک نەدۆزرایەوە"
+          : "هێشتا کتێب نییە") +
+        "</h3>" +
+        '<div style="font-size:10px">PDF ـێک زیاد بکە بۆ دەستپێکردن.</div>' +
+        "</div>";
 
       return;
     }
 
-    var a=
-      e.target.closest(
-        "[data-action]"
+    container.innerHTML =
+      list
+        .map(function (book) {
+          var progress =
+            Math.round(
+              (Number(
+                book.progress
+              ) || 0) *
+                100
+            );
+
+          return (
+            '<article class="book" data-book="' +
+            esc(book.id) +
+            '">' +
+
+            '<button class="fav" data-action="fav" title="دڵخواز">'+
+            '<i class="' +
+            (book.favorite
+              ? "fa-solid"
+              : "fa-regular") +
+            ' fa-heart"></i>' +
+            "</button>" +
+
+            '<div class="cover">' +
+            '<i class="fa-solid fa-book-bookmark"></i>' +
+            "</div>" +
+
+            '<div class="book-main">' +
+
+            '<div class="book-title">' +
+            esc(book.title) +
+            "</div>" +
+
+            '<div class="book-author">' +
+            esc(
+              book.author ||
+              "نووسەری دیارینەکراو"
+            ) +
+            "</div>" +
+
+            '<div class="meta">' +
+
+            "<span>" +
+            '<i class="fa-regular fa-file-lines"></i> ' +
+            (book.pageCount || 0) +
+            " لاپەڕە</span>" +
+
+            "<span>" +
+            '<i class="fa-solid fa-language"></i> ' +
+            esc(
+              langName(
+                book.lang
+              )
+            ) +
+            "</span>" +
+
+            '<span class="tag-badge">' +
+            esc(
+              book.category ||
+              "گشتی"
+            ) +
+            "</span>" +
+
+            "</div>" +
+
+            '<div class="progress">' +
+            '<span style="width:' +
+            progress +
+            '%"></span>' +
+            "</div>" +
+
+            '<div class="actions">' +
+
+            '<button class="small primary" data-action="open-book">' +
+            '<i class="fa-solid fa-book-open"></i> خوێندنەوە' +
+            "</button>" +
+
+            '<button class="small" data-action="del-book" title="سڕینەوە">' +
+            '<i class="fa-regular fa-trash-can"></i>' +
+            "</button>" +
+
+            "</div>" +
+
+            "</div>" +
+            "</article>"
+          );
+        })
+        .join("");
+  }
+
+  function openBook(id) {
+    var book =
+      books.find(function (item) {
+        return item.id === id;
+      });
+
+    if (!book) {
+      toast(
+        "کتێبەکە نەدۆزرایەوە"
+      );
+      return;
+    }
+
+    if (
+      window.ReaderEngine &&
+      typeof window.ReaderEngine.open ===
+        "function"
+    ) {
+      window.ReaderEngine.open(
+        book
+      );
+    } else {
+      toast(
+        "Reader هێشتا بارنەکراوە"
+      );
+    }
+  }
+
+  function toggleFavorite(id) {
+    var book =
+      books.find(function (item) {
+        return item.id === id;
+      });
+
+    if (!book) return;
+
+    book.favorite =
+      !book.favorite;
+
+    dbPut(book)
+      .then(function () {
+        renderBooks();
+      })
+      .catch(function (error) {
+        console.error(
+          "favorite:",
+          error
+        );
+      });
+  }
+
+  function deleteBook(id) {
+    var book =
+      books.find(function (item) {
+        return item.id === id;
+      });
+
+    if (!book) return;
+
+    if (
+      !window.confirm(
+        "دڵنیایت لە سڕینەوەی «" +
+          book.title +
+          "»؟"
+      )
+    ) {
+      return;
+    }
+
+    dbDelete(id)
+      .then(function () {
+        books =
+          books.filter(
+            function (item) {
+              return (
+                item.id !== id
+              );
+            }
+          );
+
+        renderBooks();
+        renderOwnerPanel();
+
+        toast(
+          "کتێبەکە سڕایەوە"
+        );
+      })
+      .catch(function (error) {
+        console.error(
+          "deleteBook:",
+          error
+        );
+
+        toast(
+          "سڕینەوە سەرکەوتوو نەبوو"
+        );
+      });
+  }
+
+  function detectSourceLang(text) {
+    var source =
+      String(text || "").trim();
+
+    if (!source) {
+      return "en";
+    }
+
+    var ku =
+      (
+        source.match(
+          /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7\u06F6]/g
+        ) || []
+      ).length;
+
+    var fa =
+      (
+        source.match(
+          /[\u067E\u0686\u0698\u06AF]/g
+        ) || []
+      ).length;
+
+    var ar =
+      (
+        source.match(
+          /[\u0600-\u06FF]/g
+        ) || []
+      ).length;
+
+    var en =
+      (
+        source.match(
+          /[A-Za-z]/g
+        ) || []
+      ).length;
+
+    if (ku >= 1) {
+      return "ku";
+    }
+
+    if (
+      fa >= 1 &&
+      en === 0
+    ) {
+      return "fa";
+    }
+
+    if (
+      en > 0 &&
+      en >= ar
+    ) {
+      return "en";
+    }
+
+    if (ar > 0) {
+      return "ar";
+    }
+
+    return "en";
+  }
+
+  function mapTranslationLang(
+    lang,
+    myMemory
+  ) {
+    var value =
+      String(
+        lang || ""
+      ).toLowerCase();
+
+    if (
+      value === "ckb" ||
+      value === "ku" ||
+      value === "ku-arab"
+    ) {
+      return myMemory
+        ? "ku"
+        : "ckb";
+    }
+
+    if (
+      value === "ar" ||
+      value === "ar-sa"
+    ) {
+      return "ar";
+    }
+
+    if (
+      value === "fa" ||
+      value === "fa-ir"
+    ) {
+      return "fa";
+    }
+
+    if (
+      value === "en" ||
+      value === "en-us"
+    ) {
+      return "en";
+    }
+
+    return myMemory
+      ? "en"
+      : "ckb";
+  }
+
+  function looksInvalidSorani(
+    text
+  ) {
+    var value =
+      String(
+        text || ""
+      ).trim();
+
+    if (!value) {
+      return true;
+    }
+
+    var latin =
+      (
+        value.match(
+          /[A-Za-z]/g
+        ) || []
+      ).length;
+
+    var arabic =
+      (
+        value.match(
+          /[\u0600-\u06FF]/g
+        ) || []
+      ).length;
+
+    return (
+      latin > 0 &&
+      latin > arabic
+    );
+  }
+
+  function cleanTranslation(
+    text,
+    targetLang
+  ) {
+    var value =
+      String(
+        text || ""
+      )
+        .replace(
+          /\s+/g,
+          " "
+        )
+        .trim();
+
+    if (!value) {
+      return "";
+    }
+
+    var target =
+      mapTranslationLang(
+        targetLang,
+        false
       );
 
-    if(a){
+    /*
+     * تەنیا بۆ وەرگێڕانی کوردی:
+     * ئەگەر API بە ڕوونی لاتینی بگەڕێنێتەوە،
+     * بە داتا هەڵەکەی ناچین.
+     */
+    if (
+      target === "ckb" &&
+      looksInvalidSorani(
+        value
+      )
+    ) {
+      return "";
+    }
 
-      var act=
-        a.getAttribute(
-          "data-action"
-        );
+    return value;
+  }
 
-      if(act==="owner-panel"){
+  function googleTranslateText(
+    text,
+    sourceLang,
+    targetLang
+  ) {
+    var sourceText =
+      String(
+        text || ""
+      ).trim();
 
-        openSheet(
-          $("ownerBack"),
-          $("ownerSheet")
-        );
+    if (!sourceText) {
+      return Promise.resolve("");
+    }
 
-        try{
-          renderOwnerPanel();
-        }catch(err){}
+    var sl =
+      mapTranslationLang(
+        sourceLang ||
+          detectSourceLang(
+            sourceText
+          ),
+        false
+      );
 
-        return;
-      }
+    var tl =
+      mapTranslationLang(
+        targetLang || "ckb",
+        false
+      );
 
-      if(act==="close-owner"){
+    if (sl === tl) {
+      return Promise.resolve(
+        sourceText
+      );
+    }
 
-        closeSheet(
-          $("ownerBack"),
-          $("ownerSheet")
-        );
+    var url =
+      "https://translate.googleapis.com/translate_a/single" +
+      "?client=gtx" +
+      "&sl=" +
+      encodeURIComponent(
+        sl
+      ) +
+      "&tl=" +
+      encodeURIComponent(
+        tl
+      ) +
+      "&dt=t" +
+      "&q=" +
+      encodeURIComponent(
+        sourceText
+      );
 
-        return;
-      }
-
-      if(act==="open-book"){
-
-        var card=
-          a.closest(
-            ".book"
-          );
-
-        if(card){
-
-          openBook(
-            card.getAttribute(
-              "data-book"
-            )
+    return fetch(url)
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error(
+            "Google HTTP " +
+              response.status
           );
         }
 
-        return;
-      }
+        return response.json();
+      })
+      .then(function (data) {
+        var result =
+          (data[0] || [])
+            .map(function (part) {
+              return (
+                part[0] || ""
+              );
+            })
+            .join("")
+            .trim();
 
-      if(act==="fav"){
-
-        var fc=
-          a.closest(
-            ".book"
+        result =
+          cleanTranslation(
+            result,
+            tl
           );
 
-        if(fc){
+        if (!result) {
+          throw new Error(
+            "Google translation invalid"
+          );
+        }
 
-          var bid=
-            fc.getAttribute(
-              "data-book"
-            );
+        return result;
+      });
+  }
 
-          var bk=
-            books.find(
-              function(x){
-                return x.id===bid;
+  function myMemoryTranslateText(
+    text,
+    sourceLang,
+    targetLang
+  ) {
+    var sourceText =
+      String(
+        text || ""
+      ).trim();
+
+    if (!sourceText) {
+      return Promise.resolve("");
+    }
+
+    var sl =
+      mapTranslationLang(
+        sourceLang ||
+          detectSourceLang(
+            sourceText
+          ),
+        true
+      );
+
+    var tl =
+      mapTranslationLang(
+        targetLang || "ckb",
+        true
+      );
+
+    if (sl === tl) {
+      return Promise.resolve(
+        sourceText
+      );
+    }
+
+    var langPair =
+      sl +
+      "|" +
+      tl;
+
+    var url =
+      "https://api.mymemory.translated.net/get" +
+      "?q=" +
+      encodeURIComponent(
+        sourceText.slice(
+          0,
+          500
+        )
+      ) +
+      "&langpair=" +
+      encodeURIComponent(
+        langPair
+      );
+
+    return fetch(url)
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error(
+            "MyMemory HTTP " +
+              response.status
+          );
+        }
+
+        return response.json();
+      })
+      .then(function (data) {
+        if (
+          data &&
+          data.responseStatus &&
+          Number(
+            data.responseStatus
+          ) !== 200
+        ) {
+          throw new Error(
+            "MyMemory " +
+              data.responseStatus
+          );
+        }
+
+        var result =
+          data &&
+          data.responseData &&
+          data.responseData
+            .translatedText;
+
+        result =
+          cleanTranslation(
+            result,
+            targetLang
+          );
+
+        if (!result) {
+          throw new Error(
+            "MyMemory translation invalid"
+          );
+        }
+
+        return result;
+      });
+  }
+
+  function translateText(
+    text,
+    targetLang
+  ) {
+    var value =
+      String(
+        text || ""
+      ).trim();
+
+    if (!value) {
+      return Promise.resolve("");
+    }
+
+    var source =
+      detectSourceLang(
+        value
+      );
+
+    return googleTranslateText(
+      value,
+      source,
+      targetLang || "ckb"
+    ).catch(function () {
+      return myMemoryTranslateText(
+        value,
+        source,
+        targetLang || "ckb"
+      );
+    });
+  }
+
+  function uniqueStrings(
+    values
+  ) {
+    var output = [];
+    var seen = {};
+
+    (values || []).forEach(
+      function (value) {
+        var clean =
+          String(
+            value || ""
+          )
+            .replace(
+              /\s+/g,
+              " "
+            )
+            .trim();
+
+        if (!clean) return;
+
+        var key =
+          clean.toLowerCase();
+
+        if (!seen[key]) {
+          seen[key] = true;
+          output.push(clean);
+        }
+      }
+    );
+
+    return output.slice(
+      0,
+      5
+    );
+  }
+
+  function geminiMeanings(
+    word,
+    targetLang
+  ) {
+    var apiKey =
+      (
+        localStorage.getItem(
+          "kh_gemini_key"
+        ) || ""
+      ).trim();
+
+    if (!apiKey) {
+      return Promise.reject(
+        new Error(
+          "NO_GEMINI_KEY"
+        )
+      );
+    }
+
+    var target =
+      targetLang === "ckb"
+        ? "کوردی سۆرانیی ستاندارد"
+        : "عەرەبیی ستاندارد";
+
+    var prompt =
+      "وشەی «" +
+      String(word || "").trim() +
+      "» وەربگێڕە بۆ " +
+      target +
+      ".\n" +
+      "تا 5 مانا یان هاوواتای جیاواز بدە، بە پێی بەکارهێنان.\n" +
+      (
+        targetLang ===
+        "ckb"
+          ? "تەنها کوردی سۆرانیی ستاندارد بەکاربهێنە. بادینی، کورمانجی، فارسی یان لاتینی بەکارمەهێنە."
+          : "تەنها عەرەبیی ستاندارد بەکاربهێنە."
+      ) +
+      "\n" +
+      'تەنها JSON بگەڕێنەوە: {"meanings":["..."]}';
+
+    /*
+     * generateContent ـەکە هەمان شێوازی
+     * بەکارهێنانی API ـی پڕۆژەیە.
+     */
+    var url =
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" +
+      encodeURIComponent(
+        apiKey
+      );
+
+    return fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type":
+          "application/json"
+      },
+      body: JSON.stringify({
+        contents: [
+          {
+            parts: [
+              {
+                text: prompt
+              }
+            ]
+          }
+        ]
+      })
+    })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error(
+            "Gemini HTTP " +
+              response.status
+          );
+        }
+
+        return response.json();
+      })
+      .then(function (data) {
+        var raw =
+          data &&
+          data.candidates &&
+          data.candidates[0] &&
+          data.candidates[0]
+            .content &&
+          data.candidates[0]
+            .content.parts &&
+          data.candidates[0]
+            .content.parts[0] &&
+          data.candidates[0]
+            .content.parts[0].text;
+
+        if (!raw) {
+          throw new Error(
+            "Gemini empty"
+          );
+        }
+
+        raw =
+          String(raw)
+            .trim()
+            .replace(
+              /^```json\s*/i,
+              ""
+            )
+            .replace(
+              /^```\s*/i,
+              ""
+            )
+            .replace(
+              /\s*```$/i,
+              ""
+            )
+            .trim();
+
+        var parsed =
+          JSON.parse(raw);
+
+        var meanings =
+          uniqueStrings(
+            parsed.meanings || []
+          );
+
+        if (
+          targetLang ===
+          "ckb"
+        ) {
+          meanings =
+            meanings.filter(
+              function (item) {
+                return !looksInvalidSorani(
+                  item
+                );
               }
             );
-
-          if(bk){
-
-            bk.favorite=
-              !bk.favorite;
-
-            dbPut(bk).then(
-              renderBooks
-            );
-          }
         }
 
-        return;
-      }
+        if (!meanings.length) {
+          throw new Error(
+            "No valid meanings"
+          );
+        }
 
-      if(act==="del-book"){
+        return meanings;
+      });
+  }
 
-        var dc=
-          a.closest(
-            ".book"
+  function getTranslationMeanings(
+    word,
+    targetLang
+  ) {
+    var value =
+      String(
+        word || ""
+      ).trim();
+
+    if (!value) {
+      return Promise.resolve(
+        []
+      );
+    }
+
+    return geminiMeanings(
+      value,
+      targetLang
+    ).catch(function () {
+      return Promise.all([
+        googleTranslateText(
+          value,
+          detectSourceLang(
+            value
+          ),
+          targetLang
+        ).catch(function () {
+          return "";
+        }),
+        myMemoryTranslateText(
+          value,
+          detectSourceLang(
+            value
+          ),
+          targetLang
+        ).catch(function () {
+          return "";
+        })
+      ]).then(function (
+        results
+      ) {
+        return uniqueStrings(
+          results
+        );
+      });
+    });
+  }
+
+  function renderMeanings(
+    meanings,
+    className
+  ) {
+    var list =
+      uniqueStrings(
+        meanings
+      );
+
+    if (!list.length) {
+      return (
+        '<span class="translation-empty">' +
+        "وەرگێڕان بەردەست نەبوو" +
+        "</span>"
+      );
+    }
+
+    return (
+      '<div class="meaning-list ' +
+      esc(className || "") +
+      '">' +
+      list
+        .map(function (item) {
+          return (
+            '<div class="meaning-item">' +
+            esc(item) +
+            "</div>"
+          );
+        })
+        .join("") +
+      "</div>"
+    );
+  }
+
+  function speakText(
+    text,
+    lang
+  ) {
+    if (
+      !window.speechSynthesis
+    ) {
+      toast(
+        "دەنگ لەم وێبگەڕەدا بەردەست نییە"
+      );
+      return;
+    }
+
+    var value =
+      String(
+        text || ""
+      ).trim();
+
+    if (!value) return;
+
+    window.speechSynthesis.cancel();
+
+    var utterance =
+      new SpeechSynthesisUtterance(
+        value
+      );
+
+    var normalized =
+      String(
+        lang || ""
+      ).toLowerCase();
+
+    if (
+      normalized === "ar" ||
+      normalized === "ar-sa"
+    ) {
+      utterance.lang = "ar-SA";
+    } else if (
+      normalized === "ku" ||
+      normalized === "ckb"
+    ) {
+      utterance.lang = "ku-Arab";
+    } else if (
+      normalized === "fa" ||
+      normalized === "fa-ir"
+    ) {
+      utterance.lang = "fa-IR";
+    } else {
+      utterance.lang = "en-US";
+    }
+
+    utterance.rate = 0.85;
+    utterance.volume = 1;
+
+    window.speechSynthesis.speak(
+      utterance
+    );
+  }
+
+  function openWordModal(
+    word
+  ) {
+    currentWord =
+      String(
+        word || ""
+      ).trim();
+
+    currentWordLang =
+      detectSourceLang(
+        currentWord
+      );
+
+    currentWordMeanings = {
+      ku: [],
+      ar: []
+    };
+
+    var sheet =
+      $("wordSheet");
+
+    if (!sheet) return;
+
+    var sourceClass =
+      currentWordLang ===
+      "en"
+        ? "english-text"
+        : currentWordLang ===
+          "ar"
+        ? "arabic-text"
+        : "kurdish-text";
+
+    sheet.innerHTML =
+      '<div class="handle"></div>' +
+
+      '<div class="section-head">' +
+      "<h3>فەرهەنگ</h3>" +
+      '<button class="icon-btn" data-action="close-word">' +
+      '<i class="fa-solid fa-xmark"></i>' +
+      "</button>" +
+      "</div>" +
+
+      '<div class="field">' +
+      "<label>وشە</label>" +
+      '<div id="modalWord" class="source-word ' +
+      sourceClass +
+      '" style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+
+      "<span>" +
+      esc(currentWord) +
+      "</span>" +
+
+      '<button class="icon-btn" data-vspeak="' +
+      esc(currentWord) +
+      '" data-vlang="' +
+      esc(currentWordLang) +
+      '" style="width:34px;height:34px;color:var(--a)">' +
+      '<i class="fa-solid fa-volume-high"></i>' +
+      "</button>" +
+
+      "</div>" +
+      "</div>" +
+
+      '<div class="field">' +
+      "<label>بە کوردی</label>" +
+      '<div id="modalKu" class="translation-box ku-translation">' +
+      "چاوەڕوانی..." +
+      "</div>" +
+      "</div>" +
+
+      '<div class="field">' +
+      "<label>بە عەرەبی</label>" +
+      '<div id="modalAr" class="translation-box ar-translation">' +
+      '<div id="modalArText">' +
+      "چاوەڕوانی..." +
+      "</div>" +
+      '<button class="icon-btn" id="modalArSpeakBtn" style="width:34px;height:34px;color:#22c98b;margin-top:8px">' +
+      '<i class="fa-solid fa-volume-high"></i>' +
+      "</button>" +
+      "</div>" +
+      "</div>" +
+
+      '<div class="hero-actions">' +
+      '<button class="primary" data-action="save-word">' +
+      "خەزنکردنی وشەکە" +
+      "</button>" +
+      "</div>";
+
+    openSheet(
+      $("wordBack"),
+      sheet
+    );
+
+    getTranslationMeanings(
+      currentWord,
+      "ckb"
+    )
+      .then(function (meanings) {
+        currentWordMeanings.ku =
+          uniqueStrings(
+            meanings
           );
 
-        if(dc){
+        var el =
+          $("modalKu");
 
-          var delId=
-            dc.getAttribute(
-              "data-book"
+        if (el) {
+          el.innerHTML =
+            renderMeanings(
+              currentWordMeanings.ku,
+              "ku-translation"
             );
+        }
+      })
+      .catch(function () {
+        var el =
+          $("modalKu");
 
-          if(
-            confirm(
-              "ئەم کتێبە بسڕدرێتەوە؟"
+        if (el) {
+          el.textContent =
+            "وەرگێڕان بەردەست نەبوو";
+        }
+      });
+
+    getTranslationMeanings(
+      currentWord,
+      "ar"
+    )
+      .then(function (meanings) {
+        currentWordMeanings.ar =
+          uniqueStrings(
+            meanings
+          );
+
+        var text =
+          $("modalArText");
+
+        if (text) {
+          text.innerHTML =
+            renderMeanings(
+              currentWordMeanings.ar,
+              "ar-translation"
+            );
+        }
+
+        var button =
+          $("modalArSpeakBtn");
+
+        if (button) {
+          button.setAttribute(
+            "data-vspeak",
+            currentWordMeanings.ar.join(
+              "، "
             )
-          ){
+          );
 
-            dbDel(delId)
-              .then(function(){
+          button.setAttribute(
+            "data-vlang",
+            "ar"
+          );
+        }
+      })
+      .catch(function () {
+        var text =
+          $("modalArText");
 
-                books=
-                  books.filter(
-                    function(x){
-                      return x.id!==delId;
-                    }
+        if (text) {
+          text.textContent =
+            "وەرگێڕان بەردەست نەبوو";
+        }
+      });
+  }
+
+  function openSentenceModal(
+    sentence
+  ) {
+    var text =
+      String(
+        sentence || ""
+      ).trim();
+
+    if (
+      text.length < 2
+    ) {
+      return;
+    }
+
+    var original =
+      $("sentenceOriginal");
+
+    var kurdish =
+      $("sentenceKu");
+
+    if (original) {
+      original.textContent =
+        text;
+    }
+
+    if (kurdish) {
+      kurdish.textContent =
+        "چاوەڕوانی...";
+    }
+
+    openSheet(
+      $("sentenceBack"),
+      $("sentenceSheet")
+    );
+
+    translateText(
+      text,
+      "ckb"
+    )
+      .then(function (result) {
+        if (kurdish) {
+          kurdish.textContent =
+            result ||
+            "وەرگێڕان بەردەست نەبوو";
+        }
+      })
+      .catch(function () {
+        if (kurdish) {
+          kurdish.textContent =
+            "وەرگێڕان بەردەست نەبوو";
+        }
+      });
+  }
+
+  function saveWord() {
+    if (!currentWord) return;
+
+    var exists =
+      vocab.some(function (item) {
+        return (
+          String(
+            item.word || ""
+          ).toLowerCase() ===
+          currentWord.toLowerCase()
+        );
+      });
+
+    if (exists) {
+      toast(
+        "ئەم وشەیە پێشتر خەزنکراوە"
+      );
+      return;
+    }
+
+    var ku =
+      currentWordMeanings.ku.join(
+        "\n"
+      );
+
+    var ar =
+      currentWordMeanings.ar.join(
+        "\n"
+      );
+
+    vocab.unshift({
+      id:
+        String(Date.now()) +
+        "_" +
+        Math.floor(
+          Math.random() * 10000
+        ),
+
+      word:
+        currentWord,
+
+      lang:
+        currentWordLang,
+
+      ku: ku,
+
+      third: ar
+    });
+
+    saveJSON(
+      "kh_vocab",
+      vocab
+    );
+
+    renderBooks();
+
+    closeSheet(
+      $("wordBack"),
+      $("wordSheet")
+    );
+
+    toast(
+      "وشەکە خەزنکرا"
+    );
+  }
+
+  function renderVocab() {
+    var back =
+      document.createElement(
+        "div"
+      );
+
+    var sheet =
+      document.createElement(
+        "div"
+      );
+
+    back.className =
+      "back open";
+
+    sheet.className =
+      "sheet open";
+
+    sheet.innerHTML =
+      '<div class="handle"></div>' +
+
+      '<div class="section-head">' +
+      "<h3>وشەکانم</h3>" +
+      '<button class="icon-btn" data-temp-close>' +
+      '<i class="fa-solid fa-xmark"></i>' +
+      "</button>" +
+      "</div>" +
+
+      '<div style="margin-top:10px;max-height:400px;overflow:auto">' +
+
+      (
+        vocab.length
+          ? vocab
+              .map(function (item) {
+                var source =
+                  item.lang ||
+                  detectSourceLang(
+                    item.word
                   );
 
-                renderBooks();
+                return (
+                  '<div class="field" style="margin-bottom:10px">' +
 
-                toast(
-                  "کتێبەکە سڕایەوە"
+                  '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800;color:#f4c85c;font-size:17px">' +
+
+                  "<span>" +
+                  esc(item.word) +
+                  "</span>" +
+
+                  '<button class="icon-btn" data-vspeak="' +
+                  esc(item.word) +
+                  '" data-vlang="' +
+                  esc(source) +
+                  '" style="width:30px;height:30px">' +
+                  '<i class="fa-solid fa-volume-high"></i>' +
+                  "</button>" +
+
+                  "</div>" +
+
+                  '<div class="saved-meanings ku-translation" style="margin-top:7px">' +
+                  esc(
+                    String(
+                      item.ku || ""
+                    ).replace(
+                      /\n/g,
+                      "، "
+                    )
+                  ) +
+                  "</div>" +
+
+                  '<div style="display:flex;gap:7px;align-items:flex-start;margin-top:7px">' +
+
+                  '<div class="saved-meanings ar-translation" style="flex:1">' +
+                  esc(
+                    String(
+                      item.third || ""
+                    ).replace(
+                      /\n/g,
+                      "، "
+                    )
+                  ) +
+                  "</div>" +
+
+                  '<button class="icon-btn" data-vspeak="' +
+                  esc(
+                    item.third || ""
+                  ) +
+                  '" data-vlang="ar" style="width:30px;height:30px">' +
+                  '<i class="fa-solid fa-volume-high"></i>' +
+                  "</button>" +
+
+                  "</div>" +
+
+                  '<div class="hero-actions">' +
+
+                  '<button class="ghost" data-vdel="' +
+                  esc(
+                    item.id
+                  ) +
+                  '">' +
+                  "سڕینەوە" +
+                  "</button>" +
+
+                  "</div>" +
+
+                  "</div>"
                 );
-              });
+              })
+              .join("")
+          : '<div style="padding:30px;text-align:center;color:var(--muted)">هێشتا وشەیەک خەزن نەکراوە</div>'
+      ) +
+
+      "</div>";
+
+    document.body.appendChild(
+      back
+    );
+
+    document.body.appendChild(
+      sheet
+    );
+
+    updateTelegramBtn();
+
+    function close() {
+      back.remove();
+      sheet.remove();
+      updateTelegramBtn();
+    }
+
+    back.addEventListener(
+      "click",
+      close
+    );
+
+    sheet.addEventListener(
+      "click",
+      function (event) {
+        var closeButton =
+          event.target.closest(
+            "[data-temp-close]"
+          );
+
+        if (closeButton) {
+          close();
+          return;
+        }
+
+        var del =
+          event.target.closest(
+            "[data-vdel]"
+          );
+
+        if (!del) return;
+
+        var id =
+          del.getAttribute(
+            "data-vdel"
+          );
+
+        vocab =
+          vocab.filter(
+            function (item) {
+              return (
+                item.id !== id
+              );
+            }
+          );
+
+        saveJSON(
+          "kh_vocab",
+          vocab
+        );
+
+        close();
+
+        renderVocab();
+        renderBooks();
+      }
+    );
+  }
+
+  function addMusicFiles(
+    files
+  ) {
+    if (!files) return;
+
+    for (
+      var i = 0;
+      i < files.length;
+      i++
+    ) {
+      var file =
+        files[i];
+
+      music.push({
+        name:
+          file.name,
+        url:
+          URL.createObjectURL(
+            file
+          )
+      });
+    }
+
+    if (
+      musicIndex < 0 &&
+      music.length
+    ) {
+      loadTrack(
+        0,
+        false
+      );
+    }
+
+    renderTracks();
+  }
+
+  function loadTrack(
+    index,
+    autoplay
+  ) {
+    if (!music[index]) {
+      return;
+    }
+
+    musicIndex =
+      index;
+
+    var audio =
+      $("audio");
+
+    if (audio) {
+      audio.src =
+        music[index].url;
+
+      audio.volume =
+        musicVolume;
+    }
+
+    var name =
+      $("nowName");
+
+    if (name) {
+      name.textContent =
+        music[index].name;
+    }
+
+    var sub =
+      $("nowSub");
+
+    if (sub) {
+      sub.textContent =
+        "دەنگی هەڵبژێردراو";
+    }
+
+    renderTracks();
+    updatePlayButton();
+
+    if (
+      autoplay &&
+      audio
+    ) {
+      audio
+        .play()
+        .then(
+          updatePlayButton
+        )
+        .catch(function () {});
+    }
+  }
+
+  function updatePlayButton() {
+    var audio =
+      $("audio");
+
+    var button =
+      document.querySelector(
+        ".music-btn.big[data-action='play-pause']"
+      );
+
+    var playing =
+      audio &&
+      !audio.paused &&
+      musicIndex >= 0;
+
+    if (button) {
+      button.innerHTML =
+        playing
+          ? '<i class="fa-solid fa-pause"></i>'
+          : '<i class="fa-solid fa-play"></i>';
+    }
+
+    document
+      .querySelectorAll(
+        "[data-track]"
+      )
+      .forEach(function (item) {
+        var index =
+          Number(
+            item.getAttribute(
+              "data-track"
+            )
+          );
+
+        var icon =
+          item.querySelector(
+            "i"
+          );
+
+        if (!icon) return;
+
+        icon.className =
+          "fa-solid " +
+          (
+            index ===
+              musicIndex &&
+            playing
+              ? "fa-pause"
+              : "fa-play"
+          );
+      });
+  }
+
+  function renderTracks() {
+    var box =
+      $("tracks");
+
+    if (!box) return;
+
+    if (!music.length) {
+      box.innerHTML =
+        '<div style="text-align:center;padding:10px;color:var(--muted);font-size:10px">هیچ دەنگێک نییە.</div>';
+
+      return;
+    }
+
+    box.innerHTML =
+      music
+        .map(function (track, index) {
+          return (
+            '<div class="track" data-track-card="' +
+            index +
+            '" style="cursor:pointer">' +
+
+            '<button data-track="' +
+            index +
+            '">' +
+
+            '<i class="fa-solid fa-play"></i>' +
+
+            "</button>" +
+
+            "<span>" +
+            esc(track.name) +
+            "</span>" +
+
+            "</div>"
+          );
+        })
+        .join("");
+
+    updatePlayButton();
+  }
+
+  function renderOwnerPanel() {
+    var total =
+      $("ownerTotalBooks");
+
+    if (total) {
+      total.textContent =
+        books.length;
+    }
+
+    var publicCount =
+      $("ownerPublicBooks");
+
+    if (publicCount) {
+      publicCount.textContent =
+        books.filter(
+          function (book) {
+            return (
+              book.isPublished !==
+              false
+            );
           }
-        }
+        ).length;
+    }
 
-        return;
+    var pending =
+      $("ownerPendingBooks");
+
+    if (pending) {
+      pending.textContent =
+        books.filter(
+          function (book) {
+            return (
+              book.isPublished ===
+              false
+            );
+          }
+        ).length;
+    }
+
+    var audioCount =
+      $("ownerTotalAudios");
+
+    if (audioCount) {
+      audioCount.textContent =
+        music.length;
+    }
+
+    var list =
+      $("ownerBooksList");
+
+    if (!list) return;
+
+    if (!books.length) {
+      list.innerHTML =
+        '<div style="text-align:center;color:var(--muted);padding:12px;font-size:10px">هیچ کتێبێک نییە.</div>';
+      return;
+    }
+
+    list.innerHTML =
+      books
+        .map(function (book) {
+          var category =
+            book.category ||
+            "گشتی";
+
+          return (
+            '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--line);padding:8px;border-radius:11px">' +
+
+            '<div style="flex:1;min-width:0">' +
+
+            '<strong style="font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+            esc(book.title) +
+            "</strong>" +
+
+            '<div style="margin-top:5px">' +
+
+            '<select data-owner-cat="' +
+            esc(book.id) +
+            '" style="font-size:10px;background:var(--surface);color:#fff;border:1px solid var(--line);border-radius:6px;padding:3px">' +
+
+            CATEGORIES
+              .map(
+                function (cat) {
+                  return (
+                    '<option value="' +
+                    esc(cat) +
+                    '"' +
+                    (
+                      category ===
+                      cat
+                        ? " selected"
+                        : ""
+                    ) +
+                    ">" +
+                    esc(cat) +
+                    "</option>"
+                  );
+                }
+              )
+              .join("") +
+
+            "</select>" +
+
+            "</div>" +
+
+            "</div>" +
+
+            '<button class="icon-btn" data-owner-del="' +
+            esc(book.id) +
+            '" style="width:32px;height:32px;color:#ff536d">' +
+            '<i class="fa-regular fa-trash-can"></i>' +
+            "</button>" +
+
+            "</div>"
+          );
+        })
+        .join("");
+  }
+
+  window.AppLib = {
+    dbPut: dbPut,
+
+    dbAll: dbAll,
+
+    updateTelegram: updateTelegramBtn,
+
+    openSettings: function () {
+      renderSiteThemes();
+      renderReaderThemes();
+      updateThemeBadges();
+
+      var apiInput =
+        $("geminiApiKey");
+
+      if (apiInput) {
+        try {
+          apiInput.value =
+            localStorage.getItem(
+              "kh_gemini_key"
+            ) || "";
+        } catch (e) {}
       }
 
-      if(act==="continue"){
+      openSheet(
+        $("sheetBack"),
+        $("settingsSheet")
+      );
+    },
 
-        var bTop=
-          books
-            .slice()
-            .sort(
-              function(x,y){
-                return y.progress-x.progress;
-              }
-            )[0];
+    getMusicVolume:
+      function () {
+        return musicVolume;
+      },
 
-        if(bTop){
+    setMusicVolume:
+      function (value) {
+        var number =
+          Number(value);
 
-          openBook(
-            bTop.id
+        if (
+          !Number.isFinite(
+            number
+          )
+        ) {
+          number = 0.32;
+        }
+
+        musicVolume =
+          Math.max(
+            0,
+            Math.min(
+              1,
+              number
+            )
           );
 
-        }else{
+        var audio =
+          $("audio");
 
-          toast(
-            "هێشتا کتێب نییە"
+        if (audio) {
+          audio.volume =
+            musicVolume;
+        }
+
+        try {
+          localStorage.setItem(
+            "kh_music_volume",
+            String(
+              musicVolume
+            )
           );
-        }
+        } catch (e) {}
+      },
+
+    translateText:
+      translateText,
+
+    detectSourceLang:
+      detectSourceLang
+  };
+
+  document.addEventListener(
+    "click",
+    function (event) {
+      var speakButton =
+        event.target.closest(
+          "[data-vspeak]"
+        );
+
+      if (speakButton) {
+        speakText(
+          speakButton.getAttribute(
+            "data-vspeak"
+          ),
+          speakButton.getAttribute(
+            "data-vlang"
+          )
+        );
 
         return;
       }
 
-      if(act==="add-pdf"){
+      var action =
+        event.target.closest(
+          "[data-action]"
+        );
 
-        if($("pdfInput")){
-          $("pdfInput").click();
+      if (action) {
+        var name =
+          action.getAttribute(
+            "data-action"
+          );
+
+        if (
+          name ===
+          "add-pdf"
+        ) {
+          var input =
+            $("pdfInput");
+
+          if (input) {
+            input.click();
+          }
+
+          return;
         }
 
-        return;
-      }
+        if (
+          name ===
+          "add-music"
+        ) {
+          var musicInput =
+            $("musicInput");
 
-      if(act==="add-music"){
+          if (musicInput) {
+            musicInput.click();
+          }
 
-        if($("musicInput")){
-          $("musicInput").click();
+          return;
         }
 
-        return;
-      }
+        if (
+          name ===
+          "open-book"
+        ) {
+          var card =
+            action.closest(
+              ".book"
+            );
 
-      if(act==="play-pause"){
+          if (card) {
+            openBook(
+              card.getAttribute(
+                "data-book"
+              )
+            );
+          }
 
-        var au=$("audio");
+          return;
+        }
 
-        if(au){
+        if (
+          name ===
+          "fav"
+        ) {
+          var cardFav =
+            action.closest(
+              ".book"
+            );
 
-          if(
-            musicIndex<0&&
+          if (cardFav) {
+            toggleFavorite(
+              cardFav.getAttribute(
+                "data-book"
+              )
+            );
+          }
+
+          return;
+        }
+
+        if (
+          name ===
+          "del-book"
+        ) {
+          var cardDel =
+            action.closest(
+              ".book"
+            );
+
+          if (cardDel) {
+            deleteBook(
+              cardDel.getAttribute(
+                "data-book"
+              )
+            );
+          }
+
+          return;
+        }
+
+        if (
+          name ===
+          "continue"
+        ) {
+          if (!books.length) {
+            toast(
+              "هێشتا کتێب نییە"
+            );
+            return;
+          }
+
+          var latest =
+            books
+              .slice()
+              .sort(
+                function (a, b) {
+                  return (
+                    (b.updatedAt ||
+                      b.addedAt ||
+                      0) -
+                    (a.updatedAt ||
+                      a.addedAt ||
+                      0)
+                  );
+                }
+              )[0];
+
+          if (latest) {
+            openBook(
+              latest.id
+            );
+          }
+
+          return;
+        }
+
+        if (
+          name ===
+          "settings"
+        ) {
+          window.AppLib.openSettings();
+          return;
+        }
+
+        if (
+          name ===
+          "close-settings"
+        ) {
+          closeSheet(
+            $("sheetBack"),
+            $("settingsSheet")
+          );
+          return;
+        }
+
+        if (
+          name ===
+          "owner-panel"
+        ) {
+          renderOwnerPanel();
+
+          openSheet(
+            $("ownerBack"),
+            $("ownerSheet")
+          );
+
+          return;
+        }
+
+        if (
+          name ===
+          "close-owner"
+        ) {
+          closeSheet(
+            $("ownerBack"),
+            $("ownerSheet")
+          );
+
+          return;
+        }
+
+        if (
+          name ===
+          "close-word"
+        ) {
+          closeSheet(
+            $("wordBack"),
+            $("wordSheet")
+          );
+
+          return;
+        }
+
+        if (
+          name ===
+          "save-word"
+        ) {
+          saveWord();
+          return;
+        }
+
+        if (
+          name ===
+          "close-sentence"
+        ) {
+          closeSheet(
+            $("sentenceBack"),
+            $("sentenceSheet")
+          );
+
+          return;
+        }
+
+        if (
+          name ===
+          "clear-vocab"
+        ) {
+          if (
+            window.confirm(
+              "هەموو وشە خەزنکراوەکان بسڕدرێنەوە؟"
+            )
+          ) {
+            vocab = [];
+
+            saveJSON(
+              "kh_vocab",
+              vocab
+            );
+
+            renderBooks();
+
+            toast(
+              "وشەکان سڕانەوە"
+            );
+          }
+
+          return;
+        }
+
+        if (
+          name ===
+          "play-pause"
+        ) {
+          var audio =
+            $("audio");
+
+          if (!audio) {
+            return;
+          }
+
+          if (
+            musicIndex < 0 &&
             music.length
-          ){
-
+          ) {
             loadTrack(
               0,
               true
             );
 
-          }else if(
-            au.paused
-          ){
-
-            au.play()
+          } else if (
+            audio.paused
+          ) {
+            audio
+              .play()
               .then(
-                updatePlayButtonUI
+                updatePlayButton
               )
-              .catch(function(){});
-
-          }else{
-
-            au.pause();
-            updatePlayButtonUI();
+              .catch(
+                function () {}
+              );
+          } else {
+            audio.pause();
+            updatePlayButton();
           }
+
+          return;
         }
 
-        return;
-      }
-
-      if(act==="next-track"){
-
-        if(music.length){
+        if (
+          name ===
+          "next-track"
+        ) {
+          if (!music.length) {
+            return;
+          }
 
           loadTrack(
-            (musicIndex+1)%
-            music.length,
+            (
+              musicIndex +
+              1
+            ) %
+              music.length,
+            true
+          );
+
+          return;
+        }
+
+        if (
+          name ===
+          "prev-track"
+        ) {
+          if (!music.length) {
+            return;
+          }
+
+          loadTrack(
+            (
+              musicIndex -
+              1 +
+              music.length
+            ) %
+              music.length,
+            true
+          );
+
+          return;
+        }
+
+        if (
+          name ===
+          "page-prev" ||
+          name ===
+          "page-next"
+        ) {
+          return;
+        }
+      }
+
+      var track =
+        event.target.closest(
+          "[data-track-card]"
+        );
+
+      if (track) {
+        var index =
+          Number(
+            track.getAttribute(
+              "data-track-card"
+            )
+          );
+
+        var audio =
+          $("audio");
+
+        if (
+          index ===
+            musicIndex &&
+          audio &&
+          !audio.paused
+        ) {
+          audio.pause();
+          updatePlayButton();
+        } else {
+          loadTrack(
+            index,
             true
           );
         }
@@ -2459,166 +3190,73 @@ document.addEventListener(
         return;
       }
 
-      if(act==="prev-track"){
+      var theme =
+        event.target.closest(
+          "[data-site-theme]"
+        );
 
-        if(music.length){
-
-          loadTrack(
-            (musicIndex-1+
-              music.length)%
-            music.length,
-            true
-          );
-        }
+      if (theme) {
+        setSiteTheme(
+          theme.getAttribute(
+            "data-site-theme"
+          )
+        );
 
         return;
       }
 
-      if(act==="settings"){
+      var readerThemeButton =
+        event.target.closest(
+          "[data-set-reader-theme]"
+        );
 
-        renderSiteThemes();
+      if (readerThemeButton) {
+        readerTheme =
+          readerThemeButton.getAttribute(
+            "data-set-reader-theme"
+          );
+
+        try {
+          localStorage.setItem(
+            "kh_reader_theme",
+            readerTheme
+          );
+        } catch (e) {}
+
         renderReaderThemes();
         updateThemeBadges();
 
-        if($("geminiApiKey")){
-
-          $("geminiApiKey").value=
-            localStorage.getItem(
-              "kh_gemini_key"
-            )||"";
+        if (
+          window.ReaderEngine &&
+          typeof window.ReaderEngine.applyTheme ===
+            "function"
+        ) {
+          window.ReaderEngine.applyTheme();
         }
 
-        openSheet(
-          $("sheetBack"),
-          $("settingsSheet")
-        );
-
         return;
       }
 
-      if(act==="close-settings"){
-
-        closeSheet(
-          $("sheetBack"),
-          $("settingsSheet")
+      var accordion =
+        event.target.closest(
+          "[data-toggle-target]"
         );
 
-        return;
-      }
-
-      if(act==="clear-vocab"){
-
-        if(
-          confirm(
-            "هەموو وشەکان بسڕدرێنەوە؟"
-          )
-        ){
-
-          vocab=[];
-
-          try{
-
-            localStorage.setItem(
-              "kh_vocab",
-              "[]"
-            );
-
-          }catch(err){}
-
-          renderBooks();
-
-          toast(
-            "وشەکان سڕانەوە"
+      if (accordion) {
+        var targetId =
+          accordion.getAttribute(
+            "data-toggle-target"
           );
+
+        var target =
+          $(targetId);
+
+        if (!target) {
+          return;
         }
 
-        return;
-      }
-
-      if(act==="close-word"){
-
-        closeSheet(
-          $("wordBack"),
-          $("wordSheet")
-        );
-
-        return;
-      }
-
-      if(act==="save-word"){
-
-        saveWord();
-
-        return;
-      }
-
-      if(act==="close-sentence"){
-
-        closeSheet(
-          $("sentenceBack"),
-          $("sentenceSheet")
-        );
-
-        return;
-      }
-    }
-
-    var tc=
-      e.target.closest(
-        "[data-track-card]"
-      );
-
-    if(tc){
-
-      var tIdx=
-        Number(
-          tc.getAttribute(
-            "data-track-card"
-          )
-        );
-
-      var audioEl=
-        $("audio");
-
-      if(
-        tIdx===musicIndex&&
-        audioEl&&
-        !audioEl.paused
-      ){
-
-        audioEl.pause();
-        updatePlayButtonUI();
-
-      }else{
-
-        loadTrack(
-          tIdx,
-          true
-        );
-      }
-
-      return;
-    }
-
-    var th=
-      e.target.closest(
-        "[data-toggle-target]"
-      );
-
-    if(th){
-
-      var targetId=
-        th.getAttribute(
-          "data-toggle-target"
-        );
-
-      var wrap=
-        $(targetId);
-
-      if(wrap){
-
-        var isHidden=
-          wrap.classList.contains(
+        var wasHidden =
+          target.classList.contains(
             "hidden"
           );
 
@@ -2627,8 +3265,8 @@ document.addEventListener(
             ".setting-collapse"
           )
           .forEach(
-            function(c){
-              c.classList.add(
+            function (item) {
+              item.classList.add(
                 "hidden"
               );
             }
@@ -2639,537 +3277,526 @@ document.addEventListener(
             ".setting-header"
           )
           .forEach(
-            function(h){
-              h.classList.remove(
+            function (item) {
+              item.classList.remove(
                 "open"
               );
             }
           );
 
-        if(isHidden){
-
-          wrap.classList.remove(
+        if (wasHidden) {
+          target.classList.remove(
             "hidden"
           );
 
-          th.classList.add(
+          accordion.classList.add(
             "open"
           );
         }
-      }
-
-      return;
-    }
-
-    var n=
-      e.target.closest(
-        "[data-nav]"
-      );
-
-    if(n){
-
-      var v=
-        n.getAttribute(
-          "data-nav"
-        );
-
-      document
-        .querySelectorAll(
-          ".nav"
-        )
-        .forEach(
-          function(x){
-            x.classList.toggle(
-              "active",
-              x===n
-            );
-          }
-        );
-
-      updateTelegramBtn();
-
-      if(v==="vocab"){
-
-        renderVocab();
 
         return;
       }
 
-      filter=
-        v==="favorites"?
-        "favorites":
-        "all";
-
-      document
-        .querySelectorAll(
-          ".chip"
-        )
-        .forEach(
-          function(c){
-            c.classList.toggle(
-              "active",
-              c.getAttribute(
-                "data-filter"
-              )===filter
-            );
-          }
+      var navigation =
+        event.target.closest(
+          "[data-nav]"
         );
 
-      renderBooks();
-
-      return;
-    }
-
-    var ch=
-      e.target.closest(
-        "[data-filter]"
-      );
-
-    if(ch){
-
-      filter=
-        ch.getAttribute(
-          "data-filter"
-        );
-
-      document
-        .querySelectorAll(
-          ".chip"
-        )
-        .forEach(
-          function(c){
-            c.classList.toggle(
-              "active",
-              c===ch
-            );
-          }
-        );
-
-      renderBooks();
-
-      return;
-    }
-
-    var st=
-      e.target.closest(
-        "[data-site-theme]"
-      );
-
-    if(st){
-
-      setSiteTheme(
-        st.getAttribute(
-          "data-site-theme"
-        )
-      );
-
-      return;
-    }
-
-    var srt=
-      e.target.closest(
-        "[data-set-reader-theme]"
-      );
-
-    if(srt){
-
-      readerTheme=
-        srt.getAttribute(
-          "data-set-reader-theme"
-        );
-
-      try{
-
-        localStorage.setItem(
-          "kh_reader_theme",
-          readerTheme
-        );
-
-      }catch(err){}
-
-      renderReaderThemes();
-      updateThemeBadges();
-
-      return;
-    }
-
-    var w=
-      e.target.closest(
-        ".rw"
-      );
-
-    if(
-      w&&
-      w.getAttribute(
-        "data-word"
-      )
-    ){
-
-      if(
-        window.getSelection&&
-        !window.getSelection().isCollapsed
-      ){
-
-        var sel=
-          window.getSelection()
-            .toString()
-            .trim();
-
-        if(sel.length>1){
-
-          openSentenceModal(
-            sel
+      if (navigation) {
+        var nav =
+          navigation.getAttribute(
+            "data-nav"
           );
 
+        document
+          .querySelectorAll(
+            ".nav"
+          )
+          .forEach(
+            function (item) {
+              item.classList.toggle(
+                "active",
+                item ===
+                  navigation
+              );
+            }
+          );
+
+        updateTelegramBtn();
+
+        if (
+          nav ===
+          "vocab"
+        ) {
+          renderVocab();
           return;
         }
+
+        filter =
+          nav ===
+          "favorites"
+            ? "favorites"
+            : "all";
+
+        document
+          .querySelectorAll(
+            ".chip"
+          )
+          .forEach(
+            function (item) {
+              item.classList.toggle(
+                "active",
+                item.getAttribute(
+                  "data-filter"
+                ) === filter
+              );
+            }
+          );
+
+        renderBooks();
+
+        return;
       }
 
-      openWordModal(
-        w.getAttribute(
+      var filterButton =
+        event.target.closest(
+          "[data-filter]"
+        );
+
+      if (filterButton) {
+        filter =
+          filterButton.getAttribute(
+            "data-filter"
+          );
+
+        document
+          .querySelectorAll(
+            ".chip"
+          )
+          .forEach(
+            function (item) {
+              item.classList.toggle(
+                "active",
+                item ===
+                  filterButton
+              );
+            }
+          );
+
+        renderBooks();
+
+        return;
+      }
+
+      var ownerDelete =
+        event.target.closest(
+          "[data-owner-del]"
+        );
+
+      if (ownerDelete) {
+        var ownerId =
+          ownerDelete.getAttribute(
+            "data-owner-del"
+          );
+
+        deleteBook(ownerId);
+
+        return;
+      }
+
+      var word =
+        event.target.closest(
+          ".rw"
+        );
+
+      if (
+        word &&
+        word.getAttribute(
           "data-word"
         )
-      );
+      ) {
+        var selection =
+          window.getSelection
+            ? window
+                .getSelection()
+                .toString()
+                .trim()
+            : "";
 
-      return;
-    }
-  }
-);
+        if (
+          selection &&
+          selection.length >
+            1
+        ) {
+          openSentenceModal(
+            selection
+          );
+        } else {
+          openWordModal(
+            word.getAttribute(
+              "data-word"
+            )
+          );
+        }
 
-document.addEventListener(
-  "change",
-  function(e){
-
-    var oc=
-      e.target.closest(
-        "[data-owner-cat]"
-      );
-
-    if(oc){
-
-      var bid=
-        oc.getAttribute(
-          "data-owner-cat"
-        );
-
-      var bk=
-        books.find(
-          function(x){
-            return x.id===bid;
-          }
-        );
-
-      if(bk){
-
-        bk.category=
-          oc.value;
-
-        dbPut(bk).then(
-          function(){
-
-            renderBooks();
-
-            toast(
-              "پۆل نوێکرایەوە"
-            );
-          }
-        );
+        return;
       }
     }
-  }
-);
+  );
 
-if($("sheetBack")){
+  document.addEventListener(
+    "change",
+    function (event) {
+      var ownerCategory =
+        event.target.closest(
+          "[data-owner-cat]"
+        );
 
-  $("sheetBack")
-    .addEventListener(
+      if (ownerCategory) {
+        var id =
+          ownerCategory.getAttribute(
+            "data-owner-cat"
+          );
+
+        var book =
+          books.find(function (item) {
+            return item.id === id;
+          });
+
+        if (!book) return;
+
+        book.category =
+          ownerCategory.value;
+
+        book.updatedAt =
+          Date.now();
+
+        dbPut(book)
+          .then(function () {
+            renderBooks();
+            renderOwnerPanel();
+
+            toast(
+              "پۆلەکە نوێکرایەوە"
+            );
+          })
+          .catch(function (error) {
+            console.error(
+              error
+            );
+          });
+
+        return;
+      }
+
+      if (
+        event.target ===
+        $("pdfInput")
+      ) {
+        return;
+      }
+    }
+  );
+
+  var sheetBack =
+    $("sheetBack");
+
+  if (sheetBack) {
+    sheetBack.addEventListener(
       "click",
-      function(){
-
+      function () {
         closeSheet(
           $("sheetBack"),
           $("settingsSheet")
         );
-
       }
     );
-}
+  }
 
-if($("ownerBack")){
+  var ownerBack =
+    $("ownerBack");
 
-  $("ownerBack")
-    .addEventListener(
+  if (ownerBack) {
+    ownerBack.addEventListener(
       "click",
-      function(){
-
+      function () {
         closeSheet(
           $("ownerBack"),
           $("ownerSheet")
         );
-
       }
     );
-}
+  }
 
-if($("wordBack")){
+  var wordBack =
+    $("wordBack");
 
-  $("wordBack")
-    .addEventListener(
+  if (wordBack) {
+    wordBack.addEventListener(
       "click",
-      function(){
-
+      function () {
         closeSheet(
           $("wordBack"),
           $("wordSheet")
         );
-
       }
     );
-}
+  }
 
-if($("sentenceBack")){
+  var sentenceBack =
+    $("sentenceBack");
 
-  $("sentenceBack")
-    .addEventListener(
+  if (sentenceBack) {
+    sentenceBack.addEventListener(
       "click",
-      function(){
-
+      function () {
         closeSheet(
           $("sentenceBack"),
           $("sentenceSheet")
         );
-
       }
     );
-}
+  }
 
-if($("pdfInput")){
+  var pdfInput =
+    $("pdfInput");
 
-  $("pdfInput")
-    .addEventListener(
+  if (pdfInput) {
+    pdfInput.addEventListener(
       "change",
-      function(){
-
+      function () {
         addPDF(
-          this.files[0]
+          this.files &&
+            this.files[0]
         );
-
       }
     );
-}
+  }
 
-if($("musicInput")){
+  var musicInput =
+    $("musicInput");
 
-  $("musicInput")
-    .addEventListener(
+  if (musicInput) {
+    musicInput.addEventListener(
       "change",
-      function(){
-
+      function () {
         addMusicFiles(
           this.files
         );
 
-        this.value="";
+        this.value = "";
       }
     );
-}
+  }
 
-if($("searchInput")){
+  var search =
+    $("searchInput");
 
-  $("searchInput")
-    .addEventListener(
+  if (search) {
+    search.addEventListener(
       "input",
-      function(){
-
-        query=
+      function () {
+        query =
           this.value.trim();
 
         renderBooks();
-
       }
     );
-}
+  }
 
-var au=$("audio");
+  var audio =
+    $("audio");
 
-if(au){
+  if (audio) {
+    audio.addEventListener(
+      "timeupdate",
+      function () {
+        var range =
+          $("audioRange");
 
-  au.addEventListener(
-    "timeupdate",
-    function(){
-
-      if(
-        this.duration&&
-        $("audioRange")
-      ){
-
-        $("audioRange").value=
-          Math.round(
-            this.currentTime/
-            this.duration*
-            100
-          );
-      }
-    }
-  );
-
-  au.addEventListener(
-    "ended",
-    function(){
-
-      if(music.length){
-
-        loadTrack(
-          (musicIndex+1)%
-          music.length,
-          true
-        );
-      }
-
-    }
-  );
-
-  au.addEventListener(
-    "play",
-    updatePlayButtonUI
-  );
-
-  au.addEventListener(
-    "pause",
-    updatePlayButtonUI
-  );
-}
-
-if($("audioRange")){
-
-  $("audioRange")
-    .addEventListener(
-      "input",
-      function(){
-
-        var au=
-          $("audio");
-
-        if(
-          au&&
-          au.duration
-        ){
-
-          au.currentTime=
-            au.duration*
-            (
-              Number(
-                this.value
-              )/100
+        if (
+          range &&
+          this.duration
+        ) {
+          range.value =
+            String(
+              Math.round(
+                (
+                  this.currentTime /
+                  this.duration
+                ) *
+                  100
+              )
             );
         }
       }
     );
-}
 
-if($("geminiApiKey")){
+    audio.addEventListener(
+      "ended",
+      function () {
+        if (music.length) {
+          loadTrack(
+            (
+              musicIndex +
+              1
+            ) %
+              music.length,
+            true
+          );
+        }
+      }
+    );
 
-  $("geminiApiKey")
-    .addEventListener(
+    audio.addEventListener(
+      "play",
+      updatePlayButton
+    );
+
+    audio.addEventListener(
+      "pause",
+      updatePlayButton
+    );
+  }
+
+  var audioRange =
+    $("audioRange");
+
+  if (audioRange) {
+    audioRange.addEventListener(
       "input",
-      function(){
+      function () {
+        var audio =
+          $("audio");
 
-        try{
+        if (
+          audio &&
+          audio.duration
+        ) {
+          audio.currentTime =
+            audio.duration *
+            (
+              Number(
+                this.value
+              ) / 100
+            );
+        }
+      }
+    );
+  }
 
+  var apiInput =
+    $("geminiApiKey");
+
+  if (apiInput) {
+    apiInput.addEventListener(
+      "input",
+      function () {
+        try {
           localStorage.setItem(
             "kh_gemini_key",
             this.value.trim()
           );
-
-        }catch(e){}
+        } catch (e) {}
       }
     );
-}
+  }
 
-if($("fontSize")){
+  var fontSizeInput =
+    $("fontSize");
 
-  $("fontSize")
-    .addEventListener(
+  if (fontSizeInput) {
+    fontSizeInput.addEventListener(
       "change",
-      function(){
-
-        try{
-
+      function () {
+        try {
           localStorage.setItem(
             "kh_font",
             this.value
           );
+        } catch (e) {}
 
-        }catch(e){}
+        if (
+          window.ReaderEngine &&
+          typeof window.ReaderEngine.setFontSize ===
+            "function"
+        ) {
+          window.ReaderEngine.setFontSize(
+            Number(
+              this.value
+            )
+          );
+        }
       }
     );
-}
+  }
 
-function init(){
-
-  try{
-
-    var v=
-      localStorage.getItem(
-        "kh_vocab"
+  function init() {
+    vocab =
+      loadJSON(
+        "kh_vocab",
+        []
       );
 
-    vocab=
-      v?
-      JSON.parse(v):
-      [];
-
-    siteTheme=
+    siteTheme =
       localStorage.getItem(
         "kh_site_theme"
-      )||
-      "cyan";
+      ) || "cyan";
 
-    readerTheme=
+    readerTheme =
       localStorage.getItem(
         "kh_reader_theme"
-      )||
-      "paper";
+      ) || "paper";
 
-    musicVolume=
+    musicVolume =
       Number(
         localStorage.getItem(
           "kh_music_volume"
-        )||
-        0.32
+        ) || 0.32
       );
 
-  }catch(e){}
+    if (
+      !Number.isFinite(
+        musicVolume
+      )
+    ) {
+      musicVolume = 0.32;
+    }
 
-  setSiteTheme(
-    siteTheme
-  );
+    setSiteTheme(
+      siteTheme
+    );
 
-  renderReaderThemes();
-  updateThemeBadges();
-  renderTracks();
-  updatePlayButtonUI();
+    renderReaderThemes();
+    renderTracks();
+    updateThemeBadges();
 
-  dbAll()
-    .then(function(a){
+    dbAll()
+      .then(function (storedBooks) {
+        books =
+          Array.isArray(
+            storedBooks
+          )
+            ? storedBooks
+            : [];
 
-      books=
-        a||[];
+        renderBooks();
+        renderOwnerPanel();
+        updateTelegramBtn();
+      })
+      .catch(function (error) {
+        console.error(
+          "dbAll:",
+          error
+        );
 
-      renderBooks();
-      updateTelegramBtn();
+        books = [];
 
-    })
-    .catch(function(e){
+        renderBooks();
+        renderOwnerPanel();
+        updateTelegramBtn();
+      });
+  }
 
-      console.error(e);
-
-      books=[];
-      renderBooks();
-      updateTelegramBtn();
-    });
-}
-
-init();
-
+  init();
 })();
