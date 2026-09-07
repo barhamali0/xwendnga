@@ -2,6 +2,11 @@
 "use strict";
 
 var GEMINI_MODEL = "gemini-1.5-flash";
+
+if(window.pdfjsLib && !pdfjsLib.GlobalWorkerOptions.workerSrc){
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js";
+}
+
 var currentBook = null;
 var currentPage = 0;
 var currentPdfDoc = null;
@@ -10,14 +15,34 @@ var isAiLoading = false;
 var aiExtractedPages = {};
 var geminiApiKey = "";
 var readerFont = 20;
+var readerTheme = "paper";
+var pageKurdish = false;
+var translatedPages = {};
 
+var speechVolume = 0.85;
 var speechState = "stopped";
 var speechUtterance = null;
 var speechTimer = null;
 var speechWordIndex = 0;
 var speechRate = 0.85;
 
+var READER_THEMES = {
+  paper:{name:"سپی",bg:"#f4f6f9",paper:"#ffffff",fg:"#1d2a3d",toolbar:"#ffffff"},
+  cream:{name:"ڪرێمی",bg:"#eee5d1",paper:"#fff9e7",fg:"#403728",toolbar:"#f7edd8"},
+  mint:{name:"سەوزی کاڵ",bg:"#dfece5",paper:"#f4fbf7",fg:"#203c31",toolbar:"#edf7f1"},
+  sky:{name:"ئاسمانی",bg:"#dceef4",paper:"#f2fbff",fg:"#24414b",toolbar:"#eaf7fa"},
+  rose:{name:"پەمەیی",bg:"#f0dfe2",paper:"#fff5f6",fg:"#4a2d33",toolbar:"#fff0f2"},
+  lavender:{name:"مۆری",bg:"#e6def4",paper:"#fbf8ff",fg:"#332b46",toolbar:"#f2ecfb"},
+  sand:{name:"خۆڵەمێشی",bg:"#e7ded2",paper:"#fbf4eb",fg:"#493b2e",toolbar:"#f4ebdf"},
+  forest:{name:"دارستان",bg:"#dee8de",paper:"#f5fbf3",fg:"#213525",toolbar:"#edf6eb"},
+  sepia:{name:"ڪتێبی کۆن",bg:"#e6dbc6",paper:"#f7eddb",fg:"#4a3925",toolbar:"#f0e4d0"},
+  slate:{name:"سڵەیت",bg:"#dce1e7",paper:"#eef1f5",fg:"#263341",toolbar:"#e8ecf1"},
+  night:{name:"شەو",bg:"#0b1420",paper:"#101b2c",fg:"#e9f2fc",toolbar:"#122035"},
+  black:{name:"ڕەش",bg:"#050505",paper:"#0b0b0b",fg:"#f1f1f1",toolbar:"#101010"}
+};
+
 function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,function(c){return({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"})[c];}); }
 function toast(t){
   var x = $("toast");
   if(!x) return;
@@ -31,9 +56,20 @@ function loadReaderData(){
   try {
     geminiApiKey = localStorage.getItem("kh_gemini_key") || "";
     readerFont = Number(localStorage.getItem("kh_font") || 20);
+    readerTheme = localStorage.getItem("kh_reader_theme") || "paper";
+    speechVolume = Number(localStorage.getItem("kh_speech_volume") || 0.85);
     var ae = localStorage.getItem("kh_ai_pages");
     aiExtractedPages = ae ? JSON.parse(ae) : {};
   } catch(e){}
+}
+
+function applyReaderTheme(){
+  var t = READER_THEMES[readerTheme] || READER_THEMES.paper;
+  var r = $("reader");
+  if(!r) return;
+  r.style.setProperty("--reader-bg", t.bg);
+  r.style.setProperty("--paper", t.paper);
+  r.style.setProperty("--reader-fg", t.fg);
 }
 
 function clearSpeakHighlight(){
@@ -108,7 +144,7 @@ function speakRemainingText(startIndex){
   var u = new SpeechSynthesisUtterance(textToSpeak);
   speechUtterance = u;
   u.lang = (currentBook.lang==="ar" ? "ar-SA" : currentBook.lang==="fa" ? "fa-IR" : currentBook.lang==="ku" ? "ku-Arab" : "en-US");
-  u.volume = 0.9;
+  u.volume = speechVolume;
   u.rate = speechRate;
 
   u.onend = function(){ stopSpeech(); };
@@ -121,7 +157,7 @@ function speakRemainingText(startIndex){
 }
 
 function startPageSpeech(){
-  if(!window.speechSynthesis){ toast("خوێندنەوەی دەنگی لەم وێبگەڕەدا بەردەست نییە"); return; }
+  if(!window.speechSynthesis){ toast("خوێندنەوەی دەنگی لەم مۆبایلەدا بەردەست نییە"); return; }
   if(speechState === "playing"){
     if(window.speechSynthesis) window.speechSynthesis.cancel();
     clearTimeout(speechTimer);
@@ -213,15 +249,89 @@ function extractTextWithGemini(){
 
         viewMode = 'text';
         renderPage();
-        toast("دەقەکە بە سەرکەوتوویی بە Gemini دەرهێنرا! ✨");
+        toast("دەقەکە بە سەرکەوتوویی لە ڕێگەی Gemini دەرهێنرا! ✨");
       })
       .catch(function(err){
         isAiLoading = false;
         console.error(err);
-        toast("هەڵە لە جێمینای: کلیل یان پەیوەندی بپشکنە");
+        toast("هەڵە: کلیلەکەت نادروستە یان ئینتەرنێت کێشەی هەیە");
       });
     });
   });
+}
+
+function translateText(text){
+  var url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ckb&dt=t&q=" + encodeURIComponent(text);
+  return fetch(url).then(function(r){ return r.json(); }).then(function(j){ return (j[0]||[]).map(function(x){return x[0]||"";}).join("")||"—"; });
+}
+
+function togglePageKurdish(){
+  if(!currentBook) return;
+  stopSpeech();
+  pageKurdish = !pageKurdish;
+  if($("readerKurdish")) $("readerKurdish").classList.toggle("active", pageKurdish);
+  if(!pageKurdish){ renderPage(); return; }
+
+  var key = currentBook.id + "_" + currentPage;
+  $("rSub").textContent = "لاپەڕە " + (currentPage + 1) + " • ڪوردی";
+  if(translatedPages[key]){
+    showTranslatedPage(translatedPages[key]);
+    return;
+  }
+  $("readerText").textContent = "خەریڪی وەرگێڕانی لاپەڕەیە...";
+  translateText(currentBook.pages[currentPage] || "").then(function(t){
+    translatedPages[key] = t;
+    showTranslatedPage(t);
+  }).catch(function(){
+    pageKurdish = false;
+    if($("readerKurdish")) $("readerKurdish").classList.remove("active");
+    renderPage();
+    toast("وەرگێڕان سەرکەوتوو نەبوو");
+  });
+}
+
+function showTranslatedPage(t){
+  $("readerText").className = "rtext rtl";
+  $("readerText").style.fontSize = readerFont + "px";
+  paintText(t);
+}
+
+function showReaderTools(type){
+  var title = $("toolsTitle"), body = $("toolsBody");
+  if(!title || !body) return;
+  
+  if(type === "music"){
+    title.textContent = "کۆنتڕۆڵی مۆسیقا";
+    body.innerHTML = '<div style="text-align:center;padding:15px;color:var(--muted);font-size:12px;">لە بەشی خوارەوەی لاپەڕەی سەرەکی دەتوانیت دەنگ هەڵبژێریت.</div>';
+  } else {
+    title.textContent = "کۆنترۆڵی دەنگ و لاپەڕە";
+    body.innerHTML = '<div class="vols">' +
+      '<div class="vol"><label><span>🔊 دەنگی خوێندنەوە</span><b id="svt">'+Math.round(speechVolume*100)+'%</b></label>' +
+      '<input id="svr" type="range" min="0" max="100" value="'+Math.round(speechVolume*100)+'"></div>' +
+      '</div>' +
+      '<div class="reader-col-title" style="margin-top:10px;font-size:12px;font-weight:700;">ڕەنگی لاپەڕە</div>' +
+      '<div class="reader-colors">' +
+      Object.keys(READER_THEMES).map(function(k){
+        var t = READER_THEMES[k];
+        return '<button data-reader-theme-choice="'+k+'" title="'+esc(t.name)+'" style="background:'+t.bg+';outline:'+(k===readerTheme?'2px solid var(--a)':'none')+'"><span style="background:'+t.fg+'"></span></button>';
+      }).join("") +
+      '</div>';
+
+    var svr = $("svr");
+    if(svr){
+      svr.oninput = function(){
+        speechVolume = Number(this.value) / 100;
+        $("svt").textContent = Math.round(speechVolume * 100) + "%";
+        try { localStorage.setItem("kh_speech_volume", speechVolume); } catch(e){}
+      };
+    }
+  }
+  $("readerTools").classList.add("show");
+}
+
+function closeReaderTools(){
+  var rt = $("readerTools");
+  if(rt) rt.classList.remove("show");
 }
 
 function renderPage(){
@@ -244,6 +354,7 @@ function renderPage(){
     canvas.style.display = "block";
     textBox.style.display = "none";
     if(toggleBtn){
+      toggleBtn.innerHTML = '<i class="fa-solid fa-robot"></i>';
       toggleBtn.style.color = aiText ? "#22c98b" : "#f05bd5";
       toggleBtn.classList.remove("active");
     }
@@ -260,6 +371,7 @@ function renderPage(){
     canvas.style.display = "none";
     textBox.style.display = "block";
     if(toggleBtn){
+      toggleBtn.innerHTML = '<i class="fa-regular fa-image"></i>';
       toggleBtn.style.color = "";
       toggleBtn.classList.add("active");
     }
@@ -285,9 +397,12 @@ function renderPage(){
 
 function changePage(d){
   if(!currentBook) return;
+  closeReaderTools();
   var n = currentPage + d;
   if(n < 0 || n >= currentBook.pageCount) return;
   stopSpeech();
+  pageKurdish = false;
+  if($("readerKurdish")) $("readerKurdish").classList.remove("active");
   currentPage = n;
   renderPage();
 }
@@ -297,7 +412,10 @@ window.ReaderEngine = {
     stopSpeech();
     currentBook = book;
     loadReaderData();
+    applyReaderTheme();
     currentPage = Math.max(0, Math.min(currentBook.pageCount - 1, currentBook.currentPage || 0));
+    pageKurdish = false;
+    if($("readerKurdish")) $("readerKurdish").classList.remove("active");
     $("reader").classList.add("show");
     
     viewMode = (currentBook.lang === 'ku' || currentBook.lang === 'ar' || currentBook.lang === 'fa') ? 'canvas' : 'text';
@@ -329,49 +447,66 @@ window.ReaderEngine = {
     $("reader").classList.remove("show");
     currentBook = null;
     currentPdfDoc = null;
+    pageKurdish = false;
+    closeReaderTools();
     if(window.AppLib && window.AppLib.updateTelegram) window.AppLib.updateTelegram();
   }
 };
 
 document.addEventListener("click", function(e){
   var a = e.target.closest("[data-action]");
-  if(!a) return;
-  var act = a.getAttribute("data-action");
+  if(a){
+    var act = a.getAttribute("data-action");
 
-  if(act === "toggle-view" || act === "run-gemini"){
-    var key = currentBook ? (currentBook.id + "_" + currentPage) : "";
-    if(viewMode === 'canvas'){
-      if(aiExtractedPages[key]){
-        viewMode = 'text';
-        renderPage();
+    if(act === "toggle-view" || act === "run-gemini"){
+      var key = currentBook ? (currentBook.id + "_" + currentPage) : "";
+      if(viewMode === 'canvas'){
+        if(aiExtractedPages[key]){
+          viewMode = 'text';
+          renderPage();
+        } else {
+          extractTextWithGemini();
+        }
       } else {
-        extractTextWithGemini();
+        viewMode = 'canvas';
+        renderPage();
       }
-    } else {
-      viewMode = 'canvas';
-      renderPage();
+      return;
     }
-    return;
+    if(act === "page-prev"){ changePage(-1); return; }
+    if(act === "page-next"){ changePage(1); return; }
+    if(act === "reader-close"){ window.ReaderEngine.close(); return; }
+    if(act === "reader-speak"){ startPageSpeech(); return; }
+    if(act === "reader-kurdish"){ togglePageKurdish(); return; }
+    if(act === "reader-tools"){ showReaderTools("volume"); return; }
+    if(act === "reader-music"){ showReaderTools("music"); return; }
+    if(act === "tools-close"){ closeReaderTools(); return; }
+    if(act === "font-down"){
+      readerFont = Math.max(16, readerFont - 1);
+      try { localStorage.setItem("kh_font", readerFont); } catch(err){}
+      renderPage();
+      return;
+    }
+    if(act === "font-up"){
+      readerFont = Math.min(30, readerFont + 1);
+      try { localStorage.setItem("kh_font", readerFont); } catch(err){}
+      renderPage();
+      return;
+    }
+    if(act === "save-progress"){
+      if(currentBook && window.AppLib && window.AppLib.dbPut) window.AppLib.dbPut(currentBook);
+      toast("شوێنی خوێندنەوە پاشەکەوت ڪرا");
+      return;
+    }
   }
-  if(act === "page-prev"){ changePage(-1); return; }
-  if(act === "page-next"){ changePage(1); return; }
-  if(act === "reader-close"){ window.ReaderEngine.close(); return; }
-  if(act === "reader-speak"){ startPageSpeech(); return; }
-  if(act === "font-down"){
-    readerFont = Math.max(16, readerFont - 1);
-    try { localStorage.setItem("kh_font", readerFont); } catch(err){}
-    renderPage();
-    return;
-  }
-  if(act === "font-up"){
-    readerFont = Math.min(30, readerFont + 1);
-    try { localStorage.setItem("kh_font", readerFont); } catch(err){}
-    renderPage();
-    return;
-  }
-  if(act === "save-progress"){
-    if(currentBook && window.AppLib && window.AppLib.dbPut) window.AppLib.dbPut(currentBook);
-    toast("شوێنی خوێندنەوە پاشەکەوت ڪرا");
+
+  var rtc = e.target.closest("[data-reader-theme-choice]");
+  if(rtc){
+    readerTheme = rtc.getAttribute("data-reader-theme-choice");
+    try { localStorage.setItem("kh_reader_theme", readerTheme); } catch(err){}
+    applyReaderTheme();
+    showReaderTools("volume");
+    toast("ڕەنگی لاپەڕە گۆڕدرا");
     return;
   }
 });
@@ -383,6 +518,7 @@ if(pInput){
       var n = Math.max(1, Math.min(currentBook.pageCount, Number(this.value || 1)));
       stopSpeech();
       currentPage = n - 1;
+      pageKurdish = false;
       renderPage();
     }
   });
