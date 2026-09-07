@@ -58,7 +58,7 @@ var READER_THEMES={
  sky:{name:"ئاسمانی",bg:"#dceef4",paper:"#f2fbff",fg:"#24414b",toolbar:"#eaf7fa"},
  rose:{name:"پەمەیی",bg:"#f0dfe2",paper:"#fff5f6",fg:"#4a2d33",toolbar:"#fff0f2"},
  lavender:{name:"مۆری",bg:"#e6def4",paper:"#fbf8ff",fg:"#332b46",toolbar:"#f2ecfb"},
- sand:{name:"خۆڵەمێشی",bg:"#e7ded2",paper:"#f4fbf7",fg:"#493b2e",toolbar:"#f4ebdf"},
+ sand:{name:"خۆڵەمێشی",bg:"#e7ded2",paper:"#fbf4eb",fg:"#493b2e",toolbar:"#f4ebdf"},
  forest:{name:"دارستان",bg:"#dee8de",paper:"#f5fbf3",fg:"#213525",toolbar:"#edf6eb"},
  sepia:{name:"ڪتێبی کۆن",bg:"#e6dbc6",paper:"#f7eddb",fg:"#4a3925",toolbar:"#f0e4d0"},
  slate:{name:"سڵەیت",bg:"#dce1e7",paper:"#eef1f5",fg:"#263341",toolbar:"#e8ecf1"},
@@ -329,7 +329,6 @@ function getWordDelay(word, rate){
   var ms = 190 + (len * 40);
   if(/[.!?؟]/.test(word)) ms += 320;
   else if(/[,،;:]/.test(word)) ms += 160;
-  else if(/[-—]/.test(word)) ms += 100;
   return ms / r;
 }
 
@@ -487,41 +486,6 @@ function extractTextWithGemini(){
            console.error(err);
            toast("هەڵە: کلیلەکەت نادروستە یان ئینتەرنێت کێشەی هەیە");
         });
-     });
-  });
-}
-
-function shareToLens() {
-  if(!currentPdfDoc){
-     toast("وێنەی ئەم پەڕتووکە بەردەست نییە");
-     return;
-  }
-  toast("وێنەی لاپەڕە ئامادە دەکرێت...");
-  
-  currentPdfDoc.getPage(currentPage + 1).then(function(page){
-     var viewport = page.getViewport({scale: 2.2});
-     var offCanvas = document.createElement("canvas");
-     offCanvas.width = viewport.width;
-     offCanvas.height = viewport.height;
-     var ctx = offCanvas.getContext('2d');
-     
-     page.render({canvasContext: ctx, viewport: viewport}).promise.then(function(){
-        offCanvas.toBlob(function(blob){
-           var file = new File([blob], "xwendnga_page_" + (currentPage+1) + ".jpg", {type: "image/jpeg"});
-           if (navigator.canShare && navigator.canShare({ files: [file] })) {
-               navigator.share({
-                   title: 'Google Lens',
-                   text: 'خوێندنەوەی دەق لە لاپەڕە',
-                   files: [file]
-               }).catch(function(e){ console.log(e); });
-           } else {
-               var a = document.createElement("a");
-               a.href = URL.createObjectURL(blob);
-               a.download = "Page_" + (currentPage+1) + ".jpg";
-               a.click();
-               toast("وێنەکە دابەزێنرا، دەتوانیت لە Google Lens بیپشکنی.");
-           }
-        }, "image/jpeg", 0.95);
      });
   });
 }
@@ -745,8 +709,8 @@ document.addEventListener("click",function(e){
   if(a){
     var act=a.getAttribute("data-action");
     
-    // کلیل لێدانی Gemini بۆ دەرهێنانی دەقی پەڕتووک
-    if(act==="toggle-ai-ocr" || act==="run-gemini"){
+    // کلیل لێدانی Gemini یان گۆڕینی شێوازی دەق/وێنە
+    if(act==="toggle-view" || act==="run-gemini"){
         var key = currentBook ? (currentBook.id + "_" + currentPage) : "";
         if(viewMode === 'canvas'){
             if(aiExtractedPages[key]){
@@ -759,11 +723,6 @@ document.addEventListener("click",function(e){
             viewMode = 'canvas';
             renderPage();
         }
-        return;
-    }
-
-    if(act==="share-lens"){
-        shareToLens();
         return;
     }
 
@@ -857,7 +816,7 @@ document.addEventListener("click",function(e){
     return;
   }
   var ch=e.target.closest("[data-filter]");
-  if(ch){filter=ch.getAttribute("data-filter");document.querySelectorAll(".chip").forEach(function(c){c.classList.toggle("active",c===ch)});renderBooks();return}
+  if(ch){filter=ch.getAttribute("data-filter");document.querySelectorAll(".chip").forEach(function(c){c.classList.toggle("active",c.getAttribute("data-filter")===filter)});renderBooks();return}
   var st=e.target.closest("[data-site-theme]");if(st){setSiteTheme(st.getAttribute("data-site-theme"));return}
   var rt=e.target.closest("[data-reader-theme]");if(rt){readerTheme=rt.getAttribute("data-reader-theme");try{localStorage.setItem("kh_reader_theme",readerTheme)}catch(err){}applyReaderTheme();renderReaderThemes();renderSiteThemes();return}
   var ir=e.target.closest("[data-inline-reader-theme]");if(ir){readerTheme=ir.getAttribute("data-inline-reader-theme");try{localStorage.setItem("kh_reader_theme",readerTheme)}catch(err){}applyReaderTheme();showTools("volume");toast("ڕەنگی لاپەڕە گۆڕدرا");return}
