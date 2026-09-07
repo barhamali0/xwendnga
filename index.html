@@ -198,8 +198,7 @@
   </div>
   <div class="reader-bar">
     <button class="rb kur" id="readerKurdish" data-action="reader-kurdish"><i class="fa-solid fa-language"></i></button>
-    <button class="rb" data-action="toggle-ai-ocr" id="viewToggleBtn" title="دەرهێنانی دەقی کوردی بە Gemini"><i class="fa-solid fa-robot"></i></button>
-    <button class="rb" data-action="share-lens" id="lensTopBtn" title="Google Lens" style="color:var(--a)"><i class="fa-solid fa-expand"></i></button>
+    <button class="rb" data-action="toggle-view" id="viewToggleBtn" title="دەرهێنانی دەقی کوردی بە Gemini"><i class="fa-solid fa-robot"></i></button>
     <button class="rb" data-action="reader-tools"><i class="fa-solid fa-sliders"></i></button>
     <button class="rb" data-action="reader-music"><i class="fa-solid fa-music"></i></button>
     <button class="rb" data-action="font-down"><i class="fa-solid fa-minus"></i></button>
@@ -211,7 +210,7 @@
   
   <div id="readerBody" class="rbody">
     <div class="paper">
-      <canvas id="pdfCanvas"></canvas>
+      <canvas id="pdfCanvas" style="display:none;"></canvas>
       <div id="readerText" class="rtext"></div>
     </div>
   </div>
