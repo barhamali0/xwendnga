@@ -90,7 +90,7 @@
   <div class="field">
     <label>کلیلی ژیریی دەستڪرد (Gemini API Key)</label>
     <input id="geminiApiKey" type="password" placeholder="AIzaSy..." style="width:100%;border:0;outline:0;background:transparent;color:#f5cd68;font-family:monospace;direction:ltr;text-align:left;font-size:12px;">
-    <span style="font-size:9px;color:var(--muted);display:block;margin-top:4px;">کلیلی فەرمیی Gemini بۆ دەرهێنانی دەقی کوردی.</span>
+    <span style="font-size:9px;color:var(--muted);display:block;margin-top:4px;">کلیلی فەرمیی Gemini بۆ دەرهێنانی دەقی پەڕتووکە کوردییەکان.</span>
   </div>
 
   <div class="field">
@@ -197,11 +197,7 @@
     <button class="rbtn" id="readerSpeak" data-action="reader-speak"><i class="fa-solid fa-play"></i></button>
   </div>
   <div class="reader-bar">
-    <button class="rb kur" id="readerKurdish" data-action="reader-kurdish"><i class="fa-solid fa-language"></i></button>
-    <!-- دوگمەی 🤖 بۆ گۆڕینی دۆخی Canvas و دەقی Gemini -->
     <button class="rb" data-action="toggle-view" id="viewToggleBtn" title="دەرهێنانی دەقی کوردی بە Gemini"><i class="fa-solid fa-robot"></i></button>
-    <button class="rb" data-action="reader-tools"><i class="fa-solid fa-sliders"></i></button>
-    <button class="rb" data-action="reader-music"><i class="fa-solid fa-music"></i></button>
     <button class="rb" data-action="font-down"><i class="fa-solid fa-minus"></i></button>
     <button class="rb" data-action="font-up"><i class="fa-solid fa-plus"></i></button>
     <div class="pagebox"><span>لاپەڕە</span><input id="pageInput" type="number" min="1" value="1"><span id="pageTotal">/ 1</span></div>
@@ -219,15 +215,11 @@
   <div class="reader-bottom"><button data-action="save-progress"><i class="fa-solid fa-bookmark"></i> پاشەکەوتڪردنی شوێن</button></div>
 </div>
 
-<div id="readerTools" class="reader-tools">
-  <div class="tools-head"><strong id="toolsTitle">کۆنترۆڵی خوێندنەوە</strong><button class="tools-close" data-action="tools-close"><i class="fa-solid fa-xmark"></i></button></div>
-  <div id="toolsBody"></div>
-</div>
-
 <a id="telegramBtn" href="https://t.me/about_Barham" target="_blank" title="کەناڵی تێلیگرامەکەم">
   <i class="fa-brands fa-telegram"></i>
 </a>
 
 <script src="script.js"></script>
+<script src="reader.js"></script>
 </body>
 </html>
