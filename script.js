@@ -95,6 +95,13 @@ window.AppLib = {
   updateTelegram: updateTelegramBtn,
   openSettings: function(){
     openSheet($("sheetBack"), $("settingsSheet"));
+  },
+  getMusicVolume: function(){ return musicVolume; },
+  setMusicVolume: function(v){
+    musicVolume = v;
+    var au = $("audio");
+    if(au) au.volume = v;
+    try { localStorage.setItem("kh_music_volume", v); } catch(e){}
   }
 };
 
@@ -252,7 +259,6 @@ function openBook(id){
   }
 }
 
-// پارێزراوکردنی تەواوی پانێڵی خاوەنداری (Owner Panel)
 function renderOwnerPanel(){
   if($("ownerTotalBooks")) $("ownerTotalBooks").textContent = books.length;
   if($("ownerPublicBooks")) $("ownerPublicBooks").textContent = books.filter(function(b){return b.isPublished!==false;}).length;
@@ -282,20 +288,35 @@ function renderOwnerPanel(){
   }).join("");
 }
 
-function translateText(text){
-  var url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=ckb&dt=t&q=" + encodeURIComponent(text);
+// زیادکردنی وەرگێڕانی فرە زمان بۆ وشەکان
+function translateText(text, targetLang){
+  var tl = targetLang || "ckb";
+  var url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=" + tl + "&dt=t&q=" + encodeURIComponent(text);
   return fetch(url).then(function(r){ return r.json(); }).then(function(j){ return (j[0]||[]).map(function(x){return x[0]||"";}).join("")||"—"; });
 }
 
 function openWordModal(word){
   currentWord = word;
-  if($("modalWord")) $("modalWord").textContent = word;
-  if($("modalKu")) $("modalKu").textContent = "چاوەڕوانی...";
-  if($("modalThird")) $("modalThird").textContent = "چاوەڕوانی...";
+  
+  var sheet = $("wordSheet");
+  if(sheet){
+    sheet.innerHTML = '<div class="handle"></div>' +
+      '<div class="section-head"><h3>فەرهەنگ</h3><button class="icon-btn" data-action="close-word"><i class="fa-solid fa-xmark"></i></button></div>' +
+      '<div class="field"><label>وشە</label><div id="modalWord" style="font-size:20px;font-weight:800;color:#f4c85c;display:flex;justify-content:space-between;align-items:center;">'+esc(word)+'<button class="icon-btn" data-vspeak="'+esc(word)+'" data-vlang="en" style="width:30px;height:30px;font-size:12px;"><i class="fa-solid fa-volume-high"></i></button></div></div>' +
+      '<div class="field"><label>بە ڪوردی</label><div id="modalKu">چاوەڕوانی...</div></div>' +
+      '<div class="field"><label>بە عەرەبی</label><div id="modalAr" style="display:flex;justify-content:space-between;align-items:center;"><span>چاوەڕوانی...</span><button class="icon-btn" data-vspeak-ar="loading" style="width:30px;height:30px;font-size:12px;"><i class="fa-solid fa-volume-high"></i></button></div></div>' +
+      '<div class="hero-actions" style="margin-top:10px;"><button class="primary" data-action="save-word">خەزنڪردنی وشەڪە</button></div>';
+  }
+
   openSheet($("wordBack"), $("wordSheet"));
-  translateText(word).then(function(t){ if($("modalKu")) $("modalKu").textContent = t; });
-  var url = "https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=" + encodeURIComponent(word);
-  fetch(url).then(function(r){ return r.json(); }).then(function(j){ if($("modalThird")) $("modalThird").textContent = (j[0]||[]).map(function(x){return x[0]||"";}).join("")||"—"; });
+
+  translateText(word, "ckb").then(function(t){ if($("modalKu")) $("modalKu").textContent = t; });
+  translateText(word, "ar").then(function(t){ 
+    var mAr = $("modalAr");
+    if(mAr){
+      mAr.innerHTML = '<span>'+esc(t)+'</span><button class="icon-btn" data-vspeak="'+esc(t)+'" data-vlang="ar" style="width:30px;height:30px;font-size:12px;"><i class="fa-solid fa-volume-high"></i></button>';
+    }
+  });
 }
 
 function openSentenceModal(text){
@@ -304,18 +325,32 @@ function openSentenceModal(text){
   if($("sentenceOriginal")) $("sentenceOriginal").textContent = clean;
   if($("sentenceKu")) $("sentenceKu").textContent = "چاوەڕوانی...";
   openSheet($("sentenceBack"), $("sentenceSheet"));
-  translateText(clean).then(function(t){ if($("sentenceKu")) $("sentenceKu").textContent = t; }).catch(function(){ if($("sentenceKu")) $("sentenceKu").textContent = "کێشەی ئینتەرنێت"; });
+  translateText(clean, "ckb").then(function(t){ if($("sentenceKu")) $("sentenceKu").textContent = t; }).catch(function(){ if($("sentenceKu")) $("sentenceKu").textContent = "کێشەی ئینتەرنێت"; });
 }
 
 function saveWord(){
   if(!currentWord) return;
   var exists = vocab.some(function(v){ return v.word.toLowerCase() === currentWord.toLowerCase(); });
   if(exists){ toast("ئەم وشەیە پێشتر خەزنڪراوە"); return; }
-  vocab.unshift({id:String(Date.now()), word:currentWord, ku:$("modalKu")?$("modalKu").textContent:"", third:$("modalThird")?$("modalThird").textContent:""});
+  
+  var kuText = $("modalKu") ? $("modalKu").textContent : "";
+  var arText = $("modalAr") ? $("modalAr").querySelector("span").textContent : "";
+  
+  vocab.unshift({id:String(Date.now()), word:currentWord, ku:kuText, third:arText});
   try { localStorage.setItem("kh_vocab", JSON.stringify(vocab)); } catch(e){}
   renderBooks();
   closeSheet($("wordBack"), $("wordSheet"));
   toast("وشەڪە خەزنڪرا");
+}
+
+function speakText(text, lang){
+  if(!window.speechSynthesis) return;
+  window.speechSynthesis.cancel();
+  var u = new SpeechSynthesisUtterance(text);
+  u.lang = lang === "ar" ? "ar-SA" : "en-US";
+  u.volume = 0.9;
+  u.rate = 0.85;
+  window.speechSynthesis.speak(u);
 }
 
 function renderVocab(){
@@ -323,7 +358,7 @@ function renderVocab(){
   back.className = "back open"; sheet.className = "sheet open";
   sheet.innerHTML = '<div class="handle"></div><div class="section-head"><h3>وشەڪانم</h3><button class="icon-btn" data-temp-close>×</button></div><div style="margin-top:10px;max-height:350px;overflow:auto;">' +
     (vocab.length ? vocab.map(function(v){
-      return '<div class="field" style="margin-bottom:10px"><div style="font-weight:800;color:#f4c85c;font-size:17px">'+esc(v.word)+'</div><div style="margin-top:5px;line-height:1.8">'+esc(v.ku)+'<br><span style="color:var(--muted)">'+esc(v.third)+'</span></div><div class="hero-actions" style="margin-top:8px"><button class="ghost" data-vdel="'+esc(v.id)+'">سڕینەوە</button></div></div>';
+      return '<div class="field" style="margin-bottom:10px"><div style="font-weight:800;color:#f4c85c;font-size:17px;display:flex;justify-content:space-between;">'+esc(v.word)+'<button class="icon-btn" data-vspeak="'+esc(v.word)+'" data-vlang="en" style="width:28px;height:28px;font-size:11px"><i class="fa-solid fa-volume-high"></i></button></div><div style="margin-top:5px;line-height:1.8">'+esc(v.ku)+'<br><span style="color:var(--muted);display:flex;justify-content:space-between;align-items:center;">'+esc(v.third)+'<button class="icon-btn" data-vspeak="'+esc(v.third)+'" data-vlang="ar" style="width:28px;height:28px;font-size:11px"><i class="fa-solid fa-volume-high"></i></button></span></div><div class="hero-actions" style="margin-top:8px"><button class="ghost" data-vdel="'+esc(v.id)+'">سڕینەوە</button></div></div>';
     }).join("") : '<div style="text-align:center;color:var(--muted);padding:25px">هێشتا وشەیەڪ نییە</div>') + '</div>';
   
   document.body.appendChild(back); document.body.appendChild(sheet);
@@ -337,6 +372,10 @@ function renderVocab(){
       vocab = vocab.filter(function(v){ return v.id !== d.getAttribute("data-vdel"); });
       try { localStorage.setItem("kh_vocab", JSON.stringify(vocab)); } catch(err){}
       close(); renderVocab(); renderBooks();
+    }
+    var vs = e.target.closest("[data-vspeak]");
+    if(vs){
+      speakText(vs.getAttribute("data-vspeak"), vs.getAttribute("data-vlang"));
     }
   });
 }
@@ -357,13 +396,25 @@ function loadTrack(i, play){
   if($("nowName")) $("nowName").textContent = music[i].name;
   if($("nowSub")) $("nowSub").textContent = "دەنگی هەڵبژێردراو";
   renderTracks();
+  updatePlayButtonUI();
   if(play && au) au.play().catch(function(){});
 }
+
+function updatePlayButtonUI(){
+  var mainBtn = document.querySelector(".music-btn.big[data-action='play-pause']");
+  if(!mainBtn) return;
+  var au = $("audio");
+  var isPlaying = au && !au.paused && musicIndex >= 0;
+  mainBtn.innerHTML = isPlaying ? '<i class="fa-solid fa-pause"></i>' : '<i class="fa-solid fa-play"></i>';
+}
+
 function renderTracks(){
   var box = $("tracks");
   if(!box) return;
   box.innerHTML = music.length ? music.map(function(t, i){
-    return '<div class="track"><button data-track="'+i+'"><i class="fa-solid '+(i===musicIndex&&$("audio")&&!$("audio").paused?'fa-pause':'fa-play')+'"></i></button><span>'+esc(t.name)+'</span></div>';
+    var au = $("audio");
+    var isPlaying = (i === musicIndex && au && !au.paused);
+    return '<div class="track"><button data-track="'+i+'"><i class="fa-solid '+(isPlaying?'fa-pause':'fa-play')+'"></i></button><span>'+esc(t.name)+'</span></div>';
   }).join("") : '<div style="color:var(--muted);font-size:10px;text-align:center;padding:8px">هیچ دەنگێڪ نییە.</div>';
 }
 
@@ -372,7 +423,6 @@ document.addEventListener("click", function(e){
   if(a){
     var act = a.getAttribute("data-action");
 
-    // کردنەوەی خێرای پانێڵی تاجەکە (پڕۆفایل / خاوەندار)
     if(act === "owner-panel"){
       openSheet($("ownerBack"), $("ownerSheet"));
       try { renderOwnerPanel(); } catch(err){ console.error(err); }
@@ -438,6 +488,12 @@ document.addEventListener("click", function(e){
     if(act === "close-word"){ closeSheet($("wordBack"), $("wordSheet")); return; }
     if(act === "save-word"){ saveWord(); return; }
     if(act === "close-sentence"){ closeSheet($("sentenceBack"), $("sentenceSheet")); return; }
+  }
+
+  var vs = e.target.closest("[data-vspeak]");
+  if(vs){
+    speakText(vs.getAttribute("data-vspeak"), vs.getAttribute("data-vlang"));
+    return;
   }
 
   var th = e.target.closest("[data-toggle-target]");
@@ -533,8 +589,9 @@ if(au){
   au.addEventListener("ended", function(){
     if(music.length) loadTrack((musicIndex+1)%music.length, true);
   });
-  au.addEventListener("play", renderTracks);
-  au.addEventListener("pause", renderTracks);
+  // گۆڕینی دوگمەکانی مۆسیقا ڕاستەوخۆ کاتێک لێدەدرێت یان دەوەستێت
+  au.addEventListener("play", function(){ renderTracks(); updatePlayButtonUI(); });
+  au.addEventListener("pause", function(){ renderTracks(); updatePlayButtonUI(); });
 }
 
 if($("audioRange")){
@@ -561,11 +618,13 @@ function init(){
     var v = localStorage.getItem("kh_vocab"); vocab = v ? JSON.parse(v) : [];
     siteTheme = localStorage.getItem("kh_site_theme") || "cyan";
     readerTheme = localStorage.getItem("kh_reader_theme") || "paper";
+    musicVolume = Number(localStorage.getItem("kh_music_volume") || 0.32);
   } catch(e){}
   setSiteTheme(siteTheme);
   renderReaderThemes();
   updateThemeBadges();
   renderTracks();
+  updatePlayButtonUI();
   dbAll().then(function(a){ books = a || []; renderBooks(); updateTelegramBtn(); });
 }
 init();
