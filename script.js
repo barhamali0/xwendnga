@@ -18,7 +18,14 @@
   var readerTheme = "paper";
   var musicVolume = 0.32;
 
-  var GEMINI_MODEL = "gemini-2.5-flash";
+  /*
+   * Stable Gemini model.
+   * Do NOT put the API key here.
+   * The key is read from localStorage:
+   * kh_gemini_key
+   */
+  var GEMINI_MODEL =
+    "gemini-3.6-flash";
 
   var currentWord = "";
   var currentWordLang = "en";
@@ -280,7 +287,10 @@
     );
   }
 
-  function saveJSON(key, value) {
+  function saveJSON(
+    key,
+    value
+  ) {
     try {
       localStorage.setItem(
         key,
@@ -289,10 +299,15 @@
     } catch (e) {}
   }
 
-  function loadJSON(key, fallback) {
+  function loadJSON(
+    key,
+    fallback
+  ) {
     try {
       var value =
-        localStorage.getItem(key);
+        localStorage.getItem(
+          key
+        );
 
       return value
         ? JSON.parse(value)
@@ -302,40 +317,52 @@
     }
   }
 
-  function toast(message) {
-    var el = $("toast");
+  function toast(
+    message
+  ) {
+    var el =
+      $("toast");
 
     if (!el) {
       return;
     }
 
-    el.textContent = message;
-    el.className = "toast show";
+    el.textContent =
+      message;
+
+    el.className =
+      "toast show";
 
     clearTimeout(
       toast._timer
     );
 
-    toast._timer = setTimeout(
-      function () {
-        el.className = "toast";
-      },
-      2500
-    );
+    toast._timer =
+      setTimeout(
+        function () {
+          el.className =
+            "toast";
+        },
+        2500
+      );
   }
 
   function updateTelegramBtn() {
-    var btn = $("telegramBtn");
+    var btn =
+      $("telegramBtn");
 
     if (!btn) {
       return;
     }
 
-    var reader = $("reader");
+    var reader =
+      $("reader");
 
     var readerOpen =
       reader &&
-      reader.classList.contains("show");
+      reader.classList.contains(
+        "show"
+      );
 
     var activeNav =
       document.querySelector(
@@ -346,7 +373,8 @@
       activeNav &&
       activeNav.getAttribute(
         "data-nav"
-      ) === "home";
+      ) ===
+        "home";
 
     var sheetOpen =
       document.querySelector(
@@ -361,24 +389,46 @@
         : "none";
   }
 
-  function openSheet(back, sheet) {
-    if (!back || !sheet) {
+  function openSheet(
+    back,
+    sheet
+  ) {
+    if (
+      !back ||
+      !sheet
+    ) {
       return;
     }
 
-    back.classList.add("open");
-    sheet.classList.add("open");
+    back.classList.add(
+      "open"
+    );
+
+    sheet.classList.add(
+      "open"
+    );
 
     updateTelegramBtn();
   }
 
-  function closeSheet(back, sheet) {
-    if (!back || !sheet) {
+  function closeSheet(
+    back,
+    sheet
+  ) {
+    if (
+      !back ||
+      !sheet
+    ) {
       return;
     }
 
-    back.classList.remove("open");
-    sheet.classList.remove("open");
+    back.classList.remove(
+      "open"
+    );
+
+    sheet.classList.remove(
+      "open"
+    );
 
     updateTelegramBtn();
   }
@@ -389,13 +439,18 @@
 
   function dbOpen() {
     return new Promise(
-      function (resolve, reject) {
+      function (
+        resolve,
+        reject
+      ) {
+
         if (!window.indexedDB) {
           reject(
             new Error(
               "IndexedDB بەردەست نییە"
             )
           );
+
           return;
         }
 
@@ -407,6 +462,7 @@
 
         request.onupgradeneeded =
           function () {
+
             var db =
               request.result;
 
@@ -415,10 +471,12 @@
                 "books"
               )
             ) {
+
               db.createObjectStore(
                 "books",
                 {
-                  keyPath: "id"
+                  keyPath:
+                    "id"
                 }
               );
             }
@@ -433,6 +491,7 @@
 
         request.onerror =
           function () {
+
             reject(
               request.error ||
                 new Error(
@@ -446,12 +505,16 @@
 
   function dbAll() {
     return dbOpen().then(
-      function (db) {
+      function (
+        db
+      ) {
+
         return new Promise(
           function (
             resolve,
             reject
           ) {
+
             var tx =
               db.transaction(
                 "books",
@@ -459,12 +522,15 @@
               );
 
             var request =
-              tx.objectStore(
-                "books"
-              ).getAll();
+              tx
+                .objectStore(
+                  "books"
+                )
+                .getAll();
 
             request.onsuccess =
               function () {
+
                 resolve(
                   request.result ||
                     []
@@ -473,6 +539,7 @@
 
             request.onerror =
               function () {
+
                 reject(
                   request.error
                 );
@@ -483,30 +550,41 @@
     );
   }
 
-  function dbPut(book) {
+  function dbPut(
+    book
+  ) {
     return dbOpen().then(
-      function (db) {
+      function (
+        db
+      ) {
+
         return new Promise(
           function (
             resolve,
             reject
           ) {
+
             var tx;
 
             try {
+
               tx =
                 db.transaction(
                   "books",
                   "readwrite"
                 );
+
             } catch (e) {
+
               reject(e);
               return;
             }
 
-            tx.objectStore(
-              "books"
-            ).put(book);
+            tx
+              .objectStore(
+                "books"
+              )
+              .put(book);
 
             tx.oncomplete =
               function () {
@@ -515,6 +593,7 @@
 
             tx.onerror =
               function () {
+
                 reject(
                   tx.error ||
                     new Error(
@@ -525,6 +604,7 @@
 
             tx.onabort =
               function () {
+
                 reject(
                   tx.error ||
                     new Error(
@@ -538,30 +618,41 @@
     );
   }
 
-  function dbDelete(id) {
+  function dbDelete(
+    id
+  ) {
     return dbOpen().then(
-      function (db) {
+      function (
+        db
+      ) {
+
         return new Promise(
           function (
             resolve,
             reject
           ) {
+
             var tx;
 
             try {
+
               tx =
                 db.transaction(
                   "books",
                   "readwrite"
                 );
+
             } catch (e) {
+
               reject(e);
               return;
             }
 
-            tx.objectStore(
-              "books"
-            ).delete(id);
+            tx
+              .objectStore(
+                "books"
+              )
+              .delete(id);
 
             tx.oncomplete =
               resolve;
@@ -583,12 +674,17 @@
      ======================================================= */
 
   function updateThemeBadges() {
+
     var site =
-      SITE_THEMES[siteTheme] ||
+      SITE_THEMES[
+        siteTheme
+      ] ||
       SITE_THEMES.cyan;
 
     var reader =
-      READER_THEMES[readerTheme] ||
+      READER_THEMES[
+        readerTheme
+      ] ||
       READER_THEMES.paper;
 
     var siteLabel =
@@ -624,12 +720,18 @@
     }
   }
 
-  function setSiteTheme(key) {
+  function setSiteTheme(
+    key
+  ) {
+
     var theme =
-      SITE_THEMES[key] ||
+      SITE_THEMES[
+        key
+      ] ||
       SITE_THEMES.cyan;
 
-    siteTheme = key;
+    siteTheme =
+      key;
 
     var root =
       document.documentElement;
@@ -675,10 +777,12 @@
     );
 
     try {
+
       localStorage.setItem(
         "kh_site_theme",
         key
       );
+
     } catch (e) {}
 
     renderSiteThemes();
@@ -686,6 +790,7 @@
   }
 
   function renderSiteThemes() {
+
     var box =
       $("siteThemes");
 
@@ -698,14 +803,20 @@
         SITE_THEMES
       )
         .map(
-          function (key) {
+          function (
+            key
+          ) {
+
             var theme =
-              SITE_THEMES[key];
+              SITE_THEMES[
+                key
+              ];
 
             return (
               '<button class="theme ' +
               (
-                key === siteTheme
+                key ===
+                siteTheme
                   ? "active"
                   : ""
               ) +
@@ -720,14 +831,17 @@
               "," +
               theme.bg +
               ')">' +
+
               '<i style="background:' +
               theme.a +
               '"></i>' +
+
               '<b style="background:linear-gradient(90deg,' +
               theme.a +
               "," +
               theme.b +
               ')"></b>' +
+
               "</button>"
             );
           }
@@ -736,6 +850,7 @@
   }
 
   function renderReaderThemes() {
+
     var box =
       $("readerThemes");
 
@@ -748,14 +863,20 @@
         READER_THEMES
       )
         .map(
-          function (key) {
+          function (
+            key
+          ) {
+
             var theme =
-              READER_THEMES[key];
+              READER_THEMES[
+                key
+              ];
 
             return (
               '<button class="theme ' +
               (
-                key === readerTheme
+                key ===
+                readerTheme
                   ? "active"
                   : ""
               ) +
@@ -768,12 +889,15 @@
               '" style="background:' +
               theme.bg +
               '">' +
+
               '<i style="background:' +
               theme.fg +
               '"></i>' +
+
               '<b style="background:' +
               theme.fg +
               '"></b>' +
+
               "</button>"
             );
           }
@@ -782,10 +906,13 @@
   }
 
   /* =======================================================
-     LANGUAGE / PDF
+     PDF LANGUAGE DETECTION
      ======================================================= */
 
-  function detectLang(text) {
+  function detectLang(
+    text
+  ) {
+
     var sample =
       String(
         text || ""
@@ -859,9 +986,20 @@
     return "en";
   }
 
+  /*
+   * IMPORTANT:
+   * This function is kept focused on STORAGE safety.
+   *
+   * The more advanced PDF text reconstruction is done
+   * inside reader.js from the original PDF page.
+   *
+   * This prevents bad text extracted during import from
+   * becoming the only copy available later.
+   */
   function normalizePdfText(
     items
   ) {
+
     if (
       !items ||
       !items.length
@@ -871,7 +1009,10 @@
 
     return items
       .map(
-        function (item) {
+        function (
+          item
+        ) {
+
           return String(
             item &&
             item.str
@@ -888,27 +1029,35 @@
       .trim();
   }
 
-  function extractPDF(file) {
+  function extractPDF(
+    file
+  ) {
+
     return new Promise(
       function (
         resolve,
         reject
       ) {
+
         if (!file) {
+
           reject(
             new Error(
               "PDF file نەدۆزرایەوە"
             )
           );
+
           return;
         }
 
         if (!window.pdfjsLib) {
+
           reject(
             new Error(
               "PDF.js بەردەست نییە"
             )
           );
+
           return;
         }
 
@@ -917,7 +1066,9 @@
 
         reader.onload =
           function () {
+
             try {
+
               var buffer =
                 reader.result;
 
@@ -925,14 +1076,21 @@
                 !buffer ||
                 !buffer.byteLength
               ) {
+
                 reject(
                   new Error(
                     "PDF buffer بەتاڵە"
                   )
                 );
+
                 return;
               }
 
+              /*
+               * TWO independent copies:
+               * one for PDF.js,
+               * one for IndexedDB.
+               */
               var pdfBytes =
                 new Uint8Array(
                   buffer.slice(
@@ -954,7 +1112,10 @@
                 })
                 .promise
                 .then(
-                  function (pdf) {
+                  function (
+                    pdf
+                  ) {
+
                     var pages =
                       [];
 
@@ -967,12 +1128,15 @@
                         pdf.numPages;
                       pageNumber++
                     ) {
+
                       (function (
                         pageNo
                       ) {
+
                         chain =
                           chain.then(
                             function () {
+
                               return pdf
                                 .getPage(
                                   pageNo
@@ -981,11 +1145,13 @@
                                   function (
                                     page
                                   ) {
+
                                     return page
                                       .getTextContent(
                                         {
                                           normalizeWhitespace:
                                             false,
+
                                           disableCombineTextItems:
                                             true
                                         }
@@ -994,6 +1160,7 @@
                                         function (
                                           content
                                         ) {
+
                                           pages.push(
                                             normalizePdfText(
                                               content.items
@@ -1005,6 +1172,7 @@
                                 );
                             }
                           );
+
                       })(
                         pageNumber
                       );
@@ -1012,6 +1180,7 @@
 
                     return chain.then(
                       function () {
+
                         resolve({
                           pages:
                             pages,
@@ -1036,13 +1205,20 @@
                 .catch(
                   reject
                 );
-            } catch (error) {
-              reject(error);
+
+            } catch (
+              error
+            ) {
+
+              reject(
+                error
+              );
             }
           };
 
         reader.onerror =
           function () {
+
             reject(
               reader.error ||
                 new Error(
@@ -1058,7 +1234,10 @@
     );
   }
 
-  function addPDF(file) {
+  function addPDF(
+    file
+  ) {
+
     if (!file) {
       return;
     }
@@ -1067,9 +1246,14 @@
       "PDF خەریکی بارکردنە..."
     );
 
-    extractPDF(file)
+    extractPDF(
+      file
+    )
       .then(
-        function (data) {
+        function (
+          data
+        ) {
+
           var book = {
             id:
               String(
@@ -1124,15 +1308,23 @@
             favorite:
               false,
 
+            bookmarked:
+              false,
+
             addedAt:
               Date.now()
           };
 
-          return dbPut(book);
+          return dbPut(
+            book
+          );
         }
       )
       .then(
-        function (savedBook) {
+        function (
+          savedBook
+        ) {
+
           books.push(
             savedBook
           );
@@ -1146,7 +1338,10 @@
         }
       )
       .catch(
-        function (error) {
+        function (
+          error
+        ) {
+
           console.error(
             "addPDF:",
             error
@@ -1162,7 +1357,8 @@
       $("pdfInput");
 
     if (input) {
-      input.value = "";
+      input.value =
+        "";
     }
   }
 
@@ -1170,16 +1366,28 @@
      BOOKS
      ======================================================= */
 
-  function langName(lang) {
-    if (lang === "ku") {
+  function langName(
+    lang
+  ) {
+
+    if (
+      lang ===
+      "ku"
+    ) {
       return "کوردی";
     }
 
-    if (lang === "ar") {
+    if (
+      lang ===
+      "ar"
+    ) {
       return "عەرەبی";
     }
 
-    if (lang === "fa") {
+    if (
+      lang ===
+      "fa"
+    ) {
       return "فارسی";
     }
 
@@ -1187,11 +1395,16 @@
   }
 
   function filteredBooks() {
+
     var list =
       books
         .slice()
         .sort(
-          function (a, b) {
+          function (
+            a,
+            b
+          ) {
+
             return (
               (
                 b.addedAt ||
@@ -1209,28 +1422,39 @@
       filter ===
       "favorites"
     ) {
+
       list =
         list.filter(
-          function (book) {
+          function (
+            book
+          ) {
+
             return !!book.favorite;
           }
         );
+
     } else if (
       filter ===
       "recent"
     ) {
+
       list =
         list.slice(
           0,
           8
         );
+
     } else if (
       filter !==
       "all"
     ) {
+
       list =
         list.filter(
-          function (book) {
+          function (
+            book
+          ) {
+
             return (
               book.category ||
               "گشتی"
@@ -1241,12 +1465,16 @@
     }
 
     if (query) {
+
       var q =
         query.toLowerCase();
 
       list =
         list.filter(
-          function (book) {
+          function (
+            book
+          ) {
+
             var text =
               [
                 book.title,
@@ -1262,7 +1490,8 @@
             return (
               text.indexOf(
                 q
-              ) >= 0
+              ) >=
+              0
             );
           }
         );
@@ -1272,6 +1501,7 @@
   }
 
   function renderBooks() {
+
     var list =
       filteredBooks();
 
@@ -1308,17 +1538,24 @@
     }
 
     if (!list.length) {
+
       box.innerHTML =
         '<div class="empty" style="grid-column:1/-1;text-align:center;padding:35px;color:var(--muted)">' +
+
         '<i class="fa-solid fa-book-open" style="font-size:32px;margin-bottom:9px"></i>' +
+
         '<h3 style="margin:5px 0;color:#e9f2fb;font-size:14px">' +
+
         (
           query
             ? "هیچ ئەنجامێک نەدۆزرایەوە"
             : "هێشتا کتێب نییە"
         ) +
+
         "</h3>" +
+
         '<div style="font-size:10px">PDF ـێک زیاد بکە بۆ دەستپێکردن.</div>' +
+
         "</div>";
 
       return;
@@ -1327,7 +1564,10 @@
     box.innerHTML =
       list
         .map(
-          function (book) {
+          function (
+            book
+          ) {
+
             var progress =
               Math.round(
                 (
@@ -1340,6 +1580,7 @@
               );
 
             return (
+
               '<article class="book" data-book="' +
               esc(
                 book.id
@@ -1347,6 +1588,7 @@
               '">' +
 
               '<button class="fav" data-action="fav" title="دڵخواز">' +
+
               '<i class="' +
               (
                 book.favorite
@@ -1354,10 +1596,13 @@
                   : "fa-regular"
               ) +
               ' fa-heart"></i>' +
+
               "</button>" +
 
               '<div class="cover">' +
+
               '<i class="fa-solid fa-book-bookmark"></i>' +
+
               "</div>" +
 
               '<div class="book-main">' +
@@ -1378,45 +1623,59 @@
               '<div class="meta">' +
 
               "<span>" +
+
               '<i class="fa-regular fa-file-lines"></i> ' +
+
               (
                 book.pageCount ||
                 0
               ) +
+
               " لاپەڕە</span>" +
 
               "<span>" +
+
               '<i class="fa-solid fa-language"></i> ' +
+
               esc(
                 langName(
                   book.lang
                 )
               ) +
+
               "</span>" +
 
               '<span class="tag-badge">' +
+
               esc(
                 book.category ||
                 "گشتی"
               ) +
+
               "</span>" +
 
               "</div>" +
 
               '<div class="progress">' +
+
               '<span style="width:' +
               progress +
               '%"></span>' +
+
               "</div>" +
 
               '<div class="actions">' +
 
               '<button class="small primary" data-action="open-book">' +
+
               '<i class="fa-solid fa-book-open"></i> خوێندنەوە' +
+
               "</button>" +
 
               '<button class="small" data-action="del-book" title="سڕینەوە">' +
+
               '<i class="fa-regular fa-trash-can"></i>' +
+
               "</button>" +
 
               "</div>" +
@@ -1430,10 +1689,16 @@
         .join("");
   }
 
-  function openBook(id) {
+  function openBook(
+    id
+  ) {
+
     var book =
       books.find(
-        function (item) {
+        function (
+          item
+        ) {
+
           return (
             item.id ===
             id
@@ -1442,9 +1707,11 @@
       );
 
     if (!book) {
+
       toast(
         "کتێبەکە نەدۆزرایەوە"
       );
+
       return;
     }
 
@@ -1453,20 +1720,29 @@
       typeof window.ReaderEngine.open ===
         "function"
     ) {
+
       window.ReaderEngine.open(
         book
       );
+
     } else {
+
       toast(
         "Reader هێشتا بارنەکراوە"
       );
     }
   }
 
-  function toggleFavorite(id) {
+  function toggleFavorite(
+    id
+  ) {
+
     var book =
       books.find(
-        function (item) {
+        function (
+          item
+        ) {
+
           return (
             item.id ===
             id
@@ -1481,14 +1757,19 @@
     book.favorite =
       !book.favorite;
 
-    dbPut(book)
+    dbPut(
+      book
+    )
       .then(
         function () {
           renderBooks();
         }
       )
       .catch(
-        function (error) {
+        function (
+          error
+        ) {
+
           console.error(
             "favorite:",
             error
@@ -1497,10 +1778,16 @@
       );
   }
 
-  function deleteBook(id) {
+  function deleteBook(
+    id
+  ) {
+
     var book =
       books.find(
-        function (item) {
+        function (
+          item
+        ) {
+
           return (
             item.id ===
             id
@@ -1522,12 +1809,18 @@
       return;
     }
 
-    dbDelete(id)
+    dbDelete(
+      id
+    )
       .then(
         function () {
+
           books =
             books.filter(
-              function (item) {
+              function (
+                item
+              ) {
+
                 return (
                   item.id !==
                   id
@@ -1544,7 +1837,10 @@
         }
       )
       .catch(
-        function (error) {
+        function (
+          error
+        ) {
+
           console.error(
             "deleteBook:",
             error
@@ -1561,7 +1857,10 @@
      TRANSLATION
      ======================================================= */
 
-  function detectSourceLang(text) {
+  function detectSourceLang(
+    text
+  ) {
+
     var source =
       String(
         text || ""
@@ -1628,39 +1927,53 @@
     lang,
     myMemory
   ) {
+
     var value =
       String(
         lang || ""
       ).toLowerCase();
 
     if (
-      value === "ckb" ||
-      value === "ku" ||
-      value === "ku-arab"
+      value ===
+        "ckb" ||
+      value ===
+        "ku" ||
+      value ===
+        "ku-arab"
     ) {
+
       return myMemory
         ? "ku"
         : "ckb";
     }
 
     if (
-      value === "ar" ||
-      value === "ar-sa"
+      value ===
+        "ar" ||
+      value ===
+        "ar-sa"
     ) {
+
       return "ar";
     }
 
     if (
-      value === "fa" ||
-      value === "fa-ir"
+      value ===
+        "fa" ||
+      value ===
+        "fa-ir"
     ) {
+
       return "fa";
     }
 
     if (
-      value === "en" ||
-      value === "en-us"
+      value ===
+        "en" ||
+      value ===
+        "en-us"
     ) {
+
       return "en";
     }
 
@@ -1669,7 +1982,10 @@
       : "ckb";
   }
 
-  function looksInvalidSorani(text) {
+  function looksInvalidSorani(
+    text
+  ) {
+
     var value =
       String(
         text || ""
@@ -1693,6 +2009,9 @@
         ) || []
       ).length;
 
+    /*
+     * A Sorani translation should not be mostly Latin.
+     */
     return (
       latin > 0 &&
       latin > arabic
@@ -1703,6 +2022,7 @@
     text,
     targetLang
   ) {
+
     var value =
       String(
         text || ""
@@ -1721,7 +2041,8 @@
       mapTranslationLang(
         targetLang,
         false
-      ) === "ckb" &&
+      ) ===
+        "ckb" &&
       looksInvalidSorani(
         value
       )
@@ -1737,6 +2058,7 @@
     sourceLang,
     targetLang
   ) {
+
     var sourceText =
       String(
         text || ""
@@ -1764,7 +2086,10 @@
         false
       );
 
-    if (sl === tl) {
+    if (
+      sl ===
+      tl
+    ) {
       return Promise.resolve(
         sourceText
       );
@@ -1787,10 +2112,16 @@
         sourceText
       );
 
-    return fetch(url)
+    return fetch(
+      url
+    )
       .then(
-        function (response) {
+        function (
+          response
+        ) {
+
           if (!response.ok) {
+
             throw new Error(
               "Google HTTP " +
                 response.status
@@ -1801,14 +2132,20 @@
         }
       )
       .then(
-        function (data) {
+        function (
+          data
+        ) {
+
           var result =
             (
               data[0] ||
               []
             )
               .map(
-                function (part) {
+                function (
+                  part
+                ) {
+
                   return (
                     part[0] ||
                     ""
@@ -1825,6 +2162,7 @@
             );
 
           if (!result) {
+
             throw new Error(
               "Google translation invalid"
             );
@@ -1840,6 +2178,7 @@
     sourceLang,
     targetLang
   ) {
+
     var sourceText =
       String(
         text || ""
@@ -1867,7 +2206,10 @@
         true
       );
 
-    if (sl === tl) {
+    if (
+      sl ===
+      tl
+    ) {
       return Promise.resolve(
         sourceText
       );
@@ -1889,10 +2231,16 @@
         tl
       );
 
-    return fetch(url)
+    return fetch(
+      url
+    )
       .then(
-        function (response) {
+        function (
+          response
+        ) {
+
           if (!response.ok) {
+
             throw new Error(
               "MyMemory HTTP " +
                 response.status
@@ -1903,14 +2251,19 @@
         }
       )
       .then(
-        function (data) {
+        function (
+          data
+        ) {
+
           if (
             data &&
             data.responseStatus &&
             Number(
               data.responseStatus
-            ) !== 200
+            ) !==
+              200
           ) {
+
             throw new Error(
               "MyMemory " +
                 data.responseStatus
@@ -1930,6 +2283,7 @@
             );
 
           if (!result) {
+
             throw new Error(
               "MyMemory translation invalid"
             );
@@ -1944,6 +2298,7 @@
     text,
     targetLang
   ) {
+
     var value =
       String(
         text || ""
@@ -1967,6 +2322,7 @@
         "ckb"
     ).catch(
       function () {
+
         return myMemoryTranslateText(
           value,
           source,
@@ -1980,6 +2336,7 @@
   function uniqueStrings(
     values
   ) {
+
     var output = [];
     var seen = {};
 
@@ -1987,7 +2344,10 @@
       values ||
       []
     ).forEach(
-      function (value) {
+      function (
+        value
+      ) {
+
         var clean =
           String(
             value || ""
@@ -2006,7 +2366,10 @@
           clean.toLowerCase();
 
         if (!seen[key]) {
-          seen[key] = true;
+
+          seen[key] =
+            true;
+
           output.push(
             clean
           );
@@ -2028,6 +2391,7 @@
     word,
     targetLang
   ) {
+
     var apiKey =
       (
         localStorage.getItem(
@@ -2037,6 +2401,7 @@
       ).trim();
 
     if (!apiKey) {
+
       return Promise.reject(
         new Error(
           "NO_GEMINI_KEY"
@@ -2044,29 +2409,100 @@
       );
     }
 
-    var target =
-      targetLang ===
-      "ckb"
-        ? "کوردی سۆرانیی ستاندارد"
-        : "عەرەبیی ستاندارد";
-
-    var prompt =
-      "وشەی «" +
+    /*
+     * Remove punctuation around a selected word.
+     */
+    var cleanWord =
       String(
         word || ""
-      ).trim() +
-      "» وەربگێڕە بۆ " +
+      )
+        .replace(
+          /^[\s"'“”‘’.,!?;:()[\]{}،؛؟]+/g,
+          ""
+        )
+        .replace(
+          /[\s"'“”‘’.,!?;:()[\]{}،؛؟]+$/g,
+          ""
+        )
+        .trim();
+
+    if (!cleanWord) {
+
+      return Promise.reject(
+        new Error(
+          "EMPTY_WORD"
+        )
+      );
+    }
+
+    var isSorani =
+      targetLang ===
+      "ckb";
+
+    var target =
+      isSorani
+        ? "کوردی سۆرانیی ستاندارد"
+        : "عەرەبیی فەصیح و ستاندارد";
+
+    /*
+     * Very strict dictionary prompt.
+     *
+     * Goal:
+     * 1. Main meaning first.
+     * 2. Related meanings afterwards.
+     * 3. Short dictionary-style entries.
+     * 4. No Badini / Kurmanji / Persian when Sorani
+     *    is requested.
+     */
+    var prompt =
+      "You are the dictionary engine of a Kurdish learning app.\n\n" +
+
+      "SOURCE WORD:\n" +
+      cleanWord +
+      "\n\n" +
+
+      "TARGET LANGUAGE:\n" +
       target +
-      ".\n" +
-      "تا 5 مانا یان هاوواتای جیاواز بدە، بە پێی بەکارهێنان.\n" +
+      "\n\n" +
+
+      "TASK:\n" +
+
       (
-        targetLang ===
-        "ckb"
-          ? "تەنها کوردی سۆرانیی ستاندارد بەکاربهێنە. بادینی، کورمانجی، فارسی یان لاتینی بەکارمەهێنە."
-          : "تەنها عەرەبیی ستاندارد بەکاربهێنە."
+        isSorani
+          ? "Translate the source word into clean Standard Central Kurdish (Sorani) only."
+          : "Translate the source word into clear Modern Standard Arabic only."
       ) +
-      "\n" +
-      'تەنها JSON بگەڕێنەوە: {"meanings":["..."]}';
+
+      "\n\n" +
+
+      "MEANING ORDER:\n" +
+      "1. MAIN = the primary, most common dictionary meaning.\n" +
+      "2. RELATED = a close and useful alternative meaning.\n" +
+      "3. RELATED = another common contextual meaning, only when real.\n" +
+      "4. RELATED = another useful context, only when real.\n" +
+      "5. RELATED = only when genuinely necessary.\n\n" +
+
+      "RULES:\n" +
+      "- The first meaning MUST be the main meaning.\n" +
+      "- Later meanings must be genuinely related to the same word.\n" +
+      "- Do not invent meanings.\n" +
+      "- Keep each meaning short and dictionary-like.\n" +
+      "- Prefer 1 to 5 words per meaning.\n" +
+      "- Do not add examples.\n" +
+      "- Do not add explanations.\n" +
+      "- Do not add numbering.\n" +
+      "- Do not add transliteration.\n" +
+      "- Do not repeat the source word.\n" +
+
+      (
+        isSorani
+          ? "\nSORANI QUALITY RULES:\n- Use only standard Sorani Kurdish vocabulary.\n- Never use Badini.\n- Never use Kurmanji.\n- Never use Persian as a replacement vocabulary.\n- Never use Latin transliteration.\n- Do not return English words inside Sorani meanings."
+          : "\nARABIC QUALITY RULES:\n- Use Modern Standard Arabic.\n- No dialect unless absolutely necessary for meaning."
+      ) +
+
+      "\n\n" +
+
+      'RETURN ONLY THIS JSON SHAPE:\n{"meanings":["main meaning","related meaning","related meaning"]}';
 
     var url =
       "https://generativelanguage.googleapis.com/v1beta/models/" +
@@ -2074,6 +2510,27 @@
         GEMINI_MODEL
       ) +
       ":generateContent";
+
+    var body = {
+      contents: [
+        {
+          parts: [
+            {
+              text:
+                prompt
+            }
+          ]
+        }
+      ],
+
+      generationConfig: {
+        temperature:
+          0.1,
+
+        responseMimeType:
+          "application/json"
+      }
+    };
 
     return fetch(
       url,
@@ -2091,35 +2548,54 @@
 
         body:
           JSON.stringify(
-            {
-              contents: [
-                {
-                  parts: [
-                    {
-                      text:
-                        prompt
-                    }
-                  ]
-                }
-              ]
-            }
+            body
           )
       }
     )
       .then(
-        function (response) {
-          if (!response.ok) {
-            throw new Error(
-              "Gemini HTTP " +
-                response.status
-            );
-          }
+        function (
+          response
+        ) {
 
-          return response.json();
+          return response
+            .json()
+            .catch(
+              function () {
+                return {};
+              }
+            )
+            .then(
+              function (
+                data
+              ) {
+
+                if (
+                  !response.ok
+                ) {
+
+                  var serverMessage =
+                    data &&
+                    data.error &&
+                    data.error.message
+                      ? data.error.message
+                      : "Gemini HTTP " +
+                        response.status;
+
+                  throw new Error(
+                    serverMessage
+                  );
+                }
+
+                return data;
+              }
+            );
         }
       )
       .then(
-        function (data) {
+        function (
+          data
+        ) {
+
           var raw =
             data &&
             data.candidates &&
@@ -2135,6 +2611,7 @@
               .text;
 
           if (!raw) {
+
             throw new Error(
               "Gemini empty"
             );
@@ -2156,7 +2633,8 @@
               .replace(
                 /\s*```$/i,
                 ""
-              );
+              )
+              .trim();
 
           var parsed =
             JSON.parse(
@@ -2165,21 +2643,42 @@
 
           var meanings =
             uniqueStrings(
-              parsed.meanings ||
-                []
+              Array.isArray(
+                parsed.meanings
+              )
+                ? parsed.meanings
+                : []
             );
 
           if (
-            targetLang ===
-            "ckb"
+            !meanings.length
           ) {
+
+            throw new Error(
+              "No meanings"
+            );
+          }
+
+          if (isSorani) {
+
             meanings =
               meanings.filter(
                 function (
                   item
                 ) {
-                  return !looksInvalidSorani(
-                    item
+
+                  var latin =
+                    (
+                      item.match(
+                        /[A-Za-z]/g
+                      ) || []
+                    ).length;
+
+                  return (
+                    latin ===
+                      0 &&
+                    item.length <=
+                      100
                   );
                 }
               );
@@ -2188,8 +2687,9 @@
           if (
             !meanings.length
           ) {
+
             throw new Error(
-              "No valid meanings"
+              "No valid Sorani meanings"
             );
           }
 
@@ -2202,6 +2702,7 @@
     word,
     targetLang
   ) {
+
     var value =
       String(
         word || ""
@@ -2213,13 +2714,19 @@
       );
     }
 
+    /*
+     * Gemini is primary.
+     * Translation APIs are fallback only.
+     */
     return geminiMeanings(
       value,
       targetLang
     ).catch(
       function () {
+
         return Promise.all(
           [
+
             googleTranslateText(
               value,
               detectSourceLang(
@@ -2243,9 +2750,13 @@
                 return "";
               }
             )
+
           ]
         ).then(
-          function (results) {
+          function (
+            results
+          ) {
+
             return uniqueStrings(
               results
             );
@@ -2255,16 +2766,27 @@
     );
   }
 
+  /*
+   * Dictionary UI:
+   *
+   * MAIN MEANING
+   *    large
+   *
+   * Related meanings
+   *    small underneath
+   */
   function renderMeanings(
     meanings,
     className
   ) {
+
     var list =
       uniqueStrings(
         meanings
       );
 
     if (!list.length) {
+
       return (
         '<span class="translation-empty">' +
         "وەرگێڕان بەردەست نەبوو" +
@@ -2272,25 +2794,63 @@
       );
     }
 
-    return (
+    var primary =
+      list[0];
+
+    var related =
+      list.slice(
+        1
+      );
+
+    var html =
       '<div class="meaning-list ' +
       esc(
-        className || ""
+        className ||
+        ""
       ) +
-      '">' +
-      list
-        .map(
-          function (item) {
-            return (
-              '<div class="meaning-item">' +
-              esc(item) +
-              "</div>"
-            );
-          }
-        )
-        .join("") +
-      "</div>"
-    );
+      '">';
+
+    html +=
+      '<div class="meaning-primary">' +
+      esc(
+        primary
+      ) +
+      "</div>";
+
+    if (
+      related.length
+    ) {
+
+      html +=
+        '<div class="meaning-related-label">' +
+        "ماناکانی نزیک" +
+        "</div>";
+
+      html +=
+        '<div class="meaning-related">';
+
+      related.forEach(
+        function (
+          item
+        ) {
+
+          html +=
+            '<div class="meaning-related-item">' +
+            esc(
+              item
+            ) +
+            "</div>";
+        }
+      );
+
+      html +=
+        "</div>";
+    }
+
+    html +=
+      "</div>";
+
+    return html;
   }
 
   /* =======================================================
@@ -2301,12 +2861,15 @@
     text,
     lang
   ) {
+
     if (
       !window.speechSynthesis
     ) {
+
       toast(
         "دەنگ لەم وێبگەڕەدا بەردەست نییە"
       );
+
       return;
     }
 
@@ -2337,25 +2900,32 @@
       normalized ===
         "ar-sa"
     ) {
+
       utterance.lang =
         "ar-SA";
+
     } else if (
       normalized ===
         "ku" ||
       normalized ===
         "ckb"
     ) {
+
       utterance.lang =
         "ku-Arab";
+
     } else if (
       normalized ===
         "fa" ||
       normalized ===
         "fa-ir"
     ) {
+
       utterance.lang =
         "fa-IR";
+
     } else {
+
       utterance.lang =
         "en-US";
     }
@@ -2375,13 +2945,33 @@
      WORD MODAL
      ======================================================= */
 
+  var wordRequestId =
+    0;
+
   function openWordModal(
     word
   ) {
-    currentWord =
+
+    var rawWord =
       String(
         word || ""
       ).trim();
+
+    currentWord =
+      rawWord
+        .replace(
+          /^[\s"'“”‘’.,!?;:()[\]{}،؛؟]+/g,
+          ""
+        )
+        .replace(
+          /[\s"'“”‘’.,!?;:()[\]{}،؛؟]+$/g,
+          ""
+        )
+        .trim();
+
+    if (!currentWord) {
+      return;
+    }
 
     currentWordLang =
       detectSourceLang(
@@ -2392,6 +2982,9 @@
       ku: [],
       ar: []
     };
+
+    var requestId =
+      ++wordRequestId;
 
     var sheet =
       $("wordSheet");
@@ -2409,30 +3002,51 @@
         ? "arabic-text"
         : "kurdish-text";
 
+    var sourceLabel =
+      currentWordLang ===
+      "en"
+        ? "English"
+        : currentWordLang ===
+          "ar"
+        ? "عەرەبی"
+        : "کوردی";
+
     sheet.innerHTML =
       '<div class="handle"></div>' +
 
       '<div class="section-head">' +
+
       "<h3>فەرهەنگ</h3>" +
 
       '<button class="icon-btn" data-action="close-word">' +
+
       '<i class="fa-solid fa-xmark"></i>' +
+
       "</button>" +
 
       "</div>" +
 
       '<div class="field">' +
-      "<label>وشە</label>" +
+
+      "<label>وشەی سەرچاوە • " +
+      esc(
+        sourceLabel
+      ) +
+      "</label>" +
 
       '<div id="modalWord" class="source-word ' +
       sourceClass +
-      '" style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
+      '">' +
+
+      '<div class="source-word-main">' +
 
       "<span>" +
       esc(
         currentWord
       ) +
       "</span>" +
+
+      "</div>" +
 
       '<button class="icon-btn" data-vspeak="' +
       esc(
@@ -2442,20 +3056,24 @@
       esc(
         currentWordLang
       ) +
-      '" style="width:34px;height:34px;color:var(--a)">' +
+      '" style="width:38px;height:38px;color:var(--a)">' +
 
       '<i class="fa-solid fa-volume-high"></i>' +
 
       "</button>" +
 
       "</div>" +
+
       "</div>" +
 
       '<div class="field">' +
-      "<label>بە کوردی</label>" +
+
+      "<label>بە کوردی — مانای سەرەکی و ماناکانی نزیک</label>" +
 
       '<div id="modalKu" class="translation-box ku-translation">' +
-      "چاوەڕوانی..." +
+
+      '<div class="dictionary-loading">چاوەڕوانی...</div>' +
+
       "</div>" +
 
       "</div>" +
@@ -2467,20 +3085,27 @@
       '<div id="modalAr" class="translation-box ar-translation">' +
 
       '<div id="modalArText">' +
-      "چاوەڕوانی..." +
+
+      '<div class="dictionary-loading">چاوەڕوانی...</div>' +
+
       "</div>" +
 
       '<button class="icon-btn" id="modalArSpeakBtn" style="width:34px;height:34px;color:#22c98b;margin-top:8px">' +
+
       '<i class="fa-solid fa-volume-high"></i>' +
+
       "</button>" +
 
       "</div>" +
+
       "</div>" +
 
       '<div class="hero-actions">' +
 
       '<button class="primary" data-action="save-word">' +
+
       "خەزنکردنی وشەکە" +
+
       "</button>" +
 
       "</div>";
@@ -2495,7 +3120,17 @@
       "ckb"
     )
       .then(
-        function (meanings) {
+        function (
+          meanings
+        ) {
+
+          if (
+            requestId !==
+            wordRequestId
+          ) {
+            return;
+          }
+
           currentWordMeanings.ku =
             uniqueStrings(
               meanings
@@ -2505,6 +3140,7 @@
             $("modalKu");
 
           if (el) {
+
             el.innerHTML =
               renderMeanings(
                 currentWordMeanings.ku,
@@ -2514,13 +3150,29 @@
         }
       )
       .catch(
-        function () {
+        function (
+          error
+        ) {
+
+          if (
+            requestId !==
+            wordRequestId
+          ) {
+            return;
+          }
+
+          console.error(
+            "Kurdish dictionary:",
+            error
+          );
+
           var el =
             $("modalKu");
 
           if (el) {
-            el.textContent =
-              "وەرگێڕان بەردەست نەبوو";
+
+            el.innerHTML =
+              '<span class="translation-empty">وەرگێڕانی کوردی بەردەست نەبوو</span>';
           }
         }
       );
@@ -2530,7 +3182,17 @@
       "ar"
     )
       .then(
-        function (meanings) {
+        function (
+          meanings
+        ) {
+
+          if (
+            requestId !==
+            wordRequestId
+          ) {
+            return;
+          }
+
           currentWordMeanings.ar =
             uniqueStrings(
               meanings
@@ -2540,6 +3202,7 @@
             $("modalArText");
 
           if (text) {
+
             text.innerHTML =
               renderMeanings(
                 currentWordMeanings.ar,
@@ -2551,6 +3214,7 @@
             $("modalArSpeakBtn");
 
           if (button) {
+
             button.setAttribute(
               "data-vspeak",
               currentWordMeanings.ar.join(
@@ -2566,13 +3230,29 @@
         }
       )
       .catch(
-        function () {
+        function (
+          error
+        ) {
+
+          if (
+            requestId !==
+            wordRequestId
+          ) {
+            return;
+          }
+
+          console.error(
+            "Arabic dictionary:",
+            error
+          );
+
           var text =
             $("modalArText");
 
           if (text) {
-            text.textContent =
-              "وەرگێڕان بەردەست نەبوو";
+
+            text.innerHTML =
+              '<span class="translation-empty">وەرگێڕانی عەرەبی بەردەست نەبوو</span>';
           }
         }
       );
@@ -2585,13 +3265,15 @@
   function openSentenceModal(
     sentence
   ) {
+
     var text =
       String(
         sentence || ""
       ).trim();
 
     if (
-      text.length < 2
+      text.length <
+      2
     ) {
       return;
     }
@@ -2622,8 +3304,12 @@
       "ckb"
     )
       .then(
-        function (result) {
+        function (
+          result
+        ) {
+
           if (kurdish) {
+
             kurdish.textContent =
               result ||
               "وەرگێڕان بەردەست نەبوو";
@@ -2632,7 +3318,9 @@
       )
       .catch(
         function () {
+
           if (kurdish) {
+
             kurdish.textContent =
               "وەرگێڕان بەردەست نەبوو";
           }
@@ -2641,13 +3329,17 @@
   }
 
   function saveWord() {
+
     if (!currentWord) {
       return;
     }
 
     var exists =
       vocab.some(
-        function (item) {
+        function (
+          item
+        ) {
+
           return (
             String(
               item.word || ""
@@ -2658,6 +3350,7 @@
       );
 
     if (exists) {
+
       toast(
         "ئەم وشەیە پێشتر خەزنکراوە"
       );
@@ -2715,6 +3408,7 @@
      ======================================================= */
 
   function renderVocab() {
+
     var back =
       document.createElement(
         "div"
@@ -2735,10 +3429,13 @@
       '<div class="handle"></div>' +
 
       '<div class="section-head">' +
+
       "<h3>وشەکانم</h3>" +
 
       '<button class="icon-btn" data-temp-close>' +
+
       '<i class="fa-solid fa-xmark"></i>' +
+
       "</button>" +
 
       "</div>" +
@@ -2749,7 +3446,10 @@
         vocab.length
           ? vocab
               .map(
-                function (item) {
+                function (
+                  item
+                ) {
+
                   var source =
                     item.lang ||
                     detectSourceLang(
@@ -2757,6 +3457,7 @@
                     );
 
                   return (
+
                     '<div class="field" style="margin-bottom:10px">' +
 
                     '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800;color:#f4c85c;font-size:17px">' +
@@ -2861,6 +3562,7 @@
     updateTelegramBtn();
 
     function close() {
+
       back.remove();
       sheet.remove();
 
@@ -2874,13 +3576,17 @@
 
     sheet.addEventListener(
       "click",
-      function (event) {
+      function (
+        event
+      ) {
+
         var closeButton =
           event.target.closest(
             "[data-temp-close]"
           );
 
         if (closeButton) {
+
           close();
           return;
         }
@@ -2901,7 +3607,10 @@
 
         vocab =
           vocab.filter(
-            function (item) {
+            function (
+              item
+            ) {
+
               return (
                 item.id !==
                 id
@@ -2929,6 +3638,7 @@
   function addMusicFiles(
     files
   ) {
+
     if (!files) {
       return;
     }
@@ -2938,6 +3648,7 @@
       i < files.length;
       i++
     ) {
+
       music.push({
         name:
           files[i].name,
@@ -2953,6 +3664,7 @@
       musicIndex < 0 &&
       music.length
     ) {
+
       loadTrack(
         0,
         false
@@ -2966,6 +3678,7 @@
     index,
     autoplay
   ) {
+
     if (!music[index]) {
       return;
     }
@@ -2977,6 +3690,7 @@
       $("audio");
 
     if (audio) {
+
       audio.src =
         music[index].url;
 
@@ -2991,11 +3705,13 @@
       $("nowSub");
 
     if (name) {
+
       name.textContent =
         music[index].name;
     }
 
     if (sub) {
+
       sub.textContent =
         "دەنگی هەڵبژێردراو";
     }
@@ -3007,6 +3723,7 @@
       autoplay &&
       audio
     ) {
+
       audio
         .play()
         .then(
@@ -3019,6 +3736,7 @@
   }
 
   function updatePlayButton() {
+
     var audio =
       $("audio");
 
@@ -3030,9 +3748,11 @@
     var playing =
       audio &&
       !audio.paused &&
-      musicIndex >= 0;
+      musicIndex >=
+        0;
 
     if (button) {
+
       button.innerHTML =
         playing
           ? '<i class="fa-solid fa-pause"></i>'
@@ -3044,7 +3764,10 @@
         "[data-track]"
       )
       .forEach(
-        function (item) {
+        function (
+          item
+        ) {
+
           var index =
             Number(
               item.getAttribute(
@@ -3075,6 +3798,7 @@
   }
 
   function renderTracks() {
+
     var box =
       $("tracks");
 
@@ -3083,6 +3807,7 @@
     }
 
     if (!music.length) {
+
       box.innerHTML =
         '<div style="text-align:center;padding:10px;color:var(--muted);font-size:10px">هیچ دەنگێک نییە.</div>';
 
@@ -3096,7 +3821,9 @@
             track,
             index
           ) {
+
             return (
+
               '<div class="track" data-track-card="' +
               index +
               '">' +
@@ -3129,6 +3856,7 @@
      ======================================================= */
 
   function renderOwnerPanel() {
+
     var total =
       $("ownerTotalBooks");
 
@@ -3145,14 +3873,19 @@
       $("ownerBooksList");
 
     if (total) {
+
       total.textContent =
         books.length;
     }
 
     if (publicCount) {
+
       publicCount.textContent =
         books.filter(
-          function (book) {
+          function (
+            book
+          ) {
+
             return (
               book.isPublished !==
               false
@@ -3162,9 +3895,13 @@
     }
 
     if (pending) {
+
       pending.textContent =
         books.filter(
-          function (book) {
+          function (
+            book
+          ) {
+
             return (
               book.isPublished ===
               false
@@ -3174,6 +3911,7 @@
     }
 
     if (audioCount) {
+
       audioCount.textContent =
         music.length;
     }
@@ -3183,6 +3921,7 @@
     }
 
     if (!books.length) {
+
       list.innerHTML =
         '<div style="text-align:center;color:var(--muted);padding:12px;font-size:10px">هیچ کتێبێک نییە.</div>';
 
@@ -3192,45 +3931,65 @@
     list.innerHTML =
       books
         .map(
-          function (book) {
+          function (
+            book
+          ) {
+
             var category =
               book.category ||
               "گشتی";
 
             return (
+
               '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--line);padding:8px;border-radius:11px">' +
 
               '<div style="flex:1;min-width:0">' +
 
               '<strong style="font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
+
               esc(
                 book.title
               ) +
+
               "</strong>" +
 
               '<div style="margin-top:5px">' +
 
               '<select data-owner-cat="' +
+
               esc(
                 book.id
               ) +
+
               '" style="font-size:10px;background:var(--surface);color:#fff;border:1px solid var(--line);border-radius:6px;padding:3px">' +
 
               CATEGORIES
                 .map(
-                  function (cat) {
+                  function (
+                    cat
+                  ) {
+
                     return (
+
                       '<option value="' +
-                      esc(cat) +
+                      esc(
+                        cat
+                      ) +
                       '"' +
+
                       (
                         category ===
                         cat
                           ? " selected"
                           : ""
                       ) +
+
                       ">" +
-                      esc(cat) +
+
+                      esc(
+                        cat
+                      ) +
+
                       "</option>"
                     );
                   }
@@ -3244,9 +4003,11 @@
               "</div>" +
 
               '<button class="icon-btn" data-owner-del="' +
+
               esc(
                 book.id
               ) +
+
               '" style="width:32px;height:32px;color:#ff536d">' +
 
               '<i class="fa-regular fa-trash-can"></i>' +
@@ -3265,6 +4026,7 @@
      ======================================================= */
 
   window.AppLib = {
+
     dbPut:
       dbPut,
 
@@ -3276,6 +4038,7 @@
 
     openSettings:
       function () {
+
         renderSiteThemes();
         renderReaderThemes();
         updateThemeBadges();
@@ -3284,11 +4047,15 @@
           $("geminiApiKey");
 
         if (apiInput) {
+
           try {
+
             apiInput.value =
               localStorage.getItem(
                 "kh_gemini_key"
-              ) || "";
+              ) ||
+              "";
+
           } catch (e) {}
         }
 
@@ -3304,15 +4071,21 @@
       },
 
     setMusicVolume:
-      function (value) {
+      function (
+        value
+      ) {
+
         var number =
-          Number(value);
+          Number(
+            value
+          );
 
         if (
           !Number.isFinite(
             number
           )
         ) {
+
           number =
             0.32;
         }
@@ -3335,12 +4108,14 @@
         }
 
         try {
+
           localStorage.setItem(
             "kh_music_volume",
             String(
               musicVolume
             )
           );
+
         } catch (e) {}
       },
 
@@ -3352,19 +4127,25 @@
   };
 
   /* =======================================================
-     MAIN CLICK HANDLER
+     CLICK HANDLER
      ======================================================= */
 
   document.addEventListener(
     "click",
-    function (event) {
+    function (
+      event
+    ) {
 
+      /*
+       * TTS buttons for words / translations.
+       */
       var speakButton =
         event.target.closest(
           "[data-vspeak]"
         );
 
       if (speakButton) {
+
         speakText(
           speakButton.getAttribute(
             "data-vspeak"
@@ -3393,6 +4174,7 @@
           name ===
           "add-pdf"
         ) {
+
           var input =
             $("pdfInput");
 
@@ -3407,6 +4189,7 @@
           name ===
           "add-music"
         ) {
+
           var musicInput =
             $("musicInput");
 
@@ -3421,12 +4204,14 @@
           name ===
           "open-book"
         ) {
+
           var card =
             action.closest(
               ".book"
             );
 
           if (card) {
+
             openBook(
               card.getAttribute(
                 "data-book"
@@ -3441,12 +4226,14 @@
           name ===
           "fav"
         ) {
+
           var favCard =
             action.closest(
               ".book"
             );
 
           if (favCard) {
+
             toggleFavorite(
               favCard.getAttribute(
                 "data-book"
@@ -3461,12 +4248,14 @@
           name ===
           "del-book"
         ) {
+
           var deleteCard =
             action.closest(
               ".book"
             );
 
           if (deleteCard) {
+
             deleteBook(
               deleteCard.getAttribute(
                 "data-book"
@@ -3481,7 +4270,9 @@
           name ===
           "continue"
         ) {
+
           if (!books.length) {
+
             toast(
               "هێشتا کتێب نییە"
             );
@@ -3493,7 +4284,11 @@
             books
               .slice()
               .sort(
-                function (a, b) {
+                function (
+                  a,
+                  b
+                ) {
+
                   return (
                     (
                       b.updatedAt ||
@@ -3522,7 +4317,9 @@
           name ===
           "settings"
         ) {
+
           window.AppLib.openSettings();
+
           return;
         }
 
@@ -3530,6 +4327,7 @@
           name ===
           "close-settings"
         ) {
+
           closeSheet(
             $("sheetBack"),
             $("settingsSheet")
@@ -3542,6 +4340,7 @@
           name ===
           "owner-panel"
         ) {
+
           renderOwnerPanel();
 
           openSheet(
@@ -3556,6 +4355,7 @@
           name ===
           "close-owner"
         ) {
+
           closeSheet(
             $("ownerBack"),
             $("ownerSheet")
@@ -3568,6 +4368,7 @@
           name ===
           "close-word"
         ) {
+
           closeSheet(
             $("wordBack"),
             $("wordSheet")
@@ -3580,6 +4381,7 @@
           name ===
           "save-word"
         ) {
+
           saveWord();
           return;
         }
@@ -3588,6 +4390,7 @@
           name ===
           "speak-word"
         ) {
+
           speakText(
             currentWord,
             currentWordLang
@@ -3600,6 +4403,7 @@
           name ===
           "close-sentence"
         ) {
+
           closeSheet(
             $("sentenceBack"),
             $("sentenceSheet")
@@ -3612,11 +4416,13 @@
           name ===
           "clear-vocab"
         ) {
+
           if (
             window.confirm(
               "هەموو وشە خەزنکراوەکان بسڕدرێنەوە؟"
             )
           ) {
+
             vocab = [];
 
             saveJSON(
@@ -3638,6 +4444,7 @@
           name ===
           "play-pause"
         ) {
+
           var audio =
             $("audio");
 
@@ -3646,16 +4453,20 @@
           }
 
           if (
-            musicIndex < 0 &&
+            musicIndex <
+              0 &&
             music.length
           ) {
+
             loadTrack(
               0,
               true
             );
+
           } else if (
             audio.paused
           ) {
+
             audio
               .play()
               .then(
@@ -3664,8 +4475,11 @@
               .catch(
                 function () {}
               );
+
           } else {
+
             audio.pause();
+
             updatePlayButton();
           }
 
@@ -3676,6 +4490,7 @@
           name ===
           "next-track"
         ) {
+
           if (!music.length) {
             return;
           }
@@ -3696,6 +4511,7 @@
           name ===
           "prev-track"
         ) {
+
           if (!music.length) {
             return;
           }
@@ -3714,12 +4530,16 @@
         }
       }
 
+      /*
+       * Music track.
+       */
       var track =
         event.target.closest(
           "[data-track-card]"
         );
 
       if (track) {
+
         var index =
           Number(
             track.getAttribute(
@@ -3736,9 +4556,13 @@
           audioElement &&
           !audioElement.paused
         ) {
+
           audioElement.pause();
+
           updatePlayButton();
+
         } else {
+
           loadTrack(
             index,
             true
@@ -3748,12 +4572,16 @@
         return;
       }
 
+      /*
+       * Site theme.
+       */
       var theme =
         event.target.closest(
           "[data-site-theme]"
         );
 
       if (theme) {
+
         setSiteTheme(
           theme.getAttribute(
             "data-site-theme"
@@ -3763,22 +4591,30 @@
         return;
       }
 
+      /*
+       * Reader theme.
+       */
       var readerThemeButton =
         event.target.closest(
           "[data-set-reader-theme]"
         );
 
-      if (readerThemeButton) {
+      if (
+        readerThemeButton
+      ) {
+
         readerTheme =
           readerThemeButton.getAttribute(
             "data-set-reader-theme"
           );
 
         try {
+
           localStorage.setItem(
             "kh_reader_theme",
             readerTheme
           );
+
         } catch (e) {}
 
         renderReaderThemes();
@@ -3789,18 +4625,23 @@
           typeof window.ReaderEngine.applyTheme ===
             "function"
         ) {
+
           window.ReaderEngine.applyTheme();
         }
 
         return;
       }
 
+      /*
+       * Settings accordion.
+       */
       var accordion =
         event.target.closest(
           "[data-toggle-target]"
         );
 
       if (accordion) {
+
         var targetId =
           accordion.getAttribute(
             "data-toggle-target"
@@ -3823,7 +4664,10 @@
             ".setting-collapse"
           )
           .forEach(
-            function (item) {
+            function (
+              item
+            ) {
+
               item.classList.add(
                 "hidden"
               );
@@ -3835,7 +4679,10 @@
             ".setting-header"
           )
           .forEach(
-            function (item) {
+            function (
+              item
+            ) {
+
               item.classList.remove(
                 "open"
               );
@@ -3843,6 +4690,7 @@
           );
 
         if (wasHidden) {
+
           target.classList.remove(
             "hidden"
           );
@@ -3855,12 +4703,16 @@
         return;
       }
 
+      /*
+       * Bottom navigation.
+       */
       var navigation =
         event.target.closest(
           "[data-nav]"
         );
 
       if (navigation) {
+
         var nav =
           navigation.getAttribute(
             "data-nav"
@@ -3871,7 +4723,10 @@
             ".nav"
           )
           .forEach(
-            function (item) {
+            function (
+              item
+            ) {
+
               item.classList.toggle(
                 "active",
                 item ===
@@ -3886,6 +4741,7 @@
           nav ===
           "vocab"
         ) {
+
           renderVocab();
           return;
         }
@@ -3901,7 +4757,10 @@
             ".chip"
           )
           .forEach(
-            function (item) {
+            function (
+              item
+            ) {
+
               item.classList.toggle(
                 "active",
                 item.getAttribute(
@@ -3917,12 +4776,16 @@
         return;
       }
 
+      /*
+       * Filter chips.
+       */
       var filterButton =
         event.target.closest(
           "[data-filter]"
         );
 
       if (filterButton) {
+
         filter =
           filterButton.getAttribute(
             "data-filter"
@@ -3933,7 +4796,10 @@
             ".chip"
           )
           .forEach(
-            function (item) {
+            function (
+              item
+            ) {
+
               item.classList.toggle(
                 "active",
                 item ===
@@ -3947,12 +4813,16 @@
         return;
       }
 
+      /*
+       * Owner delete.
+       */
       var ownerDelete =
         event.target.closest(
           "[data-owner-del]"
         );
 
       if (ownerDelete) {
+
         deleteBook(
           ownerDelete.getAttribute(
             "data-owner-del"
@@ -3962,6 +4832,9 @@
         return;
       }
 
+      /*
+       * Click a reader word.
+       */
       var word =
         event.target.closest(
           ".rw"
@@ -3973,6 +4846,7 @@
           "data-word"
         )
       ) {
+
         var selection =
           window.getSelection
             ? window
@@ -3986,10 +4860,13 @@
           selection.length >
             1
         ) {
+
           openSentenceModal(
             selection
           );
+
         } else {
+
           openWordModal(
             word.getAttribute(
               "data-word"
@@ -4008,14 +4885,18 @@
 
   document.addEventListener(
     "change",
-    function (event) {
+    function (
+      event
+    ) {
 
       var ownerCategory =
         event.target.closest(
           "[data-owner-cat]"
         );
 
-      if (ownerCategory) {
+      if (
+        ownerCategory
+      ) {
 
         var id =
           ownerCategory.getAttribute(
@@ -4024,7 +4905,10 @@
 
         var book =
           books.find(
-            function (item) {
+            function (
+              item
+            ) {
+
               return (
                 item.id ===
                 id
@@ -4042,9 +4926,12 @@
         book.updatedAt =
           Date.now();
 
-        dbPut(book)
+        dbPut(
+          book
+        )
           .then(
             function () {
+
               renderBooks();
               renderOwnerPanel();
 
@@ -4054,7 +4941,10 @@
             }
           )
           .catch(
-            function (error) {
+            function (
+              error
+            ) {
+
               console.error(
                 error
               );
@@ -4067,16 +4957,18 @@
   );
 
   /* =======================================================
-     BACKDROP CLOSE
+     BACKDROPS
      ======================================================= */
 
   var sheetBack =
     $("sheetBack");
 
   if (sheetBack) {
+
     sheetBack.addEventListener(
       "click",
       function () {
+
         closeSheet(
           $("sheetBack"),
           $("settingsSheet")
@@ -4089,9 +4981,11 @@
     $("ownerBack");
 
   if (ownerBack) {
+
     ownerBack.addEventListener(
       "click",
       function () {
+
         closeSheet(
           $("ownerBack"),
           $("ownerSheet")
@@ -4104,9 +4998,11 @@
     $("wordBack");
 
   if (wordBack) {
+
     wordBack.addEventListener(
       "click",
       function () {
+
         closeSheet(
           $("wordBack"),
           $("wordSheet")
@@ -4119,9 +5015,11 @@
     $("sentenceBack");
 
   if (sentenceBack) {
+
     sentenceBack.addEventListener(
       "click",
       function () {
+
         closeSheet(
           $("sentenceBack"),
           $("sentenceSheet")
@@ -4131,16 +5029,18 @@
   }
 
   /* =======================================================
-     INPUTS
+     FILE INPUTS
      ======================================================= */
 
   var pdfInput =
     $("pdfInput");
 
   if (pdfInput) {
+
     pdfInput.addEventListener(
       "change",
       function () {
+
         addPDF(
           this.files &&
             this.files[0]
@@ -4153,9 +5053,11 @@
     $("musicInput");
 
   if (musicInput) {
+
     musicInput.addEventListener(
       "change",
       function () {
+
         addMusicFiles(
           this.files
         );
@@ -4170,9 +5072,11 @@
     $("searchInput");
 
   if (search) {
+
     search.addEventListener(
       "input",
       function () {
+
         query =
           this.value.trim();
 
@@ -4193,6 +5097,7 @@
     audio.addEventListener(
       "timeupdate",
       function () {
+
         var range =
           $("audioRange");
 
@@ -4200,6 +5105,7 @@
           range &&
           this.duration
         ) {
+
           range.value =
             String(
               Math.round(
@@ -4217,7 +5123,11 @@
     audio.addEventListener(
       "ended",
       function () {
-        if (music.length) {
+
+        if (
+          music.length
+        ) {
+
           loadTrack(
             (
               musicIndex +
@@ -4245,9 +5155,11 @@
     $("audioRange");
 
   if (audioRange) {
+
     audioRange.addEventListener(
       "input",
       function () {
+
         var audioElement =
           $("audio");
 
@@ -4255,6 +5167,7 @@
           audioElement &&
           audioElement.duration
         ) {
+
           audioElement.currentTime =
             audioElement.duration *
             (
@@ -4276,14 +5189,18 @@
     $("geminiApiKey");
 
   if (apiInput) {
+
     apiInput.addEventListener(
       "input",
       function () {
+
         try {
+
           localStorage.setItem(
             "kh_gemini_key",
             this.value.trim()
           );
+
         } catch (e) {}
       }
     );
@@ -4293,15 +5210,18 @@
     $("fontSize");
 
   if (fontSizeInput) {
+
     fontSizeInput.addEventListener(
       "change",
       function () {
 
         try {
+
           localStorage.setItem(
             "kh_font",
             this.value
           );
+
         } catch (e) {}
 
         if (
@@ -4309,6 +5229,7 @@
           typeof window.ReaderEngine.setFontSize ===
             "function"
         ) {
+
           window.ReaderEngine.setFontSize(
             Number(
               this.value
@@ -4356,6 +5277,7 @@
         musicVolume
       )
     ) {
+
       musicVolume =
         0.32;
     }
@@ -4373,6 +5295,7 @@
         function (
           storedBooks
         ) {
+
           books =
             Array.isArray(
               storedBooks
@@ -4386,7 +5309,10 @@
         }
       )
       .catch(
-        function (error) {
+        function (
+          error
+        ) {
+
           console.error(
             "dbAll:",
             error
