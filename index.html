@@ -9,232 +9,1271 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Vazirmatn:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+
 <link rel="stylesheet" href="style.css">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 </head>
 
 <body>
+
 <div class="app" id="app">
-  <div class="topbar"><div class="topbar-in">
-    <div class="brand"><div class="logo"><i class="fa-solid fa-feather-pointed"></i></div><div><h1>خوێندنگە</h1><p>پلاتفۆرمی فێربوون و ڪتێبخانە</p></div></div>
-    <div class="top-actions">
-      <button class="icon-btn gold" data-action="owner-panel" title="پانێڵی بەڕێوەبەر"><i class="fa-solid fa-crown"></i></button>
-      <button class="icon-btn" data-action="settings" title="ڕێکخستن"><i class="fa-solid fa-sliders"></i></button>
+
+  <div class="topbar">
+    <div class="topbar-in">
+
+      <div class="brand">
+        <div class="logo">
+          <i class="fa-solid fa-feather-pointed"></i>
+        </div>
+
+        <div>
+          <h1>خوێندنگە</h1>
+          <p>پلاتفۆرمی فێربوون و کتێبخانە</p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+
+        <button
+          class="icon-btn gold"
+          data-action="owner-panel"
+          title="پانێڵی بەڕێوەبەر"
+          aria-label="پانێڵی بەڕێوەبەر"
+        >
+          <i class="fa-solid fa-crown"></i>
+        </button>
+
+        <button
+          class="icon-btn"
+          data-action="settings"
+          title="ڕێکخستن"
+          aria-label="ڕێکخستن"
+        >
+          <i class="fa-solid fa-sliders"></i>
+        </button>
+
+      </div>
     </div>
-  </div></div>
+  </div>
 
   <main>
+
     <section class="hero">
-      <div class="hero-row"><div><h2>خوێندنەوەیەڪی جیاواز.</h2><p>ڪتێبەڪانت بخوێنەوە، فەرهەنگ دروست بڪە و لەگەڵ خوێندنەوە گوێ لە دەنگ بگرە.</p></div><div class="badge">OWNER EDITION</div></div>
-      <div class="hero-actions">
-        <button class="primary" data-action="add-pdf"><i class="fa-solid fa-file-circle-plus"></i> زیادڪردنی PDF</button>
-        <button class="ghost" data-action="continue"><i class="fa-solid fa-play"></i></button>
+
+      <div class="hero-row">
+
+        <div>
+          <h2>خوێندنەوەیەکی جیاواز.</h2>
+
+          <p>
+            کتێبەکانت بخوێنەوە،
+            فەرهەنگ دروست بکە
+            و لەگەڵ خوێندنەوە گوێ لە دەنگ بگرە.
+          </p>
+        </div>
+
+        <div class="badge">
+          OWNER EDITION
+        </div>
+
       </div>
-      <input id="pdfInput" class="hidden" type="file" accept="application/pdf">
+
+      <div class="hero-actions">
+
+        <button
+          class="primary"
+          data-action="add-pdf"
+        >
+          <i class="fa-solid fa-file-circle-plus"></i>
+          زیادکردنی PDF
+        </button>
+
+        <button
+          class="ghost"
+          data-action="continue"
+          aria-label="بەردەوامبوون لە خوێندنەوە"
+          title="بەردەوامبوون"
+        >
+          <i class="fa-solid fa-play"></i>
+        </button>
+
+      </div>
+
+      <input
+        id="pdfInput"
+        class="hidden"
+        type="file"
+        accept="application/pdf"
+      >
+
     </section>
-
-    <section class="section"><div class="search"><i class="fa-solid fa-magnifying-glass"></i><input id="searchInput" placeholder="گەڕان بۆ ڪتێب، نووسەر، یان پۆل..."></div></section>
-
-    <section class="section"><div class="stats">
-      <div class="stat"><i class="fa-solid fa-book"></i><strong id="bookCount">0</strong><span>ڪتێب</span></div>
-      <div class="stat"><i class="fa-solid fa-layer-group"></i><strong id="catCount">9</strong><span>پۆل</span></div>
-      <div class="stat"><i class="fa-solid fa-language"></i><strong id="wordCount">0</strong><span>وشە</span></div>
-    </div></section>
 
     <section class="section">
-      <div class="chips" id="filters">
-        <button class="chip active" data-filter="all">هەموو</button>
-        <button class="chip" data-filter="favorites">دڵخوازەڪان</button>
-        <button class="chip" data-filter="recent">تازەڪان</button>
-        <button class="chip" data-filter="زمان">زانستی زمان</button>
-        <button class="chip" data-filter="ئەدەب">ئەدەب و شیعر</button>
-        <button class="chip" data-filter="مێژوو">مێژوو</button>
-        <button class="chip" data-filter="زانست">زانست</button>
-        <button class="chip" data-filter="فەلسەفە">فەلسەفە</button>
-        <button class="chip" data-filter="ئایین">ئایین و فیقە</button>
-        <button class="chip" data-filter="ئینگلیزی">فێربوونی ئینگلیزی</button>
+
+      <div class="search">
+
+        <i class="fa-solid fa-magnifying-glass"></i>
+
+        <input
+          id="searchInput"
+          type="search"
+          autocomplete="off"
+          placeholder="گەڕان بۆ کتێب، نووسەر، یان پۆل..."
+          aria-label="گەڕان"
+        >
+
       </div>
+
     </section>
 
-    <section class="section"><div class="section-head"><h2 class="section-title">ڪتێبەڪان</h2><span class="muted" id="resultHint">0 ڪتێب</span></div><div id="bookList" class="grid"></div></section>
+    <section class="section">
 
-    <section class="section"><div class="section-head"><h2 class="section-title"><i class="fa-solid fa-headphones" style="color:#f05bd5"></i> موزیک و دەنگ</h2><span class="muted">بۆ خوێندنەوە</span></div>
+      <div class="stats">
+
+        <div class="stat">
+          <i class="fa-solid fa-book"></i>
+          <strong id="bookCount">0</strong>
+          <span>کتێب</span>
+        </div>
+
+        <div class="stat">
+          <i class="fa-solid fa-layer-group"></i>
+          <strong id="catCount">9</strong>
+          <span>پۆل</span>
+        </div>
+
+        <div class="stat">
+          <i class="fa-solid fa-language"></i>
+          <strong id="wordCount">0</strong>
+          <span>وشە</span>
+        </div>
+
+      </div>
+
+    </section>
+
+    <section class="section">
+
+      <div
+        class="chips"
+        id="filters"
+      >
+
+        <button
+          class="chip active"
+          data-filter="all"
+        >
+          هەموو
+        </button>
+
+        <button
+          class="chip"
+          data-filter="favorites"
+        >
+          دڵخوازەکان
+        </button>
+
+        <button
+          class="chip"
+          data-filter="recent"
+        >
+          تازەکان
+        </button>
+
+        <button
+          class="chip"
+          data-filter="زمان"
+        >
+          زانستی زمان
+        </button>
+
+        <button
+          class="chip"
+          data-filter="ئەدەب"
+        >
+          ئەدەب و شیعر
+        </button>
+
+        <button
+          class="chip"
+          data-filter="مێژوو"
+        >
+          مێژوو
+        </button>
+
+        <button
+          class="chip"
+          data-filter="زانست"
+        >
+          زانست
+        </button>
+
+        <button
+          class="chip"
+          data-filter="فەلسەفە"
+        >
+          فەلسەفە
+        </button>
+
+        <button
+          class="chip"
+          data-filter="ئایین"
+        >
+          ئایین و فیقە
+        </button>
+
+        <button
+          class="chip"
+          data-filter="ئینگلیزی"
+        >
+          فێربوونی ئینگلیزی
+        </button>
+
+      </div>
+
+    </section>
+
+    <section class="section">
+
+      <div class="section-head">
+
+        <h2 class="section-title">
+          کتێبەکان
+        </h2>
+
+        <span
+          class="muted"
+          id="resultHint"
+        >
+          0 کتێب
+        </span>
+
+      </div>
+
+      <div
+        id="bookList"
+        class="grid"
+      ></div>
+
+    </section>
+
+    <section class="section">
+
+      <div class="section-head">
+
+        <h2 class="section-title">
+          <i
+            class="fa-solid fa-headphones"
+            style="color:#f05bd5"
+          ></i>
+          موزیک و دەنگ
+        </h2>
+
+        <span class="muted">
+          بۆ خوێندنەوە
+        </span>
+
+      </div>
+
       <div class="music">
-        <div class="music-head"><div class="album"><i class="fa-solid fa-music"></i></div><div class="music-info"><div class="music-name" id="nowName">هیچ دەنگێڪ هەڵنەبژێردراوە</div><div class="music-sub" id="nowSub">فایلی دەنگیی خۆت زیاد بڪە</div></div><button class="icon-btn" data-action="add-music"><i class="fa-solid fa-plus"></i></button></div>
-        <input id="musicInput" class="hidden" type="file" accept="audio/*" multiple>
-        <input id="audioRange" type="range" min="0" max="100" value="0">
-        <div class="music-controls"><button class="music-btn" data-action="prev-track"><i class="fa-solid fa-backward-step"></i></button><button class="music-btn big" data-action="play-pause"><i class="fa-solid fa-play"></i></button><button class="music-btn" data-action="next-track"><i class="fa-solid fa-forward-step"></i></button></div>
-        <div class="tracks" id="tracks"></div><audio id="audio"></audio>
+
+        <div class="music-head">
+
+          <div class="album">
+            <i class="fa-solid fa-music"></i>
+          </div>
+
+          <div class="music-info">
+
+            <div
+              class="music-name"
+              id="nowName"
+            >
+              هیچ دەنگێک هەڵنەبژێردراوە
+            </div>
+
+            <div
+              class="music-sub"
+              id="nowSub"
+            >
+              فایلی دەنگیی خۆت زیاد بکە
+            </div>
+
+          </div>
+
+          <button
+            class="icon-btn"
+            data-action="add-music"
+            title="زیادکردنی دەنگ"
+            aria-label="زیادکردنی دەنگ"
+          >
+            <i class="fa-solid fa-plus"></i>
+          </button>
+
+        </div>
+
+        <input
+          id="musicInput"
+          class="hidden"
+          type="file"
+          accept="audio/*"
+          multiple
+        >
+
+        <input
+          id="audioRange"
+          type="range"
+          min="0"
+          max="100"
+          value="0"
+          aria-label="پێشچوونی دەنگ"
+        >
+
+        <div class="music-controls">
+
+          <button
+            class="music-btn"
+            data-action="prev-track"
+            aria-label="دەنگی پێشوو"
+            title="پێشوو"
+          >
+            <i class="fa-solid fa-backward-step"></i>
+          </button>
+
+          <button
+            class="music-btn big"
+            data-action="play-pause"
+            aria-label="لێدان و ڕاگرتن"
+            title="لێدان"
+          >
+            <i class="fa-solid fa-play"></i>
+          </button>
+
+          <button
+            class="music-btn"
+            data-action="next-track"
+            aria-label="دەنگی داهاتوو"
+            title="داهاتوو"
+          >
+            <i class="fa-solid fa-forward-step"></i>
+          </button>
+
+        </div>
+
+        <div
+          class="tracks"
+          id="tracks"
+        ></div>
+
+        <audio
+          id="audio"
+          preload="metadata"
+        ></audio>
+
       </div>
+
     </section>
+
   </main>
 
-  <div class="bottom"><div class="bottom-in">
-    <button class="nav active" data-nav="home"><i class="fa-solid fa-house"></i><span>سەرەڪی</span></button>
-    <button class="nav" data-nav="library"><i class="fa-solid fa-book-open"></i><span>ڪتێبەڪان</span></button>
-    <button class="nav" data-nav="favorites"><i class="fa-solid fa-heart"></i><span>دڵخواز</span></button>
-    <button class="nav" data-nav="vocab"><i class="fa-solid fa-language"></i><span>وشەڪانم</span></button>
-  </div></div>
+  <div class="bottom">
+
+    <div class="bottom-in">
+
+      <button
+        class="nav active"
+        data-nav="home"
+      >
+        <i class="fa-solid fa-house"></i>
+        <span>سەرەکی</span>
+      </button>
+
+      <button
+        class="nav"
+        data-nav="library"
+      >
+        <i class="fa-solid fa-book-open"></i>
+        <span>کتێبەکان</span>
+      </button>
+
+      <button
+        class="nav"
+        data-nav="favorites"
+      >
+        <i class="fa-solid fa-heart"></i>
+        <span>دڵخواز</span>
+      </button>
+
+      <button
+        class="nav"
+        data-nav="vocab"
+      >
+        <i class="fa-solid fa-language"></i>
+        <span>وشەکانم</span>
+      </button>
+
+    </div>
+
+  </div>
+
 </div>
 
-<div id="sheetBack" class="back"></div>
-<div id="settingsSheet" class="sheet">
+
+<!-- Settings -->
+
+<div
+  id="sheetBack"
+  class="back"
+></div>
+
+<div
+  id="settingsSheet"
+  class="sheet"
+>
+
   <div class="handle"></div>
+
   <div class="section-head">
-    <h3><i class="fa-solid fa-sliders" style="color:var(--a)"></i> ڕێکخستن</h3>
-    <button class="icon-btn" data-action="close-settings" style="width:34px;height:34px"><i class="fa-solid fa-xmark"></i></button>
+
+    <h3>
+      <i
+        class="fa-solid fa-sliders"
+        style="color:var(--a)"
+      ></i>
+      ڕێکخستن
+    </h3>
+
+    <button
+      class="icon-btn"
+      data-action="close-settings"
+      style="width:34px;height:34px"
+      aria-label="داخستن"
+    >
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
   </div>
 
-  <div class="field">
-    <label>کلیلی ژیریی دەستڪرد (Gemini API Key)</label>
-    <input id="geminiApiKey" type="password" placeholder="AIzaSy..." style="width:100%;border:0;outline:0;background:transparent;color:#f5cd68;font-family:monospace;direction:ltr;text-align:left;font-size:12px;">
-    <span style="font-size:9px;color:var(--muted);display:block;margin-top:4px;">کلیلی فەرمیی Gemini بۆ دەرهێنانی دەقی پەڕتووکە کوردییەکان.</span>
-  </div>
 
   <div class="field">
-    <label>قەبارەی فۆنتی خوێنەر</label>
+
+    <label>
+      کلیلی ژیریی دەستکرد (Gemini API Key)
+    </label>
+
+    <input
+      id="geminiApiKey"
+      type="password"
+      autocomplete="off"
+      spellcheck="false"
+      placeholder="AIzaSy..."
+      style="
+        width:100%;
+        border:0;
+        outline:0;
+        background:transparent;
+        color:#f5cd68;
+        font-family:monospace;
+        direction:ltr;
+        text-align:left;
+        font-size:12px;
+      "
+    >
+
+    <span
+      style="
+        font-size:9px;
+        color:var(--muted);
+        display:block;
+        margin-top:4px;
+      "
+    >
+      کلیلی فەرمیی Gemini بۆ دەرهێنانی دەقی پەرتووکە کوردییەکان.
+    </span>
+
+  </div>
+
+
+  <div class="field">
+
+    <label>
+      قەبارەی فۆنتی خوێنەر
+    </label>
+
     <select id="fontSize">
-      <option value="18">ڪەم (18px)</option>
-      <option value="20">ئاسایی (20px)</option>
-      <option value="23">گەورە (23px)</option>
-      <option value="26">زۆر گەورە (26px)</option>
+
+      <option value="18">
+        کەم (18px)
+      </option>
+
+      <option value="20" selected>
+        ئاسایی (20px)
+      </option>
+
+      <option value="23">
+        گەورە (23px)
+      </option>
+
+      <option value="26">
+        زۆر گەورە (26px)
+      </option>
+
     </select>
+
   </div>
+
 
   <div class="setting-accordion">
-    <button class="setting-header" data-toggle-target="siteThemesWrap">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span id="siteThemeDot" class="color-dot"></span>
-        <span>ڕەنگی پلاتفۆرم</span>
+
+    <button
+      class="setting-header"
+      data-toggle-target="siteThemesWrap"
+    >
+
+      <div
+        style="
+          display:flex;
+          align-items:center;
+          gap:8px
+        "
+      >
+
+        <span
+          id="siteThemeDot"
+          class="color-dot"
+        ></span>
+
+        <span>
+          ڕەنگی پلاتفۆرم
+        </span>
+
       </div>
-      <div style="display:flex;align-items:center;gap:6px">
-        <span id="siteThemeLabel" class="setting-sub-label">شینی ئاسمانی</span>
-        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+
+      <div
+        style="
+          display:flex;
+          align-items:center;
+          gap:6px
+        "
+      >
+
+        <span
+          id="siteThemeLabel"
+          class="setting-sub-label"
+        >
+          شینی ئاسمانی
+        </span>
+
+        <i
+          class="fa-solid fa-chevron-down arrow-icon"
+        ></i>
+
       </div>
+
     </button>
-    <div id="siteThemesWrap" class="setting-collapse hidden">
-      <div id="siteThemes" class="theme-grid" style="margin-top:6px"></div>
+
+
+    <div
+      id="siteThemesWrap"
+      class="setting-collapse hidden"
+    >
+
+      <div
+        id="siteThemes"
+        class="theme-grid"
+        style="margin-top:6px"
+      ></div>
+
     </div>
+
   </div>
+
 
   <div class="setting-accordion">
-    <button class="setting-header" data-toggle-target="readerThemesWrap">
-      <div style="display:flex;align-items:center;gap:8px">
-        <span id="readerThemeDot" class="color-dot"></span>
-        <span>ڕەنگی لاپەڕە</span>
+
+    <button
+      class="setting-header"
+      data-toggle-target="readerThemesWrap"
+    >
+
+      <div
+        style="
+          display:flex;
+          align-items:center;
+          gap:8px
+        "
+      >
+
+        <span
+          id="readerThemeDot"
+          class="color-dot"
+        ></span>
+
+        <span>
+          ڕەنگی لاپەڕە
+        </span>
+
       </div>
-      <div style="display:flex;align-items:center;gap:6px">
-        <span id="readerThemeLabel" class="setting-sub-label">سپی</span>
-        <i class="fa-solid fa-chevron-down arrow-icon"></i>
+
+      <div
+        style="
+          display:flex;
+          align-items:center;
+          gap:6px
+        "
+      >
+
+        <span
+          id="readerThemeLabel"
+          class="setting-sub-label"
+        >
+          سپی
+        </span>
+
+        <i
+          class="fa-solid fa-chevron-down arrow-icon"
+        ></i>
+
       </div>
+
     </button>
-    <div id="readerThemesWrap" class="setting-collapse hidden">
-      <div id="readerThemes" class="theme-grid" style="margin-top:6px"></div>
+
+
+    <div
+      id="readerThemesWrap"
+      class="setting-collapse hidden"
+    >
+
+      <div
+        id="readerThemes"
+        class="theme-grid"
+        style="margin-top:6px"
+      ></div>
+
     </div>
+
   </div>
 
-  <div class="hero-actions" style="margin-top:16px">
-    <button class="ghost" data-action="clear-vocab">سڕینەوەی وشەڪان</button>
-    <button class="primary" data-action="close-settings">تەواو</button>
+
+  <div
+    class="hero-actions"
+    style="margin-top:16px"
+  >
+
+    <button
+      class="ghost"
+      data-action="clear-vocab"
+    >
+      سڕینەوەی وشەکان
+    </button>
+
+    <button
+      class="primary"
+      data-action="close-settings"
+    >
+      تەواو
+    </button>
+
   </div>
+
 </div>
 
-<div id="ownerBack" class="back"></div>
-<div id="ownerSheet" class="sheet">
+
+<!-- Owner Panel -->
+
+<div
+  id="ownerBack"
+  class="back"
+></div>
+
+<div
+  id="ownerSheet"
+  class="sheet"
+>
+
   <div class="handle"></div>
+
   <div class="section-head">
-    <h3><i class="fa-solid fa-crown" style="color:var(--gold)"></i> پانێڵی بەڕێوەبەر (Owner Panel)</h3>
-    <button class="icon-btn" data-action="close-owner"><i class="fa-solid fa-xmark"></i></button>
+
+    <h3>
+
+      <i
+        class="fa-solid fa-crown"
+        style="color:var(--gold)"
+      ></i>
+
+      پانێڵی بەڕێوەبەر
+      (Owner Panel)
+
+    </h3>
+
+    <button
+      class="icon-btn"
+      data-action="close-owner"
+      aria-label="داخستن"
+    >
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
   </div>
-  <p style="font-size:11px;color:var(--muted);margin:0 0 10px">بەڕێوەبردنی گشتیی پلاتفۆرمی خوێندنگە.</p>
-  
+
+
+  <p
+    style="
+      font-size:11px;
+      color:var(--muted);
+      margin:0 0 10px
+    "
+  >
+    بەڕێوەبردنی گشتیی پلاتفۆرمی خوێندنگە.
+  </p>
+
+
   <div class="field">
-    <label>ئاماری گشتیی پلاتفۆرم</label>
-    <div style="font-size:11px;line-height:2;color:#d5e5f7">
-      • ڪۆی گشتیی ڪتێبەڪان: <strong id="ownerTotalBooks" style="color:var(--a)">0</strong><br>
-      • ڪتێبی گشتی/بڵاوڪراوە: <strong id="ownerPublicBooks" style="color:#22c98b">0</strong><br>
-      • ڪتێبی تایبەت/چاوەڕوان: <strong id="ownerPendingBooks" style="color:var(--gold)">0</strong><br>
-      • فایلی دەنگیی چالاک: <strong id="ownerTotalAudios" style="color:#f05bd5">0</strong>
+
+    <label>
+      ئاماری گشتیی پلاتفۆرم
+    </label>
+
+    <div
+      style="
+        font-size:11px;
+        line-height:2;
+        color:#d5e5f7
+      "
+    >
+
+      • کۆی گشتیی کتێبەکان:
+      <strong
+        id="ownerTotalBooks"
+        style="color:var(--a)"
+      >
+        0
+      </strong>
+
+      <br>
+
+      • کتێبی گشتی/بڵاوکراوە:
+      <strong
+        id="ownerPublicBooks"
+        style="color:#22c98b"
+      >
+        0
+      </strong>
+
+      <br>
+
+      • کتێبی تایبەت/چاوەڕوان:
+      <strong
+        id="ownerPendingBooks"
+        style="color:var(--gold)"
+      >
+        0
+      </strong>
+
+      <br>
+
+      • فایلی دەنگیی چالاک:
+      <strong
+        id="ownerTotalAudios"
+        style="color:#f05bd5"
+      >
+        0
+      </strong>
+
     </div>
+
+  </div>
+
+
+  <div class="field">
+
+    <label>
+      بەڕێوەبردنی خێرای کتێبەکان بەپێی پۆل
+    </label>
+
+    <div
+      id="ownerBooksList"
+      style="
+        max-height:220px;
+        overflow:auto;
+        display:grid;
+        gap:8px;
+        margin-top:6px
+      "
+    ></div>
+
+  </div>
+
+
+  <div class="hero-actions">
+
+    <button
+      class="primary"
+      data-action="close-owner"
+    >
+      داخستنی پانێڵ
+    </button>
+
+  </div>
+
+</div>
+
+
+<!-- Word -->
+
+<div
+  id="wordBack"
+  class="back"
+></div>
+
+<div
+  id="wordSheet"
+  class="sheet"
+>
+
+  <div class="handle"></div>
+
+  <div class="section-head">
+
+    <h3>
+      وەرگێڕانی وشە
+    </h3>
+
+    <button
+      class="icon-btn"
+      data-action="close-word"
+      aria-label="داخستن"
+    >
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
   </div>
 
   <div class="field">
-    <label>بەڕێوەبردنی خێرای ڪتێبەڪان بەپێی پۆل</label>
-    <div id="ownerBooksList" style="max-height:220px;overflow:auto;display:grid;gap:8px;margin-top:6px"></div>
+
+    <label>
+      وشە
+    </label>
+
+    <div
+      id="modalWord"
+      style="
+        font-size:20px;
+        font-weight:800;
+        color:#f4c85c
+      "
+    ></div>
+
+  </div>
+
+  <div class="field">
+
+    <label>
+      بە کوردی
+    </label>
+
+    <div id="modalKu">
+      چاوەڕوانی...
+    </div>
+
+  </div>
+
+  <div class="field">
+
+    <label id="modalThirdLabel">
+      وەرگێڕان
+    </label>
+
+    <div id="modalThird">
+      چاوەڕوانی...
+    </div>
+
   </div>
 
   <div class="hero-actions">
-    <button class="primary" data-action="close-owner">داخستنی پانێڵ</button>
+
+    <button
+      class="ghost"
+      data-action="speak-word"
+    >
+      <i class="fa-solid fa-volume-high"></i>
+      دەنگ
+    </button>
+
+    <button
+      class="primary"
+      data-action="save-word"
+    >
+      خەزنکردن
+    </button>
+
   </div>
+
 </div>
 
-<div id="wordBack" class="back"></div>
-<div id="wordSheet" class="sheet">
-  <div class="handle"></div><div class="section-head"><h3>وەرگێڕانی وشە</h3><button class="icon-btn" data-action="close-word"><i class="fa-solid fa-xmark"></i></button></div>
-  <div class="field"><label>وشە</label><div id="modalWord" style="font-size:20px;font-weight:800;color:#f4c85c"></div></div>
-  <div class="field"><label>بە ڪوردی</label><div id="modalKu">چاوەڕوانی...</div></div>
-  <div class="field"><label id="modalThirdLabel">وەرگێڕان</label><div id="modalThird">چاوەڕوانی...</div></div>
-  <div class="hero-actions"><button class="ghost" data-action="speak-word"><i class="fa-solid fa-volume-high"></i> دەنگ</button><button class="primary" data-action="save-word">خەزنڪردن</button></div>
-</div>
 
-<div id="sentenceBack" class="back"></div>
-<div id="sentenceSheet" class="sheet">
+<!-- Sentence -->
+
+<div
+  id="sentenceBack"
+  class="back"
+></div>
+
+<div
+  id="sentenceSheet"
+  class="sheet"
+>
+
   <div class="handle"></div>
-  <div class="section-head"><h3>وەرگێڕانی ڕستە</h3><button class="icon-btn" data-action="close-sentence"><i class="fa-solid fa-xmark"></i></button></div>
-  <div class="field"><label>ڕستەی هەڵبژێردراو</label><div id="sentenceOriginal" style="line-height:1.9"></div></div>
-  <div class="field"><label>بە ڪوردی</label><div id="sentenceKu" style="line-height:1.9">چاوەڕوانی...</div></div>
-</div>
 
-<div id="toast" class="toast"></div>
+  <div class="section-head">
 
-<!-- ژینگەی تەواوی خوێنەر -->
-<div id="reader" class="reader" role="dialog" aria-modal="true" aria-label="خوێنەری کتێب">
-  <header class="reader-top reader-chrome">
-    <button class="rbtn" data-action="reader-close" aria-label="داخستنی خوێنەر" title="گەڕانەوە"><i class="fa-solid fa-arrow-right"></i></button>
-    <div class="rtitle"><strong id="rTitle">کتێب</strong><span id="rSub" aria-live="polite">لاپەڕە 1</span></div>
-    <button class="rbtn audio-control" id="readerSpeak" data-action="reader-speak" aria-label="دەستپێکردنی خوێندنەوە بە دەنگ" title="خوێندنەوە بە دەنگ"><i class="fa-solid fa-play"></i></button>
-  </header>
-  <div class="reader-progress reader-chrome" aria-hidden="true"><span id="readerProgress"></span></div>
-  <nav class="reader-bar reader-chrome" aria-label="ئامرازەکانی خوێندنەوە">
-    <button class="rb kur" id="readerKurdish" data-action="reader-kurdish" aria-label="وەرگێڕانی لاپەڕە بۆ کوردی" title="وەرگێڕانی لاپەڕە"><i class="fa-solid fa-language"></i><span>کوردی</span></button>
-    <button class="rb" data-action="toggle-view" id="viewToggleBtn" aria-label="گۆڕینی شێوازی پیشاندان" title="دەقی زیرەک"><i class="fa-solid fa-robot"></i><span>دەق</span></button>
-    <button class="rb" data-action="reader-tools" aria-label="ڕێکخستنەکانی خوێندنەوە" title="ڕێکخستن"><i class="fa-solid fa-sliders"></i><span>ڕێکخستن</span></button>
-    <button class="rb" data-action="reader-music" aria-label="کۆنترۆڵی مۆسیقا" title="مۆسیقا"><i class="fa-solid fa-music"></i><span>مۆسیقا</span></button>
-    <span class="tool-separator" aria-hidden="true"></span>
-    <button class="rb zoom-control" id="zoomOut" data-action="font-down" aria-label="بچووککردنەوە" title="بچووککردنەوە"><i class="fa-solid fa-minus"></i></button>
-    <span class="zoom-readout" id="zoomReadout" aria-live="polite">100%</span>
-    <button class="rb zoom-control" id="zoomIn" data-action="font-up" aria-label="گەورەکردن" title="گەورەکردن"><i class="fa-solid fa-plus"></i></button>
-  </nav>
-  <main id="readerBody" class="rbody" tabindex="0" aria-label="لاپەڕەی کتێب">
-    <div class="reading-stage">
-      <div class="paper">
-        <canvas id="pdfCanvas" style="display:none;"></canvas>
-        <div id="readerText" class="rtext"></div>
-      </div>
+    <h3>
+      وەرگێڕانی ڕستە
+    </h3>
+
+    <button
+      class="icon-btn"
+      data-action="close-sentence"
+      aria-label="داخستن"
+    >
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+  </div>
+
+  <div class="field">
+
+    <label>
+      ڕستەی هەڵبژێردراو
+    </label>
+
+    <div
+      id="sentenceOriginal"
+      style="line-height:1.9"
+    ></div>
+
+  </div>
+
+  <div class="field">
+
+    <label>
+      بە کوردی
+    </label>
+
+    <div
+      id="sentenceKu"
+      style="line-height:1.9"
+    >
+      چاوەڕوانی...
     </div>
+
+  </div>
+
+</div>
+
+
+<div
+  id="toast"
+  class="toast"
+></div>
+
+
+<!-- Reader -->
+
+<div
+  id="reader"
+  class="reader"
+  role="dialog"
+  aria-modal="true"
+  aria-label="خوێنەری کتێب"
+>
+
+  <header
+    class="reader-top reader-chrome"
+  >
+
+    <button
+      class="rbtn"
+      data-action="reader-close"
+      aria-label="داخستنی خوێنەر"
+      title="گەڕانەوە"
+    >
+      <i class="fa-solid fa-arrow-right"></i>
+    </button>
+
+
+    <div class="rtitle">
+
+      <strong id="rTitle">
+        کتێب
+      </strong>
+
+      <span
+        id="rSub"
+        aria-live="polite"
+      >
+        لاپەڕە 1
+      </span>
+
+    </div>
+
+
+    <button
+      class="rbtn audio-control"
+      id="readerSpeak"
+      data-action="reader-speak"
+      aria-label="دەستپێکردنی خوێندنەوە بە دەنگ"
+      title="خوێندنەوە بە دەنگ"
+    >
+      <i class="fa-solid fa-play"></i>
+    </button>
+
+  </header>
+
+
+  <div
+    class="reader-progress reader-chrome"
+    aria-hidden="true"
+  >
+    <span id="readerProgress"></span>
+  </div>
+
+
+  <nav
+    class="reader-bar reader-chrome"
+    aria-label="ئامرازەکانی خوێندنەوە"
+  >
+
+    <button
+      class="rb kur"
+      id="readerKurdish"
+      data-action="reader-kurdish"
+      aria-label="وەرگێڕانی لاپەڕە بۆ کوردی"
+      title="وەرگێڕانی لاپەڕە"
+    >
+      <i class="fa-solid fa-language"></i>
+      <span>کوردی</span>
+    </button>
+
+
+    <button
+      class="rb"
+      data-action="toggle-view"
+      id="viewToggleBtn"
+      aria-label="گۆڕینی شێوازی پیشاندان"
+      title="دەقی زیرەک"
+    >
+      <i class="fa-solid fa-robot"></i>
+      <span>دەق</span>
+    </button>
+
+
+    <button
+      class="rb"
+      data-action="reader-tools"
+      aria-label="ڕێکخستنەکانی خوێندنەوە"
+      title="ڕێکخستن"
+    >
+      <i class="fa-solid fa-sliders"></i>
+      <span>ڕێکخستن</span>
+    </button>
+
+
+    <button
+      class="rb"
+      data-action="reader-music"
+      aria-label="کۆنترۆڵی مۆسیقا"
+      title="مۆسیقا"
+    >
+      <i class="fa-solid fa-music"></i>
+      <span>مۆسیقا</span>
+    </button>
+
+
+    <span
+      class="tool-separator"
+      aria-hidden="true"
+    ></span>
+
+
+    <button
+      class="rb zoom-control"
+      id="zoomOut"
+      data-action="font-down"
+      aria-label="بچووککردنەوە"
+      title="بچووککردنەوە"
+    >
+      <i class="fa-solid fa-minus"></i>
+    </button>
+
+
+    <span
+      class="zoom-readout"
+      id="zoomReadout"
+      aria-live="polite"
+    >
+      100%
+    </span>
+
+
+    <button
+      class="rb zoom-control"
+      id="zoomIn"
+      data-action="font-up"
+      aria-label="گەورەکردن"
+      title="گەورەکردن"
+    >
+      <i class="fa-solid fa-plus"></i>
+    </button>
+
+  </nav>
+
+
+  <main
+    id="readerBody"
+    class="rbody"
+    tabindex="0"
+    aria-label="لاپەڕەی کتێب"
+  >
+
+    <div class="reading-stage">
+
+      <div class="paper">
+
+        <canvas
+          id="pdfCanvas"
+          style="display:none;"
+        ></canvas>
+
+        <div
+          id="readerText"
+          class="rtext"
+        ></div>
+
+      </div>
+
+    </div>
+
   </main>
-  <footer class="reader-bottom reader-chrome">
-    <button class="page-nav" id="pagePrev" data-action="page-prev" aria-label="لاپەڕەی پێشوو"><i class="fa-solid fa-chevron-right"></i></button>
-    <div class="pagebox"><label for="pageInput">لاپەڕە</label><input id="pageInput" type="number" min="1" value="1" inputmode="numeric" aria-label="ژمارەی لاپەڕە"><span id="pageTotal">/ 1</span></div>
-    <button class="page-nav" id="pageNext" data-action="page-next" aria-label="لاپەڕەی داهاتوو"><i class="fa-solid fa-chevron-left"></i></button>
-    <button class="bookmark-control" id="bookmarkButton" data-action="save-progress" aria-label="پاشەکەوتکردنی شوێنی خوێندنەوە" aria-pressed="false" title="نیشانەکردن"><i class="fa-regular fa-bookmark"></i></button>
+
+
+  <footer
+    class="reader-bottom reader-chrome"
+  >
+
+    <button
+      class="page-nav"
+      id="pagePrev"
+      data-action="page-prev"
+      aria-label="لاپەڕەی پێشوو"
+      title="پێشوو"
+    >
+      <i class="fa-solid fa-chevron-right"></i>
+    </button>
+
+
+    <div class="pagebox">
+
+      <label for="pageInput">
+        لاپەڕە
+      </label>
+
+      <input
+        id="pageInput"
+        type="number"
+        min="1"
+        value="1"
+        inputmode="numeric"
+        aria-label="ژمارەی لاپەڕە"
+      >
+
+      <span id="pageTotal">
+        / 1
+      </span>
+
+    </div>
+
+
+    <button
+      class="page-nav"
+      id="pageNext"
+      data-action="page-next"
+      aria-label="لاپەڕەی داهاتوو"
+      title="داهاتوو"
+    >
+      <i class="fa-solid fa-chevron-left"></i>
+    </button>
+
+
+    <button
+      class="bookmark-control"
+      id="bookmarkButton"
+      data-action="save-progress"
+      aria-label="پاشەکەوتکردنی شوێنی خوێندنەوە"
+      aria-pressed="false"
+      title="نیشانەکردن"
+    >
+      <i class="fa-regular fa-bookmark"></i>
+    </button>
+
   </footer>
+
 </div>
 
-<!-- پەڕەی کۆنتڕۆڵی ڕەنگ و مۆسیقای خوێنەر -->
-<div id="readerTools" class="reader-tools" role="dialog" aria-modal="true" aria-label="کۆنترۆڵی خوێندنەوە">
-  <div class="tools-head"><strong id="toolsTitle">کۆنترۆڵی خوێندنەوە</strong><button class="tools-close" data-action="tools-close" aria-label="داخستن"><i class="fa-solid fa-xmark"></i></button></div>
+
+<!-- Reader tools -->
+
+<div
+  id="readerTools"
+  class="reader-tools"
+  role="dialog"
+  aria-modal="true"
+  aria-label="کۆنترۆڵی خوێندنەوە"
+>
+
+  <div class="tools-head">
+
+    <strong id="toolsTitle">
+      کۆنترۆڵی خوێندنەوە
+    </strong>
+
+    <button
+      class="tools-close"
+      data-action="tools-close"
+      aria-label="داخستن"
+    >
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+
+  </div>
+
   <div id="toolsBody"></div>
+
 </div>
 
-<a id="telegramBtn" href="https://t.me/about_Barham" target="_blank" title="کەناڵی تێلیگرامەکەم">
+
+<!-- Telegram -->
+
+<a
+  id="telegramBtn"
+  href="https://t.me/about_Barham"
+  target="_blank"
+  rel="noopener noreferrer"
+  title="کەناڵی تێلیگرامەکەم"
+  aria-label="کەناڵی تێلیگرام"
+>
   <i class="fa-brands fa-telegram"></i>
 </a>
 
-<!-- بەستنەوەی هەردوو فایلە سەرەکییەکە بە ڕیزبەندیی دروست -->
+
+<!-- JS -->
 <script src="script.js"></script>
 <script src="reader.js"></script>
+
 </body>
-</html>
+    </html>
