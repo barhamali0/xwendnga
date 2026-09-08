@@ -7,7 +7,7 @@
   "use strict";
 
   var GEMINI_MODEL =
-    "gemini-3.8-flash";
+    "gemini-2.5-flash";
 
   var currentBook = null;
   var currentPage = 0;
@@ -238,6 +238,12 @@
           "kh_ai_pages",
           {}
         );
+
+      translatedPages =
+        loadJSON(
+          "kh_translated_pages",
+          {}
+        );
     } catch (e) {}
   }
 
@@ -292,10 +298,14 @@
         )
       );
 
-    saveJSON(
-      "kh_font",
-      readerFont
-    );
+    try {
+      localStorage.setItem(
+        "kh_font",
+        String(
+          readerFont
+        )
+      );
+    } catch (e) {}
 
     renderPage();
   }
@@ -573,6 +583,118 @@
       );
   }
 
+  function getWordLang(
+    word
+  ) {
+    var value =
+      String(
+        word || ""
+      );
+
+    if (
+      /[A-Za-z]/.test(
+        value
+      )
+    ) {
+      return "en";
+    }
+
+    if (
+      /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7\u06F6]/.test(
+        value
+      )
+    ) {
+      return "ku";
+    }
+
+    if (
+      /[\u0600-\u06FF]/.test(
+        value
+      )
+    ) {
+      return "ar";
+    }
+
+    return (
+      currentBook &&
+      currentBook.lang
+    ) || "en";
+  }
+
+  function applyWordFont(
+    span,
+    word,
+    pageLang
+  ) {
+    var value =
+      String(
+        word || ""
+      );
+
+    var lang =
+      getWordLang(
+        value
+      );
+
+    if (
+      lang === "ku"
+    ) {
+      span.classList.add(
+        "lang-ku"
+      );
+
+      span.classList.remove(
+        "lang-ar",
+        "lang-en",
+        "lang-fa"
+      );
+
+      return;
+    }
+
+    if (
+      lang === "ar"
+    ) {
+      span.classList.add(
+        "lang-ar"
+      );
+
+      span.classList.remove(
+        "lang-ku",
+        "lang-en",
+        "lang-fa"
+      );
+
+      return;
+    }
+
+    if (
+      lang === "fa"
+    ) {
+      span.classList.add(
+        "lang-fa"
+      );
+
+      span.classList.remove(
+        "lang-ku",
+        "lang-ar",
+        "lang-en"
+      );
+
+      return;
+    }
+
+    span.classList.add(
+      "lang-en"
+    );
+
+    span.classList.remove(
+      "lang-ku",
+      "lang-ar",
+      "lang-fa"
+    );
+  }
+
   function speechFromIndex(
     index
   ) {
@@ -708,9 +830,12 @@
       stopSpeech(
         false
       );
+
       speechState =
         "paused";
+
       updateSpeechButton();
+
       return;
     }
 
@@ -721,6 +846,7 @@
       speechFromIndex(
         speechWordIndex
       );
+
       return;
     }
 
@@ -734,6 +860,7 @@
       toast(
         "هیچ دەقێک بۆ خوێندنەوە نییە"
       );
+
       return;
     }
 
@@ -743,8 +870,7 @@
   }
 
   function paintText(
-    text,
-    contextLang
+    text
   ) {
     var box =
       $("readerText");
@@ -766,6 +892,14 @@
     var fragment =
       document.createDocumentFragment();
 
+    var pageLang =
+      currentBook &&
+      currentBook.lang
+        ? currentBook.lang
+        : detectPageLanguage(
+            text
+          );
+
     words.forEach(
       function (word, index) {
         var span =
@@ -773,22 +907,17 @@
             "span"
           );
 
+        span.className =
+          "rw";
+
+        span.textContent =
+          word;
+
         var clean =
           word.replace(
             /^[.,!?;:()"'،؛؟]+|[.,!?;:()"'،؛؟]+$/g,
             ""
           );
-
-        span.className =
-          "rw lang-" +
-          detectWordLang(
-            clean ||
-              word,
-            contextLang
-          );
-
-        span.textContent =
-          word;
 
         if (clean) {
           span.setAttribute(
@@ -796,6 +925,12 @@
             clean
           );
         }
+
+        applyWordFont(
+          span,
+          clean || word,
+          pageLang
+        );
 
         fragment.appendChild(
           span
@@ -818,6 +953,70 @@
     box.appendChild(
       fragment
     );
+  }
+
+  function detectPageLanguage(
+    text
+  ) {
+    var value =
+      String(
+        text || ""
+      );
+
+    var ku =
+      (
+        value.match(
+          /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7\u06F6]/g
+        ) || []
+      ).length;
+
+    var en =
+      (
+        value.match(
+          /[A-Za-z]/g
+        ) || []
+      ).length;
+
+    var ar =
+      (
+        value.match(
+          /[\u0600-\u06FF]/g
+        ) || []
+      ).length;
+
+    var fa =
+      (
+        value.match(
+          /[\u067E\u0686\u0698\u06AF]/g
+        ) || []
+      ).length;
+
+    if (
+      ku >= 2
+    ) {
+      return "ku";
+    }
+
+    if (
+      fa >= 2 &&
+      en === 0
+    ) {
+      return "fa";
+    }
+
+    if (
+      en > ar
+    ) {
+      return "en";
+    }
+
+    if (
+      ar > 0
+    ) {
+      return "ar";
+    }
+
+    return "en";
   }
 
   function getGeminiKey() {
@@ -898,6 +1097,7 @@
       toast(
         "لاپەڕەی PDF بەردەست نییە"
       );
+
       return;
     }
 
@@ -924,15 +1124,25 @@
           );
 
         canvas.width =
-          viewport.width;
+          Math.ceil(
+            viewport.width
+          );
 
         canvas.height =
-          viewport.height;
+          Math.ceil(
+            viewport.height
+          );
 
         var context =
           canvas.getContext(
             "2d"
           );
+
+        if (!context) {
+          throw new Error(
+            "Canvas context missing"
+          );
+        }
 
         return page
           .render({
@@ -941,7 +1151,8 @@
             viewport:
               viewport
           })
-          .promise.then(
+          .promise
+          .then(
             function () {
               return canvas
                 .toDataURL(
@@ -1038,18 +1249,28 @@
       .then(function (
         data
       ) {
-        var text =
+        var parts =
           data &&
           data.candidates &&
           data.candidates[0] &&
           data.candidates[0]
             .content &&
           data.candidates[0]
-            .content.parts &&
-          data.candidates[0]
-            .content.parts[0] &&
-          data.candidates[0]
-            .content.parts[0].text;
+            .content.parts
+            ? data.candidates[0]
+                .content.parts
+            : [];
+
+        var text =
+          parts
+            .map(function (part) {
+              return part &&
+                part.text
+                ? part.text
+                : "";
+            })
+            .join("\n")
+            .trim();
 
         if (!text) {
           throw new Error(
@@ -1064,9 +1285,7 @@
 
         aiPages[
           pageKey
-        ] = String(
-          text
-        ).trim();
+        ] = text;
 
         saveJSON(
           "kh_ai_pages",
@@ -1103,7 +1322,7 @@
               "هەڵە"
             ).slice(
               0,
-              70
+              90
             )
         );
       });
@@ -1148,7 +1367,9 @@
         ) || []
       ).length;
 
-    if (ku) {
+    if (
+      ku >= 1
+    ) {
       return "ku";
     }
 
@@ -1160,129 +1381,6 @@
     }
 
     return "ar";
-  }
-
-  /*
-   * دیاریکردنی زمانی هەر وشەیەک بە تاکی (بۆ فۆنتی جیاواز بۆ هەر وشەیەک).
-   * پیتی تایبەت بە کوردی (ئ ڕ ڵ ۆ ێ ڤ) نیشانەیەکی بەهێزە — هەر کاتێک
-   * هەبوو، وشەکە بە دڵنیاییەوە کوردییە. بەڵام زۆربەی وشە عەرەبییەکان
-   * پیتی هاوبەشیان لەگەڵ کوردیدا هەیە و هیچ پیتی جیاکەرەوەیان تێدا نییە،
-   * بۆیە لەو حاڵەتەدا پشت بە زمانی گشتیی لاپەڕەکە (contextLang) دەبەستین
-   * نەک هەڵە بکرێت و فۆنتی عەرەبی بدرێتە وشەیەکی کوردی یان بەپێچەوانەوە.
-   */
-  function detectWordLang(
-    word,
-    contextLang
-  ) {
-    var w =
-      String(
-        word || ""
-      );
-
-    if (
-      /[A-Za-z]/.test(
-        w
-      )
-    ) {
-      return "en";
-    }
-
-    if (
-      /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7]/.test(
-        w
-      )
-    ) {
-      return "ku";
-    }
-
-    if (
-      /[\u0600-\u06FF]/.test(
-        w
-      )
-    ) {
-      // پیتی عەرەبی/کوردی هاوبەش — هیچ نیشانەیەکی دیاریکراو نییە،
-      // بۆیە زمانی گشتیی لاپەڕەکە دەسەڵات وەردەگرێت.
-      return contextLang ===
-        "ku"
-        ? "ku"
-        : "ar";
-    }
-
-    // ژمارە/هێما بێ پیت — پشت بە زمانی گشتیی لاپەڕەکە دەبەستین.
-    if (
-      contextLang ===
-        "ku" ||
-      contextLang ===
-        "ar" ||
-      contextLang ===
-        "fa"
-    ) {
-      return contextLang ===
-        "fa"
-        ? "ar"
-        : contextLang;
-    }
-
-    return "en";
-  }
-
-  /*
-   * دیاریکردنی زمانی گشتیی لاپەڕەیەک (بۆ دەقی دەرهێنراوی Gemini).
-   * لێرەدا پێویستمان بە بەربەستێکی بەهێزترە (دووجار پیتی تایبەت بە
-   * کوردی) نەک تەنیا یەک دانە — چونکە ئەگەر نەخێر، یەک پیتی کوردی
-   * لەناو لاپەڕەیەکی سەرەتاییی عەرەبیدا دەتوانێت هەموو لاپەڕەکە
-   * بخاتە دۆخی فۆنتی کوردییەوە. ئەم فەنکشنە تەنیا زمانی سەرەکیی
-   * لاپەڕەکە دیاری دەکات؛ فۆنتی هەر وشەیەک بە detectWordLang خۆی
-   * دیاریدەکرێت.
-   */
-  function detectPageLang(
-    text
-  ) {
-    var sample =
-      String(
-        text || ""
-      ).slice(
-        0,
-        20000
-      );
-
-    var ku =
-      (
-        sample.match(
-          /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7]/g
-        ) || []
-      ).length;
-
-    var en =
-      (
-        sample.match(
-          /[A-Za-z]/g
-        ) || []
-      ).length;
-
-    var ar =
-      (
-        sample.match(
-          /[\u0600-\u06FF]/g
-        ) || []
-      ).length;
-
-    if (ku >= 2) {
-      return "ku";
-    }
-
-    if (
-      en > 0 &&
-      en >= ar
-    ) {
-      return "en";
-    }
-
-    if (ar > 0) {
-      return "ar";
-    }
-
-    return "en";
   }
 
   function translateText(
@@ -1323,8 +1421,7 @@
       "px";
 
     paintText(
-      text,
-      "ku"
+      text
     );
   }
 
@@ -1370,10 +1467,6 @@
       return;
     }
 
-    /*
-     * ئەگەر text نەبوو و AI data هەیە،
-     * ئەوە بەکار دەهێنین.
-     */
     var sourceText =
       (
         aiPages[key] ||
@@ -1503,8 +1596,10 @@
     if (paper) {
       paper.style.width =
         "100%";
+
       paper.style.maxWidth =
         "820px";
+
       paper.style.overflow =
         "visible";
     }
@@ -1580,9 +1675,6 @@
           );
         }
 
-        /*
-         * Reset canvas before rendering.
-         */
         canvas.width =
           Math.floor(
             viewport.width
@@ -1672,9 +1764,11 @@
     var lang =
       currentBook.lang;
 
-    if (aiPages[key]) {
+    if (
+      aiPages[key]
+    ) {
       lang =
-        detectPageLang(
+        detectPageLanguage(
           text
         );
     }
@@ -1688,6 +1782,9 @@
           : lang ===
             "ar"
           ? "ar rtl"
+          : lang ===
+            "fa"
+          ? "fa rtl"
           : "ku rtl"
       );
 
@@ -1696,8 +1793,7 @@
       "px";
 
     paintText(
-      text,
-      lang
+      text
     );
   }
 
@@ -1715,13 +1811,7 @@
     ) {
       button.innerHTML =
         '<i class="fa-solid fa-robot"></i>' +
-        (
-          button.querySelector(
-            "span"
-          )
-            ? "<span>دەق</span>"
-            : ""
-        );
+        '<span>دەق</span>';
 
       button.classList.remove(
         "active"
@@ -1732,13 +1822,7 @@
 
     button.innerHTML =
       '<i class="fa-regular fa-image"></i>' +
-      (
-        button.querySelector(
-          "span"
-        )
-          ? "<span>وێنە</span>"
-          : ""
-      );
+      '<span>وێنە</span>';
 
     button.classList.add(
       "active"
@@ -1814,8 +1898,10 @@
 
           renderTextPage();
 
+          updateViewButton();
+
           toast(
-            "پیشاندانی Canvas سەرکەوتوو نەبوو"
+            "پیشاندانی PDF سەرکەوتوو نەبوو"
           );
         }
       );
@@ -1928,10 +2014,12 @@
           "text";
 
         renderPage();
+
         return;
       }
 
       extractTextWithGemini();
+
       return;
     }
 
@@ -2255,14 +2343,6 @@
 
       revealChrome();
 
-      /*
-       * English books:
-       * if digital text exists -> text mode.
-       * otherwise -> canvas mode.
-       *
-       * Kurdish/Arabic books with PDF:
-       * canvas is the default.
-       */
       var pageText =
         (
           currentBook.pages &&
@@ -2345,18 +2425,13 @@
               currentPdfDoc =
                 null;
 
-              /*
-               * ئەگەر PDF نەکراوە،
-               * دەقە دیجیتاڵییەکەی خۆی
-               * هەوڵی پیشاندان دەدەین.
-               */
               viewMode =
                 "text";
 
               renderPage();
 
               toast(
-                "PDF نەکرایەوە، دەقی بەردەست پیشان دەدرێت"
+                "PDF نەکراوە، دەقی بەردەست پیشان دەدرێت"
               );
             }
           );
@@ -2578,6 +2653,77 @@
         saveProgress();
         return;
       }
+
+      if (
+        name ===
+        "reader-theme"
+      ) {
+        var themeChoice =
+          action.getAttribute(
+            "data-theme"
+          );
+
+        if (
+          themeChoice &&
+          THEMES[
+            themeChoice
+          ]
+        ) {
+          readerTheme =
+            themeChoice;
+
+          try {
+            localStorage.setItem(
+              "kh_reader_theme",
+              readerTheme
+            );
+          } catch (e) {}
+
+          applyTheme();
+          renderPage();
+        }
+
+        return;
+      }
+    }
+  );
+
+  document.addEventListener(
+    "click",
+    function (event) {
+      var colorButton =
+        event.target.closest(
+          "[data-reader-theme-choice]"
+        );
+
+      if (!colorButton) {
+        return;
+      }
+
+      var key =
+        colorButton.getAttribute(
+          "data-reader-theme-choice"
+        );
+
+      if (
+        !THEMES[key]
+      ) {
+        return;
+      }
+
+      readerTheme =
+        key;
+
+      try {
+        localStorage.setItem(
+          "kh_reader_theme",
+          readerTheme
+        );
+      } catch (e) {}
+
+      applyTheme();
+
+      showReaderTools();
     }
   );
 
