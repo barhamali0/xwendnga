@@ -19,6 +19,8 @@
 
   var musicVolume = 0.32;
 
+  var GEMINI_MODEL = "gemini-2.5-flash";
+
   var currentWord = "";
   var currentWordLang = "en";
   var currentWordMeanings = {
@@ -256,20 +258,28 @@
 
   function toast(message) {
     var el = $("toast");
-    if (!el) return;
+
+    if (!el) {
+      return;
+    }
 
     el.textContent = message;
     el.className = "toast show";
 
     clearTimeout(toast._timer);
 
-    toast._timer = setTimeout(function () {
-      el.className = "toast";
-    }, 2500);
+    toast._timer = setTimeout(
+      function () {
+        el.className = "toast";
+      },
+      2500
+    );
   }
 
   function openSheet(back, sheet) {
-    if (!back || !sheet) return;
+    if (!back || !sheet) {
+      return;
+    }
 
     back.classList.add("open");
     sheet.classList.add("open");
@@ -278,7 +288,9 @@
   }
 
   function closeSheet(back, sheet) {
-    if (!back || !sheet) return;
+    if (!back || !sheet) {
+      return;
+    }
 
     back.classList.remove("open");
     sheet.classList.remove("open");
@@ -288,24 +300,26 @@
 
   function updateTelegramBtn() {
     var btn = $("telegramBtn");
-    if (!btn) return;
+
+    if (!btn) {
+      return;
+    }
 
     var reader = $("reader");
+
     var readerOpen =
       reader &&
       reader.classList.contains("show");
 
-    var activeNav = document.querySelector(
-      ".nav.active"
-    );
+    var activeNav =
+      document.querySelector(".nav.active");
 
     var isHome =
       activeNav &&
       activeNav.getAttribute("data-nav") === "home";
 
-    var sheetOpen = document.querySelector(
-      ".sheet.open,.back.open"
-    );
+    var sheetOpen =
+      document.querySelector(".sheet.open,.back.open");
 
     btn.style.display =
       isHome &&
@@ -316,132 +330,189 @@
   }
 
   function dbOpen() {
-    return new Promise(function (resolve, reject) {
-      if (!window.indexedDB) {
-        reject(new Error("IndexedDB بەردەست نییە"));
-        return;
-      }
-
-      var request = indexedDB.open(
-        "kh_reader_v10",
-        1
-      );
-
-      request.onupgradeneeded = function () {
-        var db = request.result;
-
-        if (!db.objectStoreNames.contains("books")) {
-          db.createObjectStore("books", {
-            keyPath: "id"
-          });
+    return new Promise(
+      function (resolve, reject) {
+        if (!window.indexedDB) {
+          reject(
+            new Error(
+              "IndexedDB بەردەست نییە"
+            )
+          );
+          return;
         }
-      };
 
-      request.onsuccess = function () {
-        resolve(request.result);
-      };
+        var request =
+          indexedDB.open(
+            "kh_reader_v10",
+            1
+          );
 
-      request.onerror = function () {
-        reject(
-          request.error ||
-            new Error("نەتوانرا داتابەیس بکرێتەوە")
-        );
-      };
-    });
+        request.onupgradeneeded =
+          function () {
+            var db =
+              request.result;
+
+            if (
+              !db.objectStoreNames.contains(
+                "books"
+              )
+            ) {
+              db.createObjectStore(
+                "books",
+                {
+                  keyPath: "id"
+                }
+              );
+            }
+          };
+
+        request.onsuccess =
+          function () {
+            resolve(
+              request.result
+            );
+          };
+
+        request.onerror =
+          function () {
+            reject(
+              request.error ||
+                new Error(
+                  "نەتوانرا داتابەیس بکرێتەوە"
+                )
+            );
+          };
+      }
+    );
   }
 
   function dbAll() {
-    return dbOpen().then(function (db) {
-      return new Promise(function (resolve, reject) {
-        var transaction;
+    return dbOpen().then(
+      function (db) {
+        return new Promise(
+          function (resolve, reject) {
+            var transaction;
 
-        try {
-          transaction = db.transaction(
-            "books",
-            "readonly"
-          );
-        } catch (e) {
-          reject(e);
-          return;
-        }
+            try {
+              transaction =
+                db.transaction(
+                  "books",
+                  "readonly"
+                );
+            } catch (e) {
+              reject(e);
+              return;
+            }
 
-        var req = transaction
-          .objectStore("books")
-          .getAll();
+            var req =
+              transaction
+                .objectStore("books")
+                .getAll();
 
-        req.onsuccess = function () {
-          resolve(req.result || []);
-        };
+            req.onsuccess =
+              function () {
+                resolve(
+                  req.result || []
+                );
+              };
 
-        req.onerror = function () {
-          reject(req.error);
-        };
-      });
-    });
+            req.onerror =
+              function () {
+                reject(
+                  req.error
+                );
+              };
+          }
+        );
+      }
+    );
   }
 
   function dbPut(book) {
-    return dbOpen().then(function (db) {
-      return new Promise(function (resolve, reject) {
-        var tx;
+    return dbOpen().then(
+      function (db) {
+        return new Promise(
+          function (resolve, reject) {
+            var tx;
 
-        try {
-          tx = db.transaction(
-            "books",
-            "readwrite"
-          );
-        } catch (e) {
-          reject(e);
-          return;
-        }
+            try {
+              tx =
+                db.transaction(
+                  "books",
+                  "readwrite"
+                );
+            } catch (e) {
+              reject(e);
+              return;
+            }
 
-        tx.objectStore("books").put(book);
+            tx.objectStore("books")
+              .put(book);
 
-        tx.oncomplete = function () {
-          resolve(book);
-        };
+            tx.oncomplete =
+              function () {
+                resolve(book);
+              };
 
-        tx.onerror = function () {
-          reject(
-            tx.error ||
-              new Error("نەتوانرا کتێبەکە پاشەکەوت بکرێت")
-          );
-        };
+            tx.onerror =
+              function () {
+                reject(
+                  tx.error ||
+                    new Error(
+                      "نەتوانرا کتێبەکە پاشەکەوت بکرێت"
+                    )
+                );
+              };
 
-        tx.onabort = function () {
-          reject(
-            tx.error ||
-              new Error("پاشەکەوتکردن هەڵوەشایەوە")
-          );
-        };
-      });
-    });
+            tx.onabort =
+              function () {
+                reject(
+                  tx.error ||
+                    new Error(
+                      "پاشەکەوتکردن هەڵوەشایەوە"
+                    )
+                );
+              };
+          }
+        );
+      }
+    );
   }
 
   function dbDelete(id) {
-    return dbOpen().then(function (db) {
-      return new Promise(function (resolve, reject) {
-        var tx;
+    return dbOpen().then(
+      function (db) {
+        return new Promise(
+          function (resolve, reject) {
+            var tx;
 
-        try {
-          tx = db.transaction(
-            "books",
-            "readwrite"
-          );
-        } catch (e) {
-          reject(e);
-          return;
-        }
+            try {
+              tx =
+                db.transaction(
+                  "books",
+                  "readwrite"
+                );
+            } catch (e) {
+              reject(e);
+              return;
+            }
 
-        tx.objectStore("books").delete(id);
+            tx.objectStore("books")
+              .delete(id);
 
-        tx.oncomplete = resolve;
+            tx.oncomplete =
+              resolve;
 
-        tx.onerror = function () {
-          reject(tx.error);
-        };
-      });
-    });
+            tx.onerror =
+              function () {
+                reject(
+                  tx.error
+                );
+              };
+          }
+        );
+      }
+    );
   }
 
   function saveJSON(key, value) {
@@ -453,13 +524,23 @@
     } catch (e) {}
   }
 
-  function loadJSON(key, fallback) {
+  function loadJSON(
+    key,
+    fallback
+  ) {
     try {
-      var value = localStorage.getItem(key);
+      var value =
+        localStorage.getItem(
+          key
+        );
 
-      if (!value) return fallback;
+      if (!value) {
+        return fallback;
+      }
 
-      return JSON.parse(value);
+      return JSON.parse(
+        value
+      );
     } catch (e) {
       return fallback;
     }
@@ -478,28 +559,32 @@
       $("siteThemeLabel");
 
     if (siteLabel) {
-      siteLabel.textContent = site.name;
+      siteLabel.textContent =
+        site.name;
     }
 
     var siteDot =
       $("siteThemeDot");
 
     if (siteDot) {
-      siteDot.style.background = site.a;
+      siteDot.style.background =
+        site.a;
     }
 
     var readerLabel =
       $("readerThemeLabel");
 
     if (readerLabel) {
-      readerLabel.textContent = reader.name;
+      readerLabel.textContent =
+        reader.name;
     }
 
     var readerDot =
       $("readerThemeDot");
 
     if (readerDot) {
-      readerDot.style.background = reader.bg;
+      readerDot.style.background =
+        reader.bg;
     }
   }
 
@@ -565,56 +650,77 @@
   }
 
   function renderSiteThemes() {
-    var box = $("siteThemes");
-    if (!box) return;
+    var box =
+      $("siteThemes");
+
+    if (!box) {
+      return;
+    }
 
     var html = "";
 
-    Object.keys(SITE_THEMES).forEach(function (key) {
-      var theme = SITE_THEMES[key];
+    Object.keys(
+      SITE_THEMES
+    ).forEach(
+      function (key) {
+        var theme =
+          SITE_THEMES[key];
 
-      html +=
-        '<button class="theme ' +
-        (key === siteTheme ? "active" : "") +
-        '" data-site-theme="' +
-        esc(key) +
-        '" title="' +
-        esc(theme.name) +
-        '" style="background:linear-gradient(145deg,' +
-        theme.bg2 +
-        "," +
-        theme.bg +
-        ')">' +
-        '<i style="background:' +
-        theme.a +
-        '"></i>' +
-        '<b style="background:linear-gradient(90deg,' +
-        theme.a +
-        "," +
-        theme.b +
-        ')"></b>' +
-        "</button>";
-    });
+        html +=
+          '<button class="theme ' +
+          (
+            key === siteTheme
+              ? "active"
+              : ""
+          ) +
+          '" data-site-theme="' +
+          esc(key) +
+          '" title="' +
+          esc(theme.name) +
+          '" style="background:linear-gradient(145deg,' +
+          theme.bg2 +
+          "," +
+          theme.bg +
+          ')">' +
+          '<i style="background:' +
+          theme.a +
+          '"></i>' +
+          '<b style="background:linear-gradient(90deg,' +
+          theme.a +
+          "," +
+          theme.b +
+          ')"></b>' +
+          "</button>";
+      }
+    );
 
     box.innerHTML = html;
   }
 
   function renderReaderThemes() {
-    var box = $("readerThemes");
-    if (!box) return;
+    var box =
+      $("readerThemes");
+
+    if (!box) {
+      return;
+    }
 
     var html = "";
 
-    Object.keys(READER_THEMES).forEach(
+    Object.keys(
+      READER_THEMES
+    ).forEach(
       function (key) {
         var theme =
           READER_THEMES[key];
 
         html +=
           '<button class="theme ' +
-          (key === readerTheme
-            ? "active"
-            : "") +
+          (
+            key === readerTheme
+              ? "active"
+              : ""
+          ) +
           '" data-set-reader-theme="' +
           esc(key) +
           '" title="' +
@@ -637,7 +743,9 @@
 
   function detectLang(text) {
     var sample =
-      String(text || "").slice(
+      String(
+        text || ""
+      ).slice(
         0,
         20000
       );
@@ -670,11 +778,34 @@
         ) || []
       ).length;
 
-    if (kurdish >= 2) return "ku";
+    var arabicTotal =
+      Math.max(
+        arabic,
+        1
+      );
+
+    var kurdishRatio =
+      kurdish /
+      arabicTotal;
+
+    if (
+      kurdish >= 3 &&
+      (
+        arabic < 120 ||
+        kurdishRatio >= 0.02
+      )
+    ) {
+      return "ku";
+    }
 
     if (
       persian >= 2 &&
-      english === 0
+      english === 0 &&
+      persian >=
+        Math.max(
+          2,
+          kurdish
+        )
     ) {
       return "fa";
     }
@@ -686,247 +817,338 @@
       return "en";
     }
 
-    if (arabic > 0) {
+    if (
+      arabic > 0
+    ) {
       return "ar";
     }
 
     return "en";
   }
 
-  function normalizePdfText(items) {
-    if (!items || !items.length) {
+  function normalizePdfText(
+    items
+  ) {
+    if (
+      !items ||
+      !items.length
+    ) {
       return "";
     }
 
     return items
-      .map(function (item) {
-        return String(
-          item && item.str
-            ? item.str
-            : ""
-        );
-      })
+      .map(
+        function (item) {
+          return String(
+            item &&
+            item.str
+              ? item.str
+              : ""
+          );
+        }
+      )
       .join(" ")
-      .replace(/[ \t]+/g, " ")
+      .replace(
+        /[ \t]+/g,
+        " "
+      )
       .trim();
   }
 
   function extractPDF(file) {
-    return new Promise(function (resolve, reject) {
-      if (!file) {
-        reject(
-          new Error("PDF file نەدۆزرایەوە")
-        );
-        return;
-      }
+    return new Promise(
+      function (resolve, reject) {
+        if (!file) {
+          reject(
+            new Error(
+              "PDF file نەدۆزرایەوە"
+            )
+          );
+          return;
+        }
 
-      if (!window.pdfjsLib) {
-        reject(
-          new Error("PDF.js بەردەست نییە")
-        );
-        return;
-      }
+        if (!window.pdfjsLib) {
+          reject(
+            new Error(
+              "PDF.js بەردەست نییە"
+            )
+          );
+          return;
+        }
 
-      var reader =
-        new FileReader();
+        var reader =
+          new FileReader();
 
-      reader.onload = function () {
-        try {
-          var buffer =
-            reader.result;
+        reader.onload =
+          function () {
+            try {
+              var buffer =
+                reader.result;
 
-          if (
-            !buffer ||
-            !buffer.byteLength
-          ) {
-            reject(
-              new Error(
-                "PDF buffer بەتاڵە"
-              )
-            );
-            return;
-          }
-
-          /*
-           * دوو copy دروست دەکەین:
-           * یەکێک بۆ PDF.js
-           * یەکێکی تر بۆ IndexedDB
-           *
-           * ئەمە کێشەی detached ArrayBuffer چارەسەر دەکات.
-           */
-          var pdfBytes =
-            new Uint8Array(
-              buffer.slice(0)
-            );
-
-          var storedBytes =
-            new Uint8Array(
-              buffer.slice(0)
-            );
-
-          pdfjsLib
-            .getDocument({
-              data: pdfBytes
-            })
-            .promise
-            .then(function (pdf) {
-              var pages = [];
-              var chain =
-                Promise.resolve();
-
-              for (
-                let pageNumber = 1;
-                pageNumber <= pdf.numPages;
-                pageNumber++
+              if (
+                !buffer ||
+                !buffer.byteLength
               ) {
-                (function (pageNo) {
-                  chain = chain.then(
-                    function () {
-                      return pdf
-                        .getPage(pageNo)
-                        .then(function (page) {
-                          return page
-                            .getTextContent({
-                              normalizeWhitespace: false,
-                              disableCombineTextItems: true
-                            })
-                            .then(function (content) {
-                              pages.push(
-                                normalizePdfText(
-                                  content.items
-                                )
-                              );
-                            });
-                        });
-                    }
-                  );
-                })(pageNumber);
+                reject(
+                  new Error(
+                    "PDF buffer بەتاڵە"
+                  )
+                );
+                return;
               }
 
-              return chain.then(
-                function () {
-                  resolve({
-                    pages: pages,
-                    lang: detectLang(
-                      pages.join("\n")
-                    ),
-                    pageCount:
-                      pdf.numPages,
-                    pdfData:
-                      storedBytes
-                  });
-                }
+              /*
+               * دوو copy دروست دەکەین:
+               * یەکێک بۆ PDF.js
+               * یەکێکی تر بۆ IndexedDB
+               *
+               * ئەمە کێشەی detached ArrayBuffer چارەسەر دەکات.
+               */
+              var pdfBytes =
+                new Uint8Array(
+                  buffer.slice(
+                    0
+                  )
+                );
+
+              var storedBytes =
+                new Uint8Array(
+                  buffer.slice(
+                    0
+                  )
+                );
+
+              pdfjsLib
+                .getDocument({
+                  data: pdfBytes
+                })
+                .promise
+                .then(
+                  function (pdf) {
+                    var pages = [];
+                    var chain =
+                      Promise.resolve();
+
+                    for (
+                      let pageNumber = 1;
+                      pageNumber <=
+                        pdf.numPages;
+                      pageNumber++
+                    ) {
+                      (function (
+                        pageNo
+                      ) {
+                        chain =
+                          chain.then(
+                            function () {
+                              return pdf
+                                .getPage(
+                                  pageNo
+                                )
+                                .then(
+                                  function (
+                                    page
+                                  ) {
+                                    return page
+                                      .getTextContent(
+                                        {
+                                          normalizeWhitespace:
+                                            false,
+                                          disableCombineTextItems:
+                                            true
+                                        }
+                                      )
+                                      .then(
+                                        function (
+                                          content
+                                        ) {
+                                          pages.push(
+                                            normalizePdfText(
+                                              content.items
+                                            )
+                                          );
+                                        }
+                                      );
+                                  }
+                                );
+                            }
+                          );
+                      })(pageNumber);
+                    }
+
+                    return chain.then(
+                      function () {
+                        resolve({
+                          pages:
+                            pages,
+                          lang:
+                            detectLang(
+                              pages.join(
+                                "\n"
+                              )
+                            ),
+                          pageCount:
+                            pdf.numPages,
+                          pdfData:
+                            storedBytes
+                        });
+                      }
+                    );
+                  }
+                )
+                .catch(
+                  reject
+                );
+            } catch (error) {
+              reject(
+                error
               );
-            })
-            .catch(reject);
-        } catch (error) {
-          reject(error);
-        }
-      };
+            }
+          };
 
-      reader.onerror = function () {
-        reject(
-          reader.error ||
-            new Error(
-              "PDF خوێندرایەوە نەبوو"
-            )
+        reader.onerror =
+          function () {
+            reject(
+              reader.error ||
+                new Error(
+                  "PDF خوێندرایەوە نەبوو"
+                )
+            );
+          };
+
+        reader.readAsArrayBuffer(
+          file
         );
-      };
-
-      reader.readAsArrayBuffer(file);
-    });
+      }
+    );
   }
 
   function addPDF(file) {
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     toast(
       "PDF خەریکی بارکردنە..."
     );
 
     extractPDF(file)
-      .then(function (data) {
-        var book = {
-          id:
-            String(Date.now()) +
-            "_" +
-            Math.floor(
-              Math.random() *
-                100000
-            ),
+      .then(
+        function (data) {
+          var book = {
+            id:
+              String(
+                Date.now()
+              ) +
+              "_" +
+              Math.floor(
+                Math.random() *
+                  100000
+              ),
 
-          title:
-            file.name.replace(
-              /\.pdf$/i,
-              ""
-            ),
+            title:
+              file.name.replace(
+                /\.pdf$/i,
+                ""
+              ),
 
-          author: "",
+            author: "",
 
-          category:
-            "گشتی",
+            category:
+              "گشتی",
 
-          isPublished:
-            true,
+            isPublished:
+              true,
 
-          pages:
-            data.pages || [],
+            pages:
+              data.pages ||
+              [],
 
-          pdfData:
-            data.pdfData,
+            pdfData:
+              data.pdfData,
 
-          lang:
-            data.lang || "en",
+            lang:
+              data.lang ||
+              "en",
 
-          pageCount:
-            data.pageCount ||
-            (data.pages
-              ? data.pages.length
-              : 0),
+            pageCount:
+              data.pageCount ||
+              (
+                data.pages
+                  ? data.pages.length
+                  : 0
+              ),
 
-          currentPage: 0,
+            currentPage: 0,
 
-          progress: 0,
+            progress: 0,
 
-          favorite: false,
+            favorite:
+              false,
 
-          addedAt:
-            Date.now()
-        };
+            addedAt:
+              Date.now()
+          };
 
-        return dbPut(book);
-      })
-      .then(function (savedBook) {
-        books.push(savedBook);
+          return dbPut(
+            book
+          );
+        }
+      )
+      .then(
+        function (savedBook) {
+          books.push(
+            savedBook
+          );
 
-        renderBooks();
-        renderOwnerPanel();
+          renderBooks();
+          renderOwnerPanel();
 
-        toast(
-          "کتێبەکە بە سەرکەوتوویی زیادکرا"
-        );
-      })
-      .catch(function (error) {
-        console.error(
-          "addPDF:",
-          error
-        );
+          toast(
+            "کتێبەکە بە سەرکەوتوویی زیادکرا"
+          );
+        }
+      )
+      .catch(
+        function (error) {
+          console.error(
+            "addPDF:",
+            error
+          );
 
-        toast(
-          "نەتوانرا PDF زیاد بکرێت"
-        );
-      });
+          toast(
+            "نەتوانرا PDF زیاد بکرێت"
+          );
+        }
+      );
 
-    var input = $("pdfInput");
+    var input =
+      $("pdfInput");
+
     if (input) {
       input.value = "";
     }
   }
 
   function langName(lang) {
-    if (lang === "ku") return "کوردی";
-    if (lang === "ar") return "عەرەبی";
-    if (lang === "fa") return "فارسی";
+    if (
+      lang === "ku"
+    ) {
+      return "کوردی";
+    }
+
+    if (
+      lang === "ar"
+    ) {
+      return "عەرەبی";
+    }
+
+    if (
+      lang === "fa"
+    ) {
+      return "فارسی";
+    }
+
     return "ئینگلیزی";
   }
 
@@ -934,52 +1156,80 @@
     var list =
       books
         .slice()
-        .sort(function (a, b) {
-          return (
-            (b.addedAt || 0) -
-            (a.addedAt || 0)
-          );
-        });
+        .sort(
+          function (a, b) {
+            return (
+              (
+                b.addedAt ||
+                0
+              ) -
+              (
+                a.addedAt ||
+                0
+              )
+            );
+          }
+        );
 
-    if (filter === "favorites") {
-      list = list.filter(function (book) {
-        return !!book.favorite;
-      });
-    } else if (filter === "recent") {
-      list = list.slice(
-        0,
-        8
-      );
+    if (
+      filter ===
+      "favorites"
+    ) {
+      list =
+        list.filter(
+          function (book) {
+            return !!book.favorite;
+          }
+        );
+    } else if (
+      filter ===
+      "recent"
+    ) {
+      list =
+        list.slice(
+          0,
+          8
+        );
     } else if (
       filter !== "all"
     ) {
-      list = list.filter(function (book) {
-        return (
-          book.category ||
-          "گشتی"
-        ) === filter;
-      });
+      list =
+        list.filter(
+          function (book) {
+            return (
+              book.category ||
+              "گشتی"
+            ) === filter;
+          }
+        );
     }
 
     if (query) {
       var q =
         query.toLowerCase();
 
-      list = list.filter(function (book) {
-        var text =
-          [
-            book.title,
-            book.author,
-            book.category
-          ]
-            .filter(Boolean)
-            .join(" ")
-            .toLowerCase();
+      list =
+        list.filter(
+          function (book) {
+            var text =
+              [
+                book.title,
+                book.author,
+                book.category
+              ]
+                .filter(
+                  Boolean
+                )
+                .join(" ")
+                .toLowerCase();
 
-        return (
-          text.indexOf(q) >= 0
+            return (
+              text.indexOf(
+                q
+              ) >= 0
+            );
+          }
         );
-      });
     }
 
     return list;
@@ -1017,16 +1267,20 @@
     var container =
       $("bookList");
 
-    if (!container) return;
+    if (!container) {
+      return;
+    }
 
     if (!list.length) {
       container.innerHTML =
         '<div class="empty" style="grid-column:1/-1;text-align:center;padding:35px;color:var(--muted)">' +
         '<i class="fa-solid fa-book-open" style="font-size:32px;margin-bottom:9px"></i>' +
         '<h3 style="margin:5px 0;color:#e9f2fb;font-size:14px">' +
-        (query
-          ? "هیچ ئەنجامێک نەدۆزرایەوە"
-          : "هێشتا کتێب نییە") +
+        (
+          query
+            ? "هیچ ئەنجامێک نەدۆزرایەوە"
+            : "هێشتا کتێب نییە"
+        ) +
         "</h3>" +
         '<div style="font-size:10px">PDF ـێک زیاد بکە بۆ دەستپێکردن.</div>' +
         "</div>";
@@ -1036,100 +1290,128 @@
 
     container.innerHTML =
       list
-        .map(function (book) {
-          var progress =
-            Math.round(
-              (Number(
-                book.progress
-              ) || 0) *
-                100
+        .map(
+          function (book) {
+            var progress =
+              Math.round(
+                (
+                  Number(
+                    book.progress
+                  ) ||
+                  0
+                ) *
+                  100
+              );
+
+            return (
+              '<article class="book" data-book="' +
+              esc(book.id) +
+              '">' +
+
+              '<button class="fav" data-action="fav" title="دڵخواز">' +
+
+              '<i class="' +
+              (
+                book.favorite
+                  ? "fa-solid"
+                  : "fa-regular"
+              ) +
+              ' fa-heart"></i>' +
+
+              "</button>" +
+
+              '<div class="cover">' +
+
+              '<i class="fa-solid fa-book-bookmark"></i>' +
+
+              "</div>" +
+
+              '<div class="book-main">' +
+
+              '<div class="book-title">' +
+              esc(
+                book.title
+              ) +
+              "</div>" +
+
+              '<div class="book-author">' +
+              esc(
+                book.author ||
+                "نووسەری دیارینەکراو"
+              ) +
+              "</div>" +
+
+              '<div class="meta">' +
+
+              "<span>" +
+              '<i class="fa-regular fa-file-lines"></i> ' +
+              (
+                book.pageCount ||
+                0
+              ) +
+              " لاپەڕە</span>" +
+
+              "<span>" +
+              '<i class="fa-solid fa-language"></i> ' +
+              esc(
+                langName(
+                  book.lang
+                )
+              ) +
+              "</span>" +
+
+              '<span class="tag-badge">' +
+              esc(
+                book.category ||
+                "گشتی"
+              ) +
+              "</span>" +
+
+              "</div>" +
+
+              '<div class="progress">' +
+
+              '<span style="width:' +
+              progress +
+              '%"></span>' +
+
+              "</div>" +
+
+              '<div class="actions">' +
+
+              '<button class="small primary" data-action="open-book">' +
+
+              '<i class="fa-solid fa-book-open"></i> خوێندنەوە' +
+
+              "</button>" +
+
+              '<button class="small" data-action="del-book" title="سڕینەوە">' +
+
+              '<i class="fa-regular fa-trash-can"></i>' +
+
+              "</button>" +
+
+              "</div>" +
+
+              "</div>" +
+
+              "</article>"
             );
-
-          return (
-            '<article class="book" data-book="' +
-            esc(book.id) +
-            '">' +
-
-            '<button class="fav" data-action="fav" title="دڵخواز">'+
-            '<i class="' +
-            (book.favorite
-              ? "fa-solid"
-              : "fa-regular") +
-            ' fa-heart"></i>' +
-            "</button>" +
-
-            '<div class="cover">' +
-            '<i class="fa-solid fa-book-bookmark"></i>' +
-            "</div>" +
-
-            '<div class="book-main">' +
-
-            '<div class="book-title">' +
-            esc(book.title) +
-            "</div>" +
-
-            '<div class="book-author">' +
-            esc(
-              book.author ||
-              "نووسەری دیارینەکراو"
-            ) +
-            "</div>" +
-
-            '<div class="meta">' +
-
-            "<span>" +
-            '<i class="fa-regular fa-file-lines"></i> ' +
-            (book.pageCount || 0) +
-            " لاپەڕە</span>" +
-
-            "<span>" +
-            '<i class="fa-solid fa-language"></i> ' +
-            esc(
-              langName(
-                book.lang
-              )
-            ) +
-            "</span>" +
-
-            '<span class="tag-badge">' +
-            esc(
-              book.category ||
-              "گشتی"
-            ) +
-            "</span>" +
-
-            "</div>" +
-
-            '<div class="progress">' +
-            '<span style="width:' +
-            progress +
-            '%"></span>' +
-            "</div>" +
-
-            '<div class="actions">' +
-
-            '<button class="small primary" data-action="open-book">' +
-            '<i class="fa-solid fa-book-open"></i> خوێندنەوە' +
-            "</button>" +
-
-            '<button class="small" data-action="del-book" title="سڕینەوە">' +
-            '<i class="fa-regular fa-trash-can"></i>' +
-            "</button>" +
-
-            "</div>" +
-
-            "</div>" +
-            "</article>"
-          );
-        })
+          }
+        )
         .join("");
   }
 
   function openBook(id) {
     var book =
-      books.find(function (item) {
-        return item.id === id;
-      });
+      books.find(
+        function (item) {
+          return (
+            item.id ===
+            id
+          );
+        }
+      );
 
     if (!book) {
       toast(
@@ -1155,78 +1437,105 @@
 
   function toggleFavorite(id) {
     var book =
-      books.find(function (item) {
-        return item.id === id;
-      });
+      books.find(
+        function (item) {
+          return (
+            item.id ===
+            id
+          );
+        }
+      );
 
-    if (!book) return;
+    if (!book) {
+      return;
+    }
 
     book.favorite =
       !book.favorite;
 
     dbPut(book)
-      .then(function () {
-        renderBooks();
-      })
-      .catch(function (error) {
-        console.error(
-          "favorite:",
-          error
-        );
-      });
+      .then(
+        function () {
+          renderBooks();
+        }
+      )
+      .catch(
+        function (error) {
+          console.error(
+            "favorite:",
+            error
+          );
+        }
+      );
   }
 
   function deleteBook(id) {
     var book =
-      books.find(function (item) {
-        return item.id === id;
-      });
+      books.find(
+        function (item) {
+          return (
+            item.id ===
+            id
+          );
+        }
+      );
 
-    if (!book) return;
+    if (!book) {
+      return;
+    }
 
     if (
       !window.confirm(
         "دڵنیایت لە سڕینەوەی «" +
-          book.title +
-          "»؟"
+        book.title +
+        "»؟"
       )
     ) {
       return;
     }
 
     dbDelete(id)
-      .then(function () {
-        books =
-          books.filter(
-            function (item) {
-              return (
-                item.id !== id
-              );
-            }
+      .then(
+        function () {
+          books =
+            books.filter(
+              function (item) {
+                return (
+                  item.id !==
+                  id
+                );
+              }
+            );
+
+          renderBooks();
+          renderOwnerPanel();
+
+          toast(
+            "کتێبەکە سڕایەوە"
+          );
+        }
+      )
+      .catch(
+        function (error) {
+          console.error(
+            "deleteBook:",
+            error
           );
 
-        renderBooks();
-        renderOwnerPanel();
-
-        toast(
-          "کتێبەکە سڕایەوە"
-        );
-      })
-      .catch(function (error) {
-        console.error(
-          "deleteBook:",
-          error
-        );
-
-        toast(
-          "سڕینەوە سەرکەوتوو نەبوو"
-        );
-      });
+          toast(
+            "سڕینەوە سەرکەوتوو نەبوو"
+          );
+        }
+      );
   }
 
-  function detectSourceLang(text) {
+  function detectSourceLang(
+    text
+  ) {
     var source =
-      String(text || "").trim();
+      String(
+        text || ""
+      ).trim();
 
     if (!source) {
       return "en";
@@ -1260,7 +1569,9 @@
         ) || []
       ).length;
 
-    if (ku >= 1) {
+    if (
+      ku >= 1
+    ) {
       return "ku";
     }
 
@@ -1278,7 +1589,9 @@
       return "en";
     }
 
-    if (ar > 0) {
+    if (
+      ar > 0
+    ) {
       return "ar";
     }
 
@@ -1386,11 +1699,6 @@
         false
       );
 
-    /*
-     * تەنیا بۆ وەرگێڕانی کوردی:
-     * ئەگەر API بە ڕوونی لاتینی بگەڕێنێتەوە،
-     * بە داتا هەڵەکەی ناچین.
-     */
     if (
       target === "ckb" &&
       looksInvalidSorani(
@@ -1414,25 +1722,30 @@
       ).trim();
 
     if (!sourceText) {
-      return Promise.resolve("");
+      return Promise.resolve(
+        ""
+      );
     }
 
     var sl =
       mapTranslationLang(
         sourceLang ||
-          detectSourceLang(
-            sourceText
-          ),
+        detectSourceLang(
+          sourceText
+        ),
         false
       );
 
     var tl =
       mapTranslationLang(
-        targetLang || "ckb",
+        targetLang ||
+        "ckb",
         false
       );
 
-    if (sl === tl) {
+    if (
+      sl === tl
+    ) {
       return Promise.resolve(
         sourceText
       );
@@ -1455,42 +1768,54 @@
         sourceText
       );
 
-    return fetch(url)
-      .then(function (response) {
-        if (!response.ok) {
-          throw new Error(
-            "Google HTTP " +
+    return fetch(
+      url
+    )
+      .then(
+        function (response) {
+          if (!response.ok) {
+            throw new Error(
+              "Google HTTP " +
               response.status
-          );
+            );
+          }
+
+          return response.json();
         }
+      )
+      .then(
+        function (data) {
+          var result =
+            (
+              data[0] ||
+              []
+            )
+              .map(
+                function (part) {
+                  return (
+                    part[0] ||
+                    ""
+                  );
+                }
+              )
+              .join("")
+              .trim();
 
-        return response.json();
-      })
-      .then(function (data) {
-        var result =
-          (data[0] || [])
-            .map(function (part) {
-              return (
-                part[0] || ""
-              );
-            })
-            .join("")
-            .trim();
+          result =
+            cleanTranslation(
+              result,
+              tl
+            );
 
-        result =
-          cleanTranslation(
-            result,
-            tl
-          );
+          if (!result) {
+            throw new Error(
+              "Google translation invalid"
+            );
+          }
 
-        if (!result) {
-          throw new Error(
-            "Google translation invalid"
-          );
+          return result;
         }
-
-        return result;
-      });
+      );
   }
 
   function myMemoryTranslateText(
@@ -1504,25 +1829,30 @@
       ).trim();
 
     if (!sourceText) {
-      return Promise.resolve("");
+      return Promise.resolve(
+        ""
+      );
     }
 
     var sl =
       mapTranslationLang(
         sourceLang ||
-          detectSourceLang(
-            sourceText
-          ),
+        detectSourceLang(
+          sourceText
+        ),
         true
       );
 
     var tl =
       mapTranslationLang(
-        targetLang || "ckb",
+        targetLang ||
+        "ckb",
         true
       );
 
-    if (sl === tl) {
+    if (
+      sl === tl
+    ) {
       return Promise.resolve(
         sourceText
       );
@@ -1547,51 +1877,57 @@
         langPair
       );
 
-    return fetch(url)
-      .then(function (response) {
-        if (!response.ok) {
-          throw new Error(
-            "MyMemory HTTP " +
+    return fetch(
+      url
+    )
+      .then(
+        function (response) {
+          if (!response.ok) {
+            throw new Error(
+              "MyMemory HTTP " +
               response.status
-          );
-        }
+            );
+          }
 
-        return response.json();
-      })
-      .then(function (data) {
-        if (
-          data &&
-          data.responseStatus &&
-          Number(
-            data.responseStatus
-          ) !== 200
-        ) {
-          throw new Error(
-            "MyMemory " +
+          return response.json();
+        }
+      )
+      .then(
+        function (data) {
+          if (
+            data &&
+            data.responseStatus &&
+            Number(
               data.responseStatus
-          );
+            ) !== 200
+          ) {
+            throw new Error(
+              "MyMemory " +
+              data.responseStatus
+            );
+          }
+
+          var result =
+            data &&
+            data.responseData &&
+            data.responseData
+              .translatedText;
+
+          result =
+            cleanTranslation(
+              result,
+              targetLang
+            );
+
+          if (!result) {
+            throw new Error(
+              "MyMemory translation invalid"
+            );
+          }
+
+          return result;
         }
-
-        var result =
-          data &&
-          data.responseData &&
-          data.responseData
-            .translatedText;
-
-        result =
-          cleanTranslation(
-            result,
-            targetLang
-          );
-
-        if (!result) {
-          throw new Error(
-            "MyMemory translation invalid"
-          );
-        }
-
-        return result;
-      });
+      );
   }
 
   function translateText(
@@ -1604,7 +1940,9 @@
       ).trim();
 
     if (!value) {
-      return Promise.resolve("");
+      return Promise.resolve(
+        ""
+      );
     }
 
     var source =
@@ -1615,14 +1953,18 @@
     return googleTranslateText(
       value,
       source,
-      targetLang || "ckb"
-    ).catch(function () {
-      return myMemoryTranslateText(
-        value,
-        source,
-        targetLang || "ckb"
-      );
-    });
+      targetLang ||
+      "ckb"
+    ).catch(
+      function () {
+        return myMemoryTranslateText(
+          value,
+          source,
+          targetLang ||
+          "ckb"
+        );
+      }
+    );
   }
 
   function uniqueStrings(
@@ -1631,7 +1973,10 @@
     var output = [];
     var seen = {};
 
-    (values || []).forEach(
+    (
+      values ||
+      []
+    ).forEach(
       function (value) {
         var clean =
           String(
@@ -1643,14 +1988,18 @@
             )
             .trim();
 
-        if (!clean) return;
+        if (!clean) {
+          return;
+        }
 
         var key =
           clean.toLowerCase();
 
         if (!seen[key]) {
           seen[key] = true;
-          output.push(clean);
+          output.push(
+            clean
+          );
         }
       }
     );
@@ -1669,7 +2018,8 @@
       (
         localStorage.getItem(
           "kh_gemini_key"
-        ) || ""
+        ) ||
+        ""
       ).trim();
 
     if (!apiKey) {
@@ -1687,7 +2037,9 @@
 
     var prompt =
       "وشەی «" +
-      String(word || "").trim() +
+      String(
+        word || ""
+      ).trim() +
       "» وەربگێڕە بۆ " +
       target +
       ".\n" +
@@ -1701,111 +2053,132 @@
       "\n" +
       'تەنها JSON بگەڕێنەوە: {"meanings":["..."]}';
 
-    /*
-     * generateContent ـەکە هەمان شێوازی
-     * بەکارهێنانی API ـی پڕۆژەیە.
-     */
     var url =
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" +
+      "https://generativelanguage.googleapis.com/v1beta/models/" +
       encodeURIComponent(
-        apiKey
-      );
+        GEMINI_MODEL
+      ) +
+      ":generateContent";
 
-    return fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type":
-          "application/json"
-      },
-      body: JSON.stringify({
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ]
-      })
-    })
-      .then(function (response) {
-        if (!response.ok) {
-          throw new Error(
-            "Gemini HTTP " +
+    return fetch(
+      url,
+      {
+        method:
+          "POST",
+        headers: {
+          "Content-Type":
+            "application/json",
+          "x-goog-api-key":
+            apiKey
+        },
+        body:
+          JSON.stringify(
+            {
+              contents: [
+                {
+                  parts: [
+                    {
+                      text:
+                        prompt
+                    }
+                  ]
+                }
+              ]
+            }
+          )
+      }
+    )
+      .then(
+        function (response) {
+          if (!response.ok) {
+            throw new Error(
+              "Gemini HTTP " +
               response.status
-          );
-        }
-
-        return response.json();
-      })
-      .then(function (data) {
-        var raw =
-          data &&
-          data.candidates &&
-          data.candidates[0] &&
-          data.candidates[0]
-            .content &&
-          data.candidates[0]
-            .content.parts &&
-          data.candidates[0]
-            .content.parts[0] &&
-          data.candidates[0]
-            .content.parts[0].text;
-
-        if (!raw) {
-          throw new Error(
-            "Gemini empty"
-          );
-        }
-
-        raw =
-          String(raw)
-            .trim()
-            .replace(
-              /^```json\s*/i,
-              ""
-            )
-            .replace(
-              /^```\s*/i,
-              ""
-            )
-            .replace(
-              /\s*```$/i,
-              ""
-            )
-            .trim();
-
-        var parsed =
-          JSON.parse(raw);
-
-        var meanings =
-          uniqueStrings(
-            parsed.meanings || []
-          );
-
-        if (
-          targetLang ===
-          "ckb"
-        ) {
-          meanings =
-            meanings.filter(
-              function (item) {
-                return !looksInvalidSorani(
-                  item
-                );
-              }
             );
-        }
+          }
 
-        if (!meanings.length) {
-          throw new Error(
-            "No valid meanings"
-          );
+          return response.json();
         }
+      )
+      .then(
+        function (data) {
+          var raw =
+            data &&
+            data.candidates &&
+            data.candidates[0] &&
+            data.candidates[0]
+              .content &&
+            data.candidates[0]
+              .content.parts &&
+            data.candidates[0]
+              .content.parts[0] &&
+            data.candidates[0]
+              .content.parts[0]
+              .text;
 
-        return meanings;
-      });
+          if (!raw) {
+            throw new Error(
+              "Gemini empty"
+            );
+          }
+
+          raw =
+            String(
+              raw
+            )
+              .trim()
+              .replace(
+                /^```json\s*/i,
+                ""
+              )
+              .replace(
+                /^```\s*/i,
+                ""
+              )
+              .replace(
+                /\s*```$/i,
+                ""
+              )
+              .trim();
+
+          var parsed =
+            JSON.parse(
+              raw
+            );
+
+          var meanings =
+            uniqueStrings(
+              parsed.meanings ||
+              []
+            );
+
+          if (
+            targetLang ===
+            "ckb"
+          ) {
+            meanings =
+              meanings.filter(
+                function (
+                  item
+                ) {
+                  return !looksInvalidSorani(
+                    item
+                  );
+                }
+              );
+          }
+
+          if (
+            !meanings.length
+          ) {
+            throw new Error(
+              "No valid meanings"
+            );
+          }
+
+          return meanings;
+        }
+      );
   }
 
   function getTranslationMeanings(
@@ -1826,34 +2199,43 @@
     return geminiMeanings(
       value,
       targetLang
-    ).catch(function () {
-      return Promise.all([
-        googleTranslateText(
-          value,
-          detectSourceLang(
-            value
-          ),
-          targetLang
-        ).catch(function () {
-          return "";
-        }),
-        myMemoryTranslateText(
-          value,
-          detectSourceLang(
-            value
-          ),
-          targetLang
-        ).catch(function () {
-          return "";
-        })
-      ]).then(function (
-        results
-      ) {
-        return uniqueStrings(
-          results
+    ).catch(
+      function () {
+        return Promise.all(
+          [
+            googleTranslateText(
+              value,
+              detectSourceLang(
+                value
+              ),
+              targetLang
+            ).catch(
+              function () {
+                return "";
+              }
+            ),
+
+            myMemoryTranslateText(
+              value,
+              detectSourceLang(
+                value
+              ),
+              targetLang
+            ).catch(
+              function () {
+                return "";
+              }
+            )
+          ]
+        ).then(
+          function (results) {
+            return uniqueStrings(
+              results
+            );
+          }
         );
-      });
-    });
+      }
+    );
   }
 
   function renderMeanings(
@@ -1875,16 +2257,21 @@
 
     return (
       '<div class="meaning-list ' +
-      esc(className || "") +
+      esc(
+        className ||
+        ""
+      ) +
       '">' +
       list
-        .map(function (item) {
-          return (
-            '<div class="meaning-item">' +
-            esc(item) +
-            "</div>"
-          );
-        })
+        .map(
+          function (item) {
+            return (
+              '<div class="meaning-item">' +
+              esc(item) +
+              "</div>"
+            );
+          }
+        )
         .join("") +
       "</div>"
     );
@@ -1908,7 +2295,9 @@
         text || ""
       ).trim();
 
-    if (!value) return;
+    if (!value) {
+      return;
+    }
 
     window.speechSynthesis.cancel();
 
@@ -1926,23 +2315,30 @@
       normalized === "ar" ||
       normalized === "ar-sa"
     ) {
-      utterance.lang = "ar-SA";
+      utterance.lang =
+        "ar-SA";
     } else if (
       normalized === "ku" ||
       normalized === "ckb"
     ) {
-      utterance.lang = "ku-Arab";
+      utterance.lang =
+        "ku-Arab";
     } else if (
       normalized === "fa" ||
       normalized === "fa-ir"
     ) {
-      utterance.lang = "fa-IR";
+      utterance.lang =
+        "fa-IR";
     } else {
-      utterance.lang = "en-US";
+      utterance.lang =
+        "en-US";
     }
 
-    utterance.rate = 0.85;
-    utterance.volume = 1;
+    utterance.rate =
+      0.85;
+
+    utterance.volume =
+      1;
 
     window.speechSynthesis.speak(
       utterance
@@ -1970,16 +2366,16 @@
     var sheet =
       $("wordSheet");
 
-    if (!sheet) return;
+    if (!sheet) {
+      return;
+    }
 
     var sourceClass =
       currentWordLang ===
       "en"
         ? "english-text"
         : currentWordLang ===
-            "ar" ||
-          currentWordLang ===
-            "fa"
+          "ar"
         ? "arabic-text"
         : "kurdish-text";
 
@@ -1987,56 +2383,93 @@
       '<div class="handle"></div>' +
 
       '<div class="section-head">' +
+
       "<h3>فەرهەنگ</h3>" +
+
       '<button class="icon-btn" data-action="close-word">' +
+
       '<i class="fa-solid fa-xmark"></i>' +
+
       "</button>" +
+
       "</div>" +
 
       '<div class="field">' +
+
       "<label>وشە</label>" +
+
       '<div id="modalWord" class="source-word ' +
       sourceClass +
       '" style="display:flex;align-items:center;justify-content:space-between;gap:8px">' +
 
       "<span>" +
-      esc(currentWord) +
+
+      esc(
+        currentWord
+      ) +
+
       "</span>" +
 
       '<button class="icon-btn" data-vspeak="' +
-      esc(currentWord) +
+      esc(
+        currentWord
+      ) +
       '" data-vlang="' +
-      esc(currentWordLang) +
+      esc(
+        currentWordLang
+      ) +
       '" style="width:34px;height:34px;color:var(--a)">' +
+
       '<i class="fa-solid fa-volume-high"></i>' +
+
       "</button>" +
 
       "</div>" +
+
       "</div>" +
 
       '<div class="field">' +
+
       "<label>بە کوردی</label>" +
+
       '<div id="modalKu" class="translation-box ku-translation">' +
+
       "چاوەڕوانی..." +
+
       "</div>" +
+
       "</div>" +
 
       '<div class="field">' +
+
       "<label>بە عەرەبی</label>" +
+
       '<div id="modalAr" class="translation-box ar-translation">' +
+
       '<div id="modalArText">' +
+
       "چاوەڕوانی..." +
+
       "</div>" +
+
       '<button class="icon-btn" id="modalArSpeakBtn" style="width:34px;height:34px;color:#22c98b;margin-top:8px">' +
+
       '<i class="fa-solid fa-volume-high"></i>' +
+
       "</button>" +
+
       "</div>" +
+
       "</div>" +
 
       '<div class="hero-actions">' +
+
       '<button class="primary" data-action="save-word">' +
+
       "خەزنکردنی وشەکە" +
+
       "</button>" +
+
       "</div>";
 
     openSheet(
@@ -2048,80 +2481,88 @@
       currentWord,
       "ckb"
     )
-      .then(function (meanings) {
-        currentWordMeanings.ku =
-          uniqueStrings(
-            meanings
-          );
-
-        var el =
-          $("modalKu");
-
-        if (el) {
-          el.innerHTML =
-            renderMeanings(
-              currentWordMeanings.ku,
-              "ku-translation"
+      .then(
+        function (meanings) {
+          currentWordMeanings.ku =
+            uniqueStrings(
+              meanings
             );
-        }
-      })
-      .catch(function () {
-        var el =
-          $("modalKu");
 
-        if (el) {
-          el.textContent =
-            "وەرگێڕان بەردەست نەبوو";
+          var el =
+            $("modalKu");
+
+          if (el) {
+            el.innerHTML =
+              renderMeanings(
+                currentWordMeanings.ku,
+                "ku-translation"
+              );
+          }
         }
-      });
+      )
+      .catch(
+        function () {
+          var el =
+            $("modalKu");
+
+          if (el) {
+            el.textContent =
+              "وەرگێڕان بەردەست نەبوو";
+          }
+        }
+      );
 
     getTranslationMeanings(
       currentWord,
       "ar"
     )
-      .then(function (meanings) {
-        currentWordMeanings.ar =
-          uniqueStrings(
-            meanings
-          );
-
-        var text =
-          $("modalArText");
-
-        if (text) {
-          text.innerHTML =
-            renderMeanings(
-              currentWordMeanings.ar,
-              "ar-translation"
+      .then(
+        function (meanings) {
+          currentWordMeanings.ar =
+            uniqueStrings(
+              meanings
             );
+
+          var text =
+            $("modalArText");
+
+          if (text) {
+            text.innerHTML =
+              renderMeanings(
+                currentWordMeanings.ar,
+                "ar-translation"
+              );
+          }
+
+          var button =
+            $("modalArSpeakBtn");
+
+          if (button) {
+            button.setAttribute(
+              "data-vspeak",
+              currentWordMeanings.ar.join(
+                "، "
+              )
+            );
+
+            button.setAttribute(
+              "data-vlang",
+              "ar"
+            );
+          }
         }
+      )
+      .catch(
+        function () {
+          var text =
+            $("modalArText");
 
-        var button =
-          $("modalArSpeakBtn");
-
-        if (button) {
-          button.setAttribute(
-            "data-vspeak",
-            currentWordMeanings.ar.join(
-              "، "
-            )
-          );
-
-          button.setAttribute(
-            "data-vlang",
-            "ar"
-          );
+          if (text) {
+            text.textContent =
+              "وەرگێڕان بەردەست نەبوو";
+          }
         }
-      })
-      .catch(function () {
-        var text =
-          $("modalArText");
-
-        if (text) {
-          text.textContent =
-            "وەرگێڕان بەردەست نەبوو";
-        }
-      });
+      );
   }
 
   function openSentenceModal(
@@ -2163,33 +2604,42 @@
       text,
       "ckb"
     )
-      .then(function (result) {
-        if (kurdish) {
-          kurdish.textContent =
-            result ||
-            "وەرگێڕان بەردەست نەبوو";
+      .then(
+        function (result) {
+          if (kurdish) {
+            kurdish.textContent =
+              result ||
+              "وەرگێڕان بەردەست نەبوو";
+          }
         }
-      })
-      .catch(function () {
-        if (kurdish) {
-          kurdish.textContent =
-            "وەرگێڕان بەردەست نەبوو";
+      )
+      .catch(
+        function () {
+          if (kurdish) {
+            kurdish.textContent =
+              "وەرگێڕان بەردەست نەبوو";
+          }
         }
-      });
+      );
   }
 
   function saveWord() {
-    if (!currentWord) return;
+    if (!currentWord) {
+      return;
+    }
 
     var exists =
-      vocab.some(function (item) {
-        return (
-          String(
-            item.word || ""
-          ).toLowerCase() ===
-          currentWord.toLowerCase()
-        );
-      });
+      vocab.some(
+        function (item) {
+          return (
+            String(
+              item.word ||
+              ""
+            ).toLowerCase() ===
+            currentWord.toLowerCase()
+          );
+        }
+      );
 
     if (exists) {
       toast(
@@ -2210,10 +2660,13 @@
 
     vocab.unshift({
       id:
-        String(Date.now()) +
+        String(
+          Date.now()
+        ) +
         "_" +
         Math.floor(
-          Math.random() * 10000
+          Math.random() *
+            10000
         ),
 
       word:
@@ -2222,9 +2675,11 @@
       lang:
         currentWordLang,
 
-      ku: ku,
+      ku:
+        ku,
 
-      third: ar
+      third:
+        ar
     });
 
     saveJSON(
@@ -2265,10 +2720,15 @@
       '<div class="handle"></div>' +
 
       '<div class="section-head">' +
+
       "<h3>وشەکانم</h3>" +
+
       '<button class="icon-btn" data-temp-close>' +
+
       '<i class="fa-solid fa-xmark"></i>' +
+
       "</button>" +
+
       "</div>" +
 
       '<div style="margin-top:10px;max-height:400px;overflow:auto">' +
@@ -2276,93 +2736,112 @@
       (
         vocab.length
           ? vocab
-              .map(function (item) {
-                var source =
-                  item.lang ||
-                  detectSourceLang(
-                    item.word
+              .map(
+                function (item) {
+                  var source =
+                    item.lang ||
+                    detectSourceLang(
+                      item.word
+                    );
+
+                  return (
+                    '<div class="field" style="margin-bottom:10px">' +
+
+                    '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800;color:#f4c85c;font-size:17px">' +
+
+                    "<span>" +
+
+                    esc(
+                      item.word
+                    ) +
+
+                    "</span>" +
+
+                    '<button class="icon-btn" data-vspeak="' +
+
+                    esc(
+                      item.word
+                    ) +
+
+                    '" data-vlang="' +
+
+                    esc(
+                      source
+                    ) +
+
+                    '" style="width:30px;height:30px">' +
+
+                    '<i class="fa-solid fa-volume-high"></i>' +
+
+                    "</button>" +
+
+                    "</div>" +
+
+                    '<div class="saved-meanings ku-translation" style="margin-top:7px">' +
+
+                    esc(
+                      String(
+                        item.ku ||
+                        ""
+                      ).replace(
+                        /\n/g,
+                        "، "
+                      )
+                    ) +
+
+                    "</div>" +
+
+                    '<div style="display:flex;gap:7px;align-items:flex-start;margin-top:7px">' +
+
+                    '<div class="saved-meanings ar-translation" style="flex:1">' +
+
+                    esc(
+                      String(
+                        item.third ||
+                        ""
+                      ).replace(
+                        /\n/g,
+                        "، "
+                      )
+                    ) +
+
+                    "</div>" +
+
+                    '<button class="icon-btn" data-vspeak="' +
+
+                    esc(
+                      item.third ||
+                      ""
+                    ) +
+
+                    '" data-vlang="ar" style="width:30px;height:30px">' +
+
+                    '<i class="fa-solid fa-volume-high"></i>' +
+
+                    "</button>" +
+
+                    "</div>" +
+
+                    '<div class="hero-actions">' +
+
+                    '<button class="ghost" data-vdel="' +
+
+                    esc(
+                      item.id
+                    ) +
+
+                    '">' +
+
+                    "سڕینەوە" +
+
+                    "</button>" +
+
+                    "</div>" +
+
+                    "</div>"
                   );
-
-                return (
-                  '<div class="field" style="margin-bottom:10px">' +
-
-                  '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800;color:#f4c85c;font-size:17px">' +
-
-                  '<span class="source-word ' +
-                  (
-                    source ===
-                    "en"
-                      ? "english-text"
-                      : source ===
-                          "ar" ||
-                        source ===
-                          "fa"
-                      ? "arabic-text"
-                      : "kurdish-text"
-                  ) +
-                  '">' +
-                  esc(item.word) +
-                  "</span>" +
-
-                  '<button class="icon-btn" data-vspeak="' +
-                  esc(item.word) +
-                  '" data-vlang="' +
-                  esc(source) +
-                  '" style="width:30px;height:30px">' +
-                  '<i class="fa-solid fa-volume-high"></i>' +
-                  "</button>" +
-
-                  "</div>" +
-
-                  '<div class="saved-meanings ku-translation" style="margin-top:7px">' +
-                  esc(
-                    String(
-                      item.ku || ""
-                    ).replace(
-                      /\n/g,
-                      "، "
-                    )
-                  ) +
-                  "</div>" +
-
-                  '<div style="display:flex;gap:7px;align-items:flex-start;margin-top:7px">' +
-
-                  '<div class="saved-meanings ar-translation" style="flex:1">' +
-                  esc(
-                    String(
-                      item.third || ""
-                    ).replace(
-                      /\n/g,
-                      "، "
-                    )
-                  ) +
-                  "</div>" +
-
-                  '<button class="icon-btn" data-vspeak="' +
-                  esc(
-                    item.third || ""
-                  ) +
-                  '" data-vlang="ar" style="width:30px;height:30px">' +
-                  '<i class="fa-solid fa-volume-high"></i>' +
-                  "</button>" +
-
-                  "</div>" +
-
-                  '<div class="hero-actions">' +
-
-                  '<button class="ghost" data-vdel="' +
-                  esc(
-                    item.id
-                  ) +
-                  '">' +
-                  "سڕینەوە" +
-                  "</button>" +
-
-                  "</div>" +
-
-                  "</div>"
-                );
-              })
+                }
+              )
               .join("")
           : '<div style="padding:30px;text-align:center;color:var(--muted)">هێشتا وشەیەک خەزن نەکراوە</div>'
       ) +
@@ -2382,6 +2861,7 @@
     function close() {
       back.remove();
       sheet.remove();
+
       updateTelegramBtn();
     }
 
@@ -2408,7 +2888,9 @@
             "[data-vdel]"
           );
 
-        if (!del) return;
+        if (!del) {
+          return;
+        }
 
         var id =
           del.getAttribute(
@@ -2419,7 +2901,8 @@
           vocab.filter(
             function (item) {
               return (
-                item.id !== id
+                item.id !==
+                id
               );
             }
           );
@@ -2440,7 +2923,9 @@
   function addMusicFiles(
     files
   ) {
-    if (!files) return;
+    if (!files) {
+      return;
+    }
 
     for (
       var i = 0;
@@ -2453,6 +2938,7 @@
       music.push({
         name:
           file.name,
+
         url:
           URL.createObjectURL(
             file
@@ -2523,7 +3009,9 @@
         .then(
           updatePlayButton
         )
-        .catch(function () {});
+        .catch(
+          function () {}
+        );
     }
   }
 
@@ -2552,38 +3040,44 @@
       .querySelectorAll(
         "[data-track]"
       )
-      .forEach(function (item) {
-        var index =
-          Number(
-            item.getAttribute(
-              "data-track"
-            )
-          );
+      .forEach(
+        function (item) {
+          var index =
+            Number(
+              item.getAttribute(
+                "data-track"
+              )
+            );
 
-        var icon =
-          item.querySelector(
-            "i"
-          );
+          var icon =
+            item.querySelector(
+              "i"
+            );
 
-        if (!icon) return;
+          if (!icon) {
+            return;
+          }
 
-        icon.className =
-          "fa-solid " +
-          (
-            index ===
-              musicIndex &&
-            playing
-              ? "fa-pause"
-              : "fa-play"
-          );
-      });
+          icon.className =
+            "fa-solid " +
+            (
+              index ===
+                musicIndex &&
+              playing
+                ? "fa-pause"
+                : "fa-play"
+            );
+        }
+      );
   }
 
   function renderTracks() {
     var box =
       $("tracks");
 
-    if (!box) return;
+    if (!box) {
+      return;
+    }
 
     if (!music.length) {
       box.innerHTML =
@@ -2594,27 +3088,33 @@
 
     box.innerHTML =
       music
-        .map(function (track, index) {
-          return (
-            '<div class="track" data-track-card="' +
-            index +
-            '" style="cursor:pointer">' +
+        .map(
+          function (track, index) {
+            return (
+              '<div class="track" data-track-card="' +
+              index +
+              '" style="cursor:pointer">' +
 
-            '<button data-track="' +
-            index +
-            '">' +
+              '<button data-track="' +
+              index +
+              '">' +
 
-            '<i class="fa-solid fa-play"></i>' +
+              '<i class="fa-solid fa-play"></i>' +
 
-            "</button>" +
+              "</button>" +
 
-            "<span>" +
-            esc(track.name) +
-            "</span>" +
+              "<span>" +
 
-            "</div>"
-          );
-        })
+              esc(
+                track.name
+              ) +
+
+              "</span>" +
+
+              "</div>"
+            );
+          }
+        )
         .join("");
 
     updatePlayButton();
@@ -2670,104 +3170,132 @@
     var list =
       $("ownerBooksList");
 
-    if (!list) return;
+    if (!list) {
+      return;
+    }
 
     if (!books.length) {
       list.innerHTML =
         '<div style="text-align:center;color:var(--muted);padding:12px;font-size:10px">هیچ کتێبێک نییە.</div>';
+
       return;
     }
 
     list.innerHTML =
       books
-        .map(function (book) {
-          var category =
-            book.category ||
-            "گشتی";
+        .map(
+          function (book) {
+            var category =
+              book.category ||
+              "گشتی";
 
-          return (
-            '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--line);padding:8px;border-radius:11px">' +
+            return (
+              '<div style="display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--line);padding:8px;border-radius:11px">' +
 
-            '<div style="flex:1;min-width:0">' +
+              '<div style="flex:1;min-width:0">' +
 
-            '<strong style="font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
-            esc(book.title) +
-            "</strong>" +
+              '<strong style="font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' +
 
-            '<div style="margin-top:5px">' +
+              esc(
+                book.title
+              ) +
 
-            '<select data-owner-cat="' +
-            esc(book.id) +
-            '" style="font-size:10px;background:var(--surface);color:#fff;border:1px solid var(--line);border-radius:6px;padding:3px">' +
+              "</strong>" +
 
-            CATEGORIES
-              .map(
-                function (cat) {
-                  return (
-                    '<option value="' +
-                    esc(cat) +
-                    '"' +
-                    (
-                      category ===
-                      cat
-                        ? " selected"
-                        : ""
-                    ) +
-                    ">" +
-                    esc(cat) +
-                    "</option>"
-                  );
-                }
-              )
-              .join("") +
+              '<div style="margin-top:5px">' +
 
-            "</select>" +
+              '<select data-owner-cat="' +
 
-            "</div>" +
+              esc(
+                book.id
+              ) +
 
-            "</div>" +
+              '" style="font-size:10px;background:var(--surface);color:#fff;border:1px solid var(--line);border-radius:6px;padding:3px">' +
 
-            '<button class="icon-btn" data-owner-del="' +
-            esc(book.id) +
-            '" style="width:32px;height:32px;color:#ff536d">' +
-            '<i class="fa-regular fa-trash-can"></i>' +
-            "</button>" +
+              CATEGORIES
+                .map(
+                  function (cat) {
+                    return (
+                      '<option value="' +
+                      esc(
+                        cat
+                      ) +
+                      '"' +
+                      (
+                        category ===
+                        cat
+                          ? " selected"
+                          : ""
+                      ) +
+                      ">" +
+                      esc(
+                        cat
+                      ) +
+                      "</option>"
+                    );
+                  }
+                )
+                .join("") +
 
-            "</div>"
-          );
-        })
+              "</select>" +
+
+              "</div>" +
+
+              "</div>" +
+
+              '<button class="icon-btn" data-owner-del="' +
+
+              esc(
+                book.id
+              ) +
+
+              '" style="width:32px;height:32px;color:#ff536d">' +
+
+              '<i class="fa-regular fa-trash-can"></i>' +
+
+              "</button>" +
+
+              "</div>"
+            );
+          }
+        )
         .join("");
   }
 
   window.AppLib = {
-    dbPut: dbPut,
+    dbPut:
+      dbPut,
 
-    dbAll: dbAll,
+    dbAll:
+      dbAll,
 
-    updateTelegram: updateTelegramBtn,
+    updateTelegram:
+      updateTelegramBtn,
 
-    openSettings: function () {
-      renderSiteThemes();
-      renderReaderThemes();
-      updateThemeBadges();
+    openSettings:
+      function () {
+        renderSiteThemes();
+        renderReaderThemes();
+        updateThemeBadges();
 
-      var apiInput =
-        $("geminiApiKey");
+        var apiInput =
+          $("geminiApiKey");
 
-      if (apiInput) {
-        try {
-          apiInput.value =
-            localStorage.getItem(
-              "kh_gemini_key"
-            ) || "";
-        } catch (e) {}
-      }
+        if (apiInput) {
+          try {
+            apiInput.value =
+              localStorage.getItem(
+                "kh_gemini_key"
+              ) ||
+              "";
+          } catch (e) {}
+        }
 
-      openSheet(
-        $("sheetBack"),
-        $("settingsSheet")
-      );
-    },
+        openSheet(
+          $("sheetBack"),
+          $("settingsSheet")
+        );
+      },
 
     getMusicVolume:
       function () {
@@ -2777,14 +3305,17 @@
     setMusicVolume:
       function (value) {
         var number =
-          Number(value);
+          Number(
+            value
+          );
 
         if (
           !Number.isFinite(
             number
           )
         ) {
-          number = 0.32;
+          number =
+            0.32;
         }
 
         musicVolume =
@@ -2956,14 +3487,21 @@
             books
               .slice()
               .sort(
-                function (a, b) {
+                function (
+                  a,
+                  b
+                ) {
                   return (
-                    (b.updatedAt ||
+                    (
+                      b.updatedAt ||
                       b.addedAt ||
-                      0) -
-                    (a.updatedAt ||
+                      0
+                    ) -
+                    (
+                      a.updatedAt ||
                       a.addedAt ||
-                      0)
+                      0
+                    )
                   );
                 }
               )[0];
@@ -2981,7 +3519,9 @@
           name ===
           "settings"
         ) {
-          window.AppLib.openSettings();
+          window.AppLib
+            .openSettings();
+
           return;
         }
 
@@ -2993,6 +3533,7 @@
             $("sheetBack"),
             $("settingsSheet")
           );
+
           return;
         }
 
@@ -3099,7 +3640,6 @@
               0,
               true
             );
-
           } else if (
             audio.paused
           ) {
@@ -3162,9 +3702,9 @@
 
         if (
           name ===
-          "page-prev" ||
+            "page-prev" ||
           name ===
-          "page-next"
+            "page-next"
         ) {
           return;
         }
@@ -3343,6 +3883,7 @@
           "vocab"
         ) {
           renderVocab();
+
           return;
         }
 
@@ -3362,7 +3903,8 @@
                 "active",
                 item.getAttribute(
                   "data-filter"
-                ) === filter
+                ) ===
+                  filter
               );
             }
           );
@@ -3413,7 +3955,9 @@
             "data-owner-del"
           );
 
-        deleteBook(ownerId);
+        deleteBook(
+          ownerId
+        );
 
         return;
       }
@@ -3473,11 +4017,18 @@
           );
 
         var book =
-          books.find(function (item) {
-            return item.id === id;
-          });
+          books.find(
+            function (item) {
+              return (
+                item.id ===
+                id
+              );
+            }
+          );
 
-        if (!book) return;
+        if (!book) {
+          return;
+        }
 
         book.category =
           ownerCategory.value;
@@ -3486,19 +4037,23 @@
           Date.now();
 
         dbPut(book)
-          .then(function () {
-            renderBooks();
-            renderOwnerPanel();
+          .then(
+            function () {
+              renderBooks();
+              renderOwnerPanel();
 
-            toast(
-              "پۆلەکە نوێکرایەوە"
-            );
-          })
-          .catch(function (error) {
-            console.error(
-              error
-            );
-          });
+              toast(
+                "پۆلەکە نوێکرایەوە"
+              );
+            }
+          )
+          .catch(
+            function (error) {
+              console.error(
+                error
+              );
+            }
+          );
 
         return;
       }
@@ -3581,7 +4136,7 @@
       function () {
         addPDF(
           this.files &&
-            this.files[0]
+          this.files[0]
         );
       }
     );
@@ -3598,7 +4153,8 @@
           this.files
         );
 
-        this.value = "";
+        this.value =
+          "";
       }
     );
   }
@@ -3692,7 +4248,8 @@
             (
               Number(
                 this.value
-              ) / 100
+              ) /
+              100
             );
         }
       }
@@ -3755,18 +4312,21 @@
     siteTheme =
       localStorage.getItem(
         "kh_site_theme"
-      ) || "cyan";
+      ) ||
+      "cyan";
 
     readerTheme =
       localStorage.getItem(
         "kh_reader_theme"
-      ) || "paper";
+      ) ||
+      "paper";
 
     musicVolume =
       Number(
         localStorage.getItem(
           "kh_music_volume"
-        ) || 0.32
+        ) ||
+        0.32
       );
 
     if (
@@ -3774,7 +4334,8 @@
         musicVolume
       )
     ) {
-      musicVolume = 0.32;
+      musicVolume =
+        0.32;
     }
 
     setSiteTheme(
@@ -3786,31 +4347,36 @@
     updateThemeBadges();
 
     dbAll()
-      .then(function (storedBooks) {
-        books =
-          Array.isArray(
-            storedBooks
-          )
-            ? storedBooks
-            : [];
+      .then(
+        function (storedBooks) {
+          books =
+            Array.isArray(
+              storedBooks
+            )
+              ? storedBooks
+              : [];
 
-        renderBooks();
-        renderOwnerPanel();
-        updateTelegramBtn();
-      })
-      .catch(function (error) {
-        console.error(
-          "dbAll:",
-          error
-        );
+          renderBooks();
+          renderOwnerPanel();
+          updateTelegramBtn();
+        }
+      )
+      .catch(
+        function (error) {
+          console.error(
+            "dbAll:",
+            error
+          );
 
-        books = [];
+          books = [];
 
-        renderBooks();
-        renderOwnerPanel();
-        updateTelegramBtn();
-      });
+          renderBooks();
+          renderOwnerPanel();
+          updateTelegramBtn();
+        }
+      );
   }
 
   init();
 })();
+``` [❶](code://python)
