@@ -32,9 +32,6 @@
   --reader-bg:#f4f6f9;
   --paper:#fff;
   --reader-fg:#1d2a3d;
-  --font-ku:"K24Kurdish","Vazirmatn",sans-serif;
-  --font-ar:"Noon","Noto Naskh Arabic",serif;
-  --font-en:"Manrope",Georgia,"Times New Roman",sans-serif;
 }
 
 *{
@@ -1019,30 +1016,44 @@ main{
 }
 
 .rtext.ku{
-  font-family:var(--font-ku);
+  font-family:
+    "K24Kurdish",
+    "Noto Naskh Arabic",
+    serif;
   font-weight:700;
   line-height:2.15;
 }
 
 .rtext.ar{
-  font-family:var(--font-ar);
+  font-family:
+    "Noto Naskh Arabic",
+    serif;
   line-height:2.15;
 }
 
 .rtext.fa{
-  font-family:var(--font-ar);
+  font-family:
+    "Vazirmatn",
+    "Noto Naskh Arabic",
+    serif;
   line-height:2.1;
 }
 
 .rtext.en{
-  font-family:var(--font-en);
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif;
 }
 
 .source-word.kurdish-text,
 .translation-box.ku-translation,
 .meaning-list.ku-translation,
 .saved-meanings.ku-translation{
-  font-family:var(--font-ku)!important;
+  font-family:
+    "K24Kurdish",
+    "Noto Naskh Arabic",
+    serif!important;
   font-weight:700;
 }
 
@@ -1050,11 +1061,16 @@ main{
 .translation-box.ar-translation,
 .meaning-list.ar-translation,
 .saved-meanings.ar-translation{
-  font-family:var(--font-ar)!important;
+  font-family:
+    "Noto Naskh Arabic",
+    serif!important;
 }
 
 .source-word.english-text{
-  font-family:var(--font-en)!important;
+  font-family:
+    Georgia,
+    "Times New Roman",
+    serif!important;
 }
 
 .translation-box{
@@ -1426,11 +1442,8 @@ body:has(.sheet.open) #telegramBtn{
 #pdfCanvas{border-radius:2px;box-shadow:none;transition:width .22s cubic-bezier(.2,.8,.2,1);will-change:width}
 .rtext{font-family:"Noto Naskh Arabic",serif;font-size:20px;line-height:2.15;text-rendering:optimizeLegibility}
 .rtext.en,.rtext.ltr,.source-word.english-text{font-family:"Manrope",system-ui,sans-serif!important;line-height:1.8;letter-spacing:0}
-.rtext.ku,.source-word.kurdish-text,.translation-box.ku-translation,.meaning-list.ku-translation,.saved-meanings.ku-translation{font-family:var(--font-ku)!important;direction:rtl;text-align:right;unicode-bidi:plaintext}
-.rtext.ar,.source-word.arabic-text,.translation-box.ar-translation,.meaning-list.ar-translation,.saved-meanings.ar-translation{font-family:var(--font-ar)!important;direction:rtl;text-align:right;unicode-bidi:plaintext}
-.rw.lang-ku{font-family:var(--font-ku)!important}
-.rw.lang-ar{font-family:var(--font-ar)!important}
-.rw.lang-en{font-family:var(--font-en)!important}
+.rtext.ku,.source-word.kurdish-text,.translation-box.ku-translation,.meaning-list.ku-translation,.saved-meanings.ku-translation{font-family:"K24Kurdish","Vazirmatn",sans-serif!important;direction:rtl;text-align:right;unicode-bidi:plaintext}
+.rtext.ar,.source-word.arabic-text,.translation-box.ar-translation,.meaning-list.ar-translation,.saved-meanings.ar-translation{font-family:"Noto Naskh Arabic",serif!important;direction:rtl;text-align:right;unicode-bidi:plaintext}
 .rw{border-radius:4px}
 .rw.selected{background:color-mix(in srgb,var(--reader-accent) 28%,transparent);color:inherit}
 .reader-bottom{
@@ -1482,3 +1495,408 @@ body:has(.sheet.open) #telegramBtn{
   .reader-colors{grid-template-columns:repeat(6,minmax(36px,1fr));overflow-x:auto}
 }
 @media(prefers-reduced-motion:reduce){.reader.show,.paper,.reader-chrome,#pdfCanvas,.bookmark-control,.reader-tools{animation:none!important;transition:none!important}.rbody{scroll-behavior:auto}}
+
+
+/* =========================================================
+   خوێندنگە — 2026 Cinematic Library Redesign
+   تەنیا شێوە و ڕێکخستنەوەی UI گۆڕدراوە؛
+   ڕەنگەکانی SITE_THEMES و READER_THEMES پارێزراون.
+   ========================================================= */
+
+body{
+  overflow-x:hidden;
+}
+
+.app{
+  position:relative;
+  isolation:isolate;
+}
+
+.app::before{
+  content:"";
+  position:fixed;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 8%,color-mix(in srgb,var(--a) 11%,transparent),transparent 24%),
+    radial-gradient(circle at 92% 22%,color-mix(in srgb,var(--b) 10%,transparent),transparent 25%);
+}
+
+.topbar{
+  padding:10px 14px;
+  background:color-mix(in srgb,var(--bg) 88%,transparent);
+  border-bottom:1px solid color-mix(in srgb,var(--line) 80%,transparent);
+  box-shadow:0 10px 35px rgba(0,0,0,.16);
+}
+
+.topbar-in{
+  max-width:940px;
+}
+
+.brand{
+  gap:11px;
+}
+
+.logo{
+  width:44px;
+  height:44px;
+  border-radius:15px;
+  box-shadow:0 12px 28px color-mix(in srgb,var(--a) 18%,transparent);
+}
+
+.brand h1{
+  font-size:18px;
+  letter-spacing:-.3px;
+}
+
+.brand p{
+  font-size:9px;
+}
+
+main{
+  max-width:940px;
+  padding:15px 14px 110px;
+}
+
+.hero{
+  position:relative;
+  overflow:hidden;
+  min-height:200px;
+  border-radius:30px;
+  padding:22px;
+  background:
+    radial-gradient(circle at 0% 0%,color-mix(in srgb,var(--a) 19%,transparent),transparent 36%),
+    radial-gradient(circle at 100% 100%,color-mix(in srgb,var(--b) 16%,transparent),transparent 38%),
+    var(--surface);
+  box-shadow:0 24px 65px rgba(0,0,0,.26);
+}
+
+.hero::before{
+  content:"";
+  position:absolute;
+  width:220px;
+  height:220px;
+  border-radius:50%;
+  top:-110px;
+  left:-70px;
+  border:1px solid color-mix(in srgb,var(--a) 18%,transparent);
+  box-shadow:0 0 90px color-mix(in srgb,var(--a) 11%,transparent);
+  pointer-events:none;
+}
+
+.hero-row{
+  position:relative;
+  z-index:1;
+  align-items:flex-start;
+}
+
+.hero h2{
+  font-size:28px;
+  line-height:1.35;
+  letter-spacing:-.5px;
+}
+
+.hero p{
+  max-width:520px;
+  font-size:11px;
+}
+
+.badge{
+  padding:8px 10px;
+  border-radius:999px;
+  font-size:8px;
+  letter-spacing:.4px;
+  backdrop-filter:blur(12px);
+}
+
+.hero-actions{
+  position:relative;
+  z-index:1;
+}
+
+.primary,
+.ghost{
+  min-height:46px;
+  border-radius:15px;
+}
+
+.search{
+  height:56px;
+  border-radius:18px;
+  box-shadow:0 10px 30px rgba(0,0,0,.12);
+}
+
+.search i{
+  opacity:.72;
+}
+
+.stats{
+  grid-template-columns:repeat(3,1fr);
+  gap:10px;
+}
+
+.stat{
+  min-height:78px;
+  border-radius:18px;
+  background:
+    linear-gradient(145deg,color-mix(in srgb,var(--surface2) 72%,transparent),var(--surface));
+  box-shadow:0 10px 24px rgba(0,0,0,.12);
+}
+
+.chips{
+  gap:7px;
+  padding:2px 1px 5px;
+}
+
+.chip{
+  border-radius:999px;
+  padding:9px 15px;
+  backdrop-filter:blur(10px);
+}
+
+.section-title{
+  font-size:19px;
+}
+
+.grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:12px;
+}
+
+.book{
+  display:block;
+  min-width:0;
+  padding:0;
+  border-radius:20px;
+  overflow:hidden;
+  background:
+    linear-gradient(160deg,color-mix(in srgb,var(--surface2) 55%,transparent),var(--surface));
+  box-shadow:0 14px 34px rgba(0,0,0,.16);
+  border-color:color-mix(in srgb,var(--line) 82%,transparent);
+  transition:transform .18s ease,box-shadow .18s ease,border-color .18s ease;
+}
+
+.book::before{
+  width:100%;
+  height:2px;
+  right:auto;
+  bottom:auto;
+  top:0;
+  left:0;
+  background:linear-gradient(90deg,var(--a),var(--b));
+}
+
+.book:hover{
+  transform:translateY(-3px);
+  box-shadow:0 20px 42px rgba(0,0,0,.24);
+  border-color:color-mix(in srgb,var(--a) 42%,var(--line));
+}
+
+.cover{
+  width:100%;
+  height:210px;
+  border-radius:0;
+  background:
+    radial-gradient(circle at 18% 10%,color-mix(in srgb,var(--a) 26%,transparent),transparent 32%),
+    linear-gradient(145deg,#284f78,#172943);
+  position:relative;
+  overflow:hidden;
+  box-shadow:inset 0 -50px 60px rgba(3,8,16,.32);
+}
+
+.cover::before,
+.cover::after{
+  content:"";
+  position:absolute;
+  pointer-events:none;
+}
+
+.cover::before{
+  inset:0;
+  background:linear-gradient(180deg,transparent 38%,rgba(4,8,14,.72) 100%);
+}
+
+.cover::after{
+  width:120px;
+  height:120px;
+  right:-40px;
+  top:-40px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.13);
+  box-shadow:0 0 60px rgba(255,255,255,.07);
+}
+
+.cover i{
+  position:relative;
+  z-index:1;
+  font-size:42px;
+  opacity:.94;
+  filter:drop-shadow(0 8px 16px rgba(0,0,0,.34));
+}
+
+.book-main{
+  padding:11px 12px 12px;
+}
+
+.book-title{
+  font-size:13px;
+  line-height:1.6;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+
+.book-author{
+  margin-top:2px;
+}
+
+.meta{
+  gap:6px;
+}
+
+.progress{
+  margin-top:10px;
+}
+
+.actions{
+  margin-top:10px;
+}
+
+.small{
+  min-height:37px;
+}
+
+.fav{
+  left:10px;
+  top:10px;
+  width:36px;
+  height:36px;
+  border-radius:50%;
+  backdrop-filter:blur(10px);
+  background:rgba(6,14,25,.62);
+}
+
+.music{
+  border-radius:22px;
+  box-shadow:0 16px 38px rgba(0,0,0,.15);
+}
+
+.bottom{
+  height:74px;
+  background:color-mix(in srgb,var(--bg) 92%,transparent);
+  border-top-color:color-mix(in srgb,var(--line) 72%,transparent);
+}
+
+.nav{
+  gap:5px;
+  font-size:9px;
+}
+
+.nav i{
+  font-size:17px;
+}
+
+.sheet{
+  max-width:760px;
+  margin:auto;
+  left:50%;
+  right:auto;
+  width:min(760px,100%);
+  transform:translate(-50%,105%);
+}
+
+.sheet.open{
+  transform:translate(-50%,0);
+}
+
+/* Language fonts: one font per word where reader.js adds lang-* classes. */
+.rw.lang-ku{
+  font-family:"K24Kurdish","Vazirmatn",sans-serif!important;
+  font-weight:700;
+}
+
+.rw.lang-ar{
+  font-family:"Noon","Noto Naskh Arabic",serif!important;
+}
+
+.rw.lang-fa{
+  font-family:"Vazirmatn","Noto Naskh Arabic",serif!important;
+}
+
+.rw.lang-en{
+  font-family:"Manrope",system-ui,sans-serif!important;
+  direction:ltr;
+  unicode-bidi:plaintext;
+}
+
+.rtext.ar,
+.source-word.arabic-text,
+.translation-box.ar-translation,
+.meaning-list.ar-translation,
+.saved-meanings.ar-translation{
+  font-family:"Noon","Noto Naskh Arabic",serif!important;
+}
+
+.rtext.ku{
+  font-family:"K24Kurdish","Vazirmatn",sans-serif!important;
+}
+
+.rtext.en,
+.rtext.ltr,
+.source-word.english-text{
+  font-family:"Manrope",system-ui,sans-serif!important;
+}
+
+@media(min-width:640px){
+  main{
+    padding-inline:18px;
+  }
+  .grid{
+    grid-template-columns:repeat(3,minmax(0,1fr));
+  }
+  .cover{
+    height:250px;
+  }
+}
+
+@media(max-width:520px){
+  .hero{
+    min-height:190px;
+    padding:19px;
+  }
+  .hero h2{
+    font-size:24px;
+  }
+  .hero-row{
+    gap:8px;
+  }
+  .badge{
+    display:none;
+  }
+  .grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+  .cover{
+    height:190px;
+  }
+  .book-main{
+    padding:10px;
+  }
+  .actions .small:first-child{
+    font-size:9px;
+  }
+}
+
+@media(max-width:360px){
+  .grid{
+    gap:9px;
+  }
+  .cover{
+    height:170px;
+  }
+  .book-title{
+    font-size:12px;
+  }
+}
