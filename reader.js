@@ -1,25 +1,23 @@
 /* =========================================================
    reader.js
-   خوێندنگە — Premium Reader / PDF / Gemini / TTS
+   خوێندنگە — Reader / PDF / Gemini / TTS
    ========================================================= */
 
 (function () {
   "use strict";
 
-  var GEMINI_MODEL =
-    "gemini-2.5-flash";
+  var GEMINI_MODEL = "gemini-3.6-flash";
 
   var currentBook = null;
   var currentPage = 0;
   var currentPdfDoc = null;
 
-  var viewMode =
-    "canvas";
-
-  var aiLoading = false;
-  var aiPages = {};
+  var viewMode = "canvas";
 
   var pageKurdish = false;
+  var aiLoading = false;
+
+  var aiPages = {};
   var translatedPages = {};
 
   var readerFont = 20;
@@ -27,20 +25,22 @@
 
   var canvasZoom = 1;
 
-  var speechState =
-    "stopped";
-
-  var speechTimer = null;
-  var speechWordIndex = 0;
+  var speechState = "stopped";
   var speechRate = 0.85;
   var speechVolume = 0.85;
+  var speechTimer = null;
+  var speechWordIndex = 0;
 
   var touchStartX = 0;
   var touchStartY = 0;
+
   var pinchStartDistance = 0;
   var pinchStartZoom = 1;
 
   var idleTimer = null;
+
+  var renderRequestId = 0;
+  var wordRenderTimer = null;
 
   var THEMES = {
     paper: {
@@ -49,66 +49,77 @@
       paper: "#ffffff",
       fg: "#1d2a3d"
     },
+
     cream: {
       name: "کرێمی",
       bg: "#eee5d1",
       paper: "#fff9e7",
       fg: "#403728"
     },
+
     mint: {
       name: "سەوزی کاڵ",
       bg: "#dfece5",
       paper: "#f4fbf7",
       fg: "#203c31"
     },
+
     sky: {
       name: "ئاسمانی",
       bg: "#dceef4",
       paper: "#f2fbff",
       fg: "#24414b"
     },
+
     rose: {
       name: "پەمەیی",
       bg: "#f0dfe2",
       paper: "#fff5f6",
       fg: "#4a2d33"
     },
+
     lavender: {
       name: "مۆری",
       bg: "#e6def4",
       paper: "#fbf8ff",
       fg: "#332b46"
     },
+
     sand: {
       name: "خۆڵەمێشی",
       bg: "#e7ded2",
       paper: "#fbf4eb",
       fg: "#493b2e"
     },
+
     forest: {
       name: "دارستان",
       bg: "#dee8de",
       paper: "#f5fbf3",
       fg: "#213525"
     },
+
     sepia: {
       name: "کەتیبی کۆن",
       bg: "#e6dbc6",
       paper: "#f7eddb",
       fg: "#4a3925"
     },
+
     slate: {
       name: "سڵەیت",
       bg: "#dce1e7",
       paper: "#eef1f5",
       fg: "#263341"
     },
+
     night: {
       name: "شەو",
       bg: "#0b1420",
       paper: "#101b2c",
       fg: "#e9f2fc"
     },
+
     black: {
       name: "ڕەش",
       bg: "#050505",
@@ -122,7 +133,9 @@
   }
 
   function esc(value) {
-    return String(value == null ? "" : value).replace(
+    return String(
+      value == null ? "" : value
+    ).replace(
       /[&<>"']/g,
       function (char) {
         return {
@@ -137,35 +150,26 @@
   }
 
   function toast(message) {
-    var el =
-      $("toast");
+    var el = $("toast");
 
-    if (!el) return;
+    if (!el) {
+      return;
+    }
 
-    el.textContent =
-      message;
+    el.textContent = message;
+    el.className = "toast show";
 
-    el.className =
-      "toast show";
+    clearTimeout(toast._timer);
 
-    clearTimeout(
-      toast._timer
+    toast._timer = setTimeout(
+      function () {
+        el.className = "toast";
+      },
+      2600
     );
-
-    toast._timer =
-      setTimeout(
-        function () {
-          el.className =
-            "toast";
-        },
-        2500
-      );
   }
 
-  function saveJSON(
-    key,
-    value
-  ) {
+  function saveJSON(key, value) {
     try {
       localStorage.setItem(
         key,
@@ -174,77 +178,87 @@
     } catch (e) {}
   }
 
-  function loadJSON(
-    key,
-    fallback
-  ) {
+  function loadJSON(key, fallback) {
     try {
       var value =
         localStorage.getItem(
           key
         );
 
-      if (!value) {
-        return fallback;
-      }
-
-      return JSON.parse(
-        value
-      );
+      return value
+        ? JSON.parse(value)
+        : fallback;
     } catch (e) {
       return fallback;
     }
   }
 
-  function loadSettings() {
-    try {
-      readerFont =
-        Number(
-          localStorage.getItem(
-            "kh_font"
-          ) || 20
-        );
+  /* =======================================================
+     SETTINGS
+     ======================================================= */
 
-      if (
-        !Number.isFinite(
+  function loadSettings() {
+    var savedFont =
+      Number(
+        localStorage.getItem(
+          "kh_font"
+        ) || 20
+      );
+
+    readerFont =
+      Number.isFinite(
+        savedFont
+      )
+        ? savedFont
+        : 20;
+
+    readerFont =
+      Math.max(
+        14,
+        Math.min(
+          34,
           readerFont
         )
-      ) {
-        readerFont = 20;
-      }
+      );
 
-      readerTheme =
+    readerTheme =
+      localStorage.getItem(
+        "kh_reader_theme"
+      ) ||
+      "paper";
+
+    var savedSpeechVolume =
+      Number(
         localStorage.getItem(
-          "kh_reader_theme"
-        ) || "paper";
+          "kh_speech_volume"
+        ) ||
+          0.85
+      );
 
-      speechVolume =
-        Number(
-          localStorage.getItem(
-            "kh_speech_volume"
-          ) || 0.85
-        );
+    speechVolume =
+      Number.isFinite(
+        savedSpeechVolume
+      )
+        ? Math.max(
+            0,
+            Math.min(
+              1,
+              savedSpeechVolume
+            )
+          )
+        : 0.85;
 
-      if (
-        !Number.isFinite(
-          speechVolume
-        )
-      ) {
-        speechVolume = 0.85;
-      }
+    aiPages =
+      loadJSON(
+        "kh_ai_pages",
+        {}
+      );
 
-      aiPages =
-        loadJSON(
-          "kh_ai_pages",
-          {}
-        );
-
-      translatedPages =
-        loadJSON(
-          "kh_translated_pages",
-          {}
-        );
-    } catch (e) {}
+    translatedPages =
+      loadJSON(
+        "kh_translated_pages",
+        {}
+      );
   }
 
   function applyTheme() {
@@ -257,7 +271,9 @@
     var reader =
       $("reader");
 
-    if (!reader) return;
+    if (!reader) {
+      return;
+    }
 
     reader.style.setProperty(
       "--reader-bg",
@@ -275,44 +291,66 @@
     );
   }
 
-  function setFontSize(
-    size
-  ) {
-    var value =
-      Number(size);
+  /* =======================================================
+     STATUS / ZOOM
+     ======================================================= */
 
-    if (
-      !Number.isFinite(
-        value
-      )
-    ) {
+  function updateZoomReadout() {
+    var readout =
+      $("zoomReadout");
+
+    if (!readout) {
       return;
     }
 
-    readerFont =
+    var percent;
+
+    if (
+      viewMode ===
+      "canvas"
+    ) {
+      percent =
+        Math.round(
+          canvasZoom *
+            100
+        );
+    } else {
+      percent =
+        Math.round(
+          (
+            readerFont /
+            20
+          ) *
+            100
+        );
+    }
+
+    percent =
       Math.max(
-        14,
+        50,
         Math.min(
-          34,
-          value
+          250,
+          percent
         )
       );
 
-    try {
-      localStorage.setItem(
-        "kh_font",
-        String(
-          readerFont
-        )
-      );
-    } catch (e) {}
-
-    renderPage();
+    readout.textContent =
+      percent +
+      "%";
   }
 
   function updateReaderStatus() {
     if (!currentBook) {
       return;
+    }
+
+    var title =
+      $("rTitle");
+
+    if (title) {
+      title.textContent =
+        currentBook.title ||
+        "کتێب";
     }
 
     var sub =
@@ -321,9 +359,15 @@
     if (sub) {
       sub.textContent =
         "لاپەڕە " +
-        (currentPage + 1) +
+        (
+          currentPage +
+          1
+        ) +
         " لە " +
-        currentBook.pageCount;
+        (
+          currentBook.pageCount ||
+          1
+        );
     }
 
     var input =
@@ -331,7 +375,8 @@
 
     if (input) {
       input.value =
-        currentPage + 1;
+        currentPage +
+        1;
     }
 
     var total =
@@ -340,25 +385,32 @@
     if (total) {
       total.textContent =
         "/ " +
-        currentBook.pageCount;
+        (
+          currentBook.pageCount ||
+          1
+        );
     }
 
     var progress =
       $("readerProgress");
 
     if (progress) {
+      var totalPages =
+        Number(
+          currentBook.pageCount
+        ) || 1;
+
       var percent =
-        currentBook.pageCount >
-        1
-          ? (
+        totalPages <= 1
+          ? 100
+          : (
               currentPage /
               (
-                currentBook.pageCount -
+                totalPages -
                 1
               )
             ) *
-            100
-          : 100;
+            100;
 
       progress.style.width =
         Math.max(
@@ -400,191 +452,189 @@
         : '<i class="fa-regular fa-bookmark"></i>';
   }
 
-  function clearSpeechHighlight() {
-    document
-      .querySelectorAll(
-        ".rw.speaking"
+  function setFontSize(
+    value
+  ) {
+    var size =
+      Number(value);
+
+    if (
+      !Number.isFinite(
+        size
       )
-      .forEach(
-        function (item) {
-          item.classList.remove(
-            "speaking"
-          );
-        }
-      );
-  }
-
-  function updateSpeechButton() {
-    var button =
-      $("readerSpeak");
-
-    if (!button) {
+    ) {
       return;
     }
 
-    button.className =
-      "rbtn" +
-      (
-        speechState ===
-        "playing"
-          ? " speaking"
-          : ""
+    readerFont =
+      Math.max(
+        14,
+        Math.min(
+          34,
+          size
+        )
       );
-
-    button.innerHTML =
-      speechState ===
-      "playing"
-        ? '<i class="fa-solid fa-pause"></i>'
-        : '<i class="fa-solid fa-play"></i>';
-  }
-
-  function stopSpeech(
-    resetIndex
-  ) {
-    if (
-      window.speechSynthesis
-    ) {
-      window.speechSynthesis.cancel();
-    }
-
-    clearTimeout(
-      speechTimer
-    );
-
-    speechTimer =
-      null;
-
-    speechState =
-      "stopped";
-
-    clearSpeechHighlight();
-
-    if (
-      resetIndex !==
-      false
-    ) {
-      speechWordIndex =
-        0;
-    }
-
-    updateSpeechButton();
-  }
-
-  function getWordDelay(
-    word
-  ) {
-    var text =
-      String(
-        word || ""
-      ).replace(
-        /^[.,!?;:()"'،؛؟]+|[.,!?;:()"'،؛؟]+$/g,
-        ""
-      );
-
-    var length =
-      text.length || 1;
-
-    var delay =
-      190 +
-      length * 40;
-
-    if (
-      /[.!?؟]/.test(
-        word
-      )
-    ) {
-      delay +=
-        320;
-    } else if (
-      /[,،;:]/.test(
-        word
-      )
-    ) {
-      delay +=
-        160;
-    }
-
-    return (
-      delay /
-      speechRate
-    );
-  }
-
-  function highlightWord(
-    index
-  ) {
-    clearSpeechHighlight();
-
-    var words =
-      document.querySelectorAll(
-        ".rw"
-      );
-
-    var word =
-      words[index];
-
-    if (!word) {
-      return;
-    }
-
-    word.classList.add(
-      "speaking"
-    );
 
     try {
-      word.scrollIntoView({
-        block: "center",
-        behavior: "smooth"
-      });
+      localStorage.setItem(
+        "kh_font",
+        String(
+          readerFont
+        )
+      );
     } catch (e) {}
+
+    if (
+      viewMode ===
+      "text"
+    ) {
+      renderPage();
+    }
+
+    updateZoomReadout();
   }
 
-  function speechLoop() {
+  function setCanvasZoom(
+    value
+  ) {
+    var zoom =
+      Number(value);
+
     if (
-      speechState !==
-      "playing"
+      !Number.isFinite(
+        zoom
+      )
     ) {
+      zoom = 1;
+    }
+
+    canvasZoom =
+      Math.max(
+        0.5,
+        Math.min(
+          2.5,
+          zoom
+        )
+      );
+
+    applyCanvasZoom();
+    updateZoomReadout();
+  }
+
+  function applyCanvasZoom() {
+    var canvas =
+      $("pdfCanvas");
+
+    if (!canvas) {
+      updateZoomReadout();
       return;
     }
 
-    var words =
-      document.querySelectorAll(
-        ".rw"
+    canvas.style.display =
+      "block";
+
+    canvas.style.width =
+      (
+        canvasZoom *
+        100
+      ).toFixed(0) +
+      "%";
+
+    canvas.style.maxWidth =
+      "none";
+
+    canvas.style.height =
+      "auto";
+
+    canvas.style.margin =
+      "0 auto";
+
+    var paper =
+      document.querySelector(
+        ".paper"
       );
 
-    if (
-      speechWordIndex >=
-      words.length
-    ) {
-      stopSpeech();
-      return;
+    if (paper) {
+      paper.style.overflow =
+        "visible";
     }
 
-    highlightWord(
-      speechWordIndex
-    );
-
-    var text =
-      words[
-        speechWordIndex
-      ]
-        ? words[
-            speechWordIndex
-          ].textContent
-        : "";
-
-    speechWordIndex +=
-      1;
-
-    speechTimer =
-      setTimeout(
-        speechLoop,
-        getWordDelay(text)
-      );
+    updateZoomReadout();
   }
 
-  function getWordLang(
-    word
+  /* =======================================================
+     LANGUAGE
+     ======================================================= */
+
+  function detectPageLanguage(
+    text
+  ) {
+    var value =
+      String(
+        text || ""
+      );
+
+    var ku =
+      (
+        value.match(
+          /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7\u06F6]/g
+        ) || []
+      ).length;
+
+    var fa =
+      (
+        value.match(
+          /[\u067E\u0686\u0698\u06AF]/g
+        ) || []
+      ).length;
+
+    var en =
+      (
+        value.match(
+          /[A-Za-z]/g
+        ) || []
+      ).length;
+
+    var ar =
+      (
+        value.match(
+          /[\u0600-\u06FF]/g
+        ) || []
+      ).length;
+
+    if (
+      ku >= 2
+    ) {
+      return "ku";
+    }
+
+    if (
+      fa >= 2 &&
+      en === 0
+    ) {
+      return "fa";
+    }
+
+    if (
+      en >
+      ar
+    ) {
+      return "en";
+    }
+
+    if (
+      ar >
+      0
+    ) {
+      return "ar";
+    }
+
+    return "en";
+  }
+
+  function detectWordLanguage(
+    word,
+    pageLang
   ) {
     var value =
       String(
@@ -608,6 +658,14 @@
     }
 
     if (
+      /[\u067E\u0686\u0698\u06AF]/.test(
+        value
+      )
+    ) {
+      return "fa";
+    }
+
+    if (
       /[\u0600-\u06FF]/.test(
         value
       )
@@ -616,262 +674,46 @@
     }
 
     return (
-      currentBook &&
-      currentBook.lang
-    ) || "en";
+      pageLang ||
+      "en"
+    );
   }
 
-  function applyWordFont(
-    span,
-    word,
-    pageLang
+  function cleanWord(
+    word
   ) {
-    var value =
-      String(
-        word || ""
-      );
-
-    var lang =
-      getWordLang(
-        value
-      );
-
-    if (
-      lang === "ku"
-    ) {
-      span.classList.add(
-        "lang-ku"
-      );
-
-      span.classList.remove(
-        "lang-ar",
-        "lang-en",
-        "lang-fa"
-      );
-
-      return;
-    }
-
-    if (
-      lang === "ar"
-    ) {
-      span.classList.add(
-        "lang-ar"
-      );
-
-      span.classList.remove(
-        "lang-ku",
-        "lang-en",
-        "lang-fa"
-      );
-
-      return;
-    }
-
-    if (
-      lang === "fa"
-    ) {
-      span.classList.add(
-        "lang-fa"
-      );
-
-      span.classList.remove(
-        "lang-ku",
-        "lang-ar",
-        "lang-en"
-      );
-
-      return;
-    }
-
-    span.classList.add(
-      "lang-en"
-    );
-
-    span.classList.remove(
-      "lang-ku",
-      "lang-ar",
-      "lang-fa"
-    );
+    return String(
+      word || ""
+    )
+      .replace(
+        /^[\s"'“”‘’.,!?;:()[\]{}،؛؟…—-]+/g,
+        ""
+      )
+      .replace(
+        /[\s"'“”‘’.,!?;:()[\]{}،؛؟…—-]+$/g,
+        ""
+      )
+      .trim();
   }
 
-  function speechFromIndex(
-    index
-  ) {
-    var words =
-      document.querySelectorAll(
-        ".rw"
-      );
+  /* =======================================================
+     WORD-BY-WORD RENDERING
+     ======================================================= */
 
-    if (
-      index >=
-      words.length
-    ) {
-      stopSpeech();
-      return;
-    }
-
-    var parts = [];
-
-    for (
-      var i = index;
-      i < words.length;
-      i++
-    ) {
-      parts.push(
-        words[i].textContent
-      );
-    }
-
-    var text =
-      parts.join(
-        " "
-      );
-
-    if (
-      window.speechSynthesis
-    ) {
-      window.speechSynthesis.cancel();
-    }
-
-    var utterance =
-      new SpeechSynthesisUtterance(
-        text
-      );
-
-    var lang =
-      currentBook &&
-      currentBook.lang
-        ? currentBook.lang
-        : "en";
-
-    if (lang === "ar") {
-      utterance.lang =
-        "ar-SA";
-    } else if (
-      lang === "ku"
-    ) {
-      utterance.lang =
-        "ku-Arab";
-    } else if (
-      lang === "fa"
-    ) {
-      utterance.lang =
-        "fa-IR";
-    } else {
-      utterance.lang =
-        "en-US";
-    }
-
-    utterance.rate =
-      speechRate;
-
-    utterance.volume =
-      speechVolume;
-
-    utterance.onend =
-      function () {
-        stopSpeech();
-      };
-
-    utterance.onerror =
-      function (event) {
-        if (
-          event.error ===
-            "interrupted" ||
-          event.error ===
-            "canceled"
-        ) {
-          return;
-        }
-
-        stopSpeech();
-      };
-
-    speechWordIndex =
-      index;
-
-    speechState =
-      "playing";
-
-    updateSpeechButton();
-
-    window.speechSynthesis.speak(
-      utterance
+  function clearWordRenderingTimer() {
+    clearTimeout(
+      wordRenderTimer
     );
 
-    speechLoop();
-  }
-
-  function startSpeech() {
-    if (
-      !window.speechSynthesis
-    ) {
-      toast(
-        "خوێندنەوەی دەنگی بەردەست نییە"
-      );
-      return;
-    }
-
-    if (
-      viewMode ===
-      "canvas"
-    ) {
-      toast(
-        "سەرەتا دەقەکە دەربهێنە بە 🤖"
-      );
-      return;
-    }
-
-    if (
-      speechState ===
-      "playing"
-    ) {
-      stopSpeech(
-        false
-      );
-
-      speechState =
-        "paused";
-
-      updateSpeechButton();
-
-      return;
-    }
-
-    if (
-      speechState ===
-      "paused"
-    ) {
-      speechFromIndex(
-        speechWordIndex
-      );
-
-      return;
-    }
-
-    var text =
-      $("readerText");
-
-    if (
-      !text ||
-      !text.innerText.trim()
-    ) {
-      toast(
-        "هیچ دەقێک بۆ خوێندنەوە نییە"
-      );
-
-      return;
-    }
-
-    speechFromIndex(
-      0
-    );
+    wordRenderTimer =
+      null;
   }
 
   function paintText(
     text
   ) {
+    clearWordRenderingTimer();
+
     var box =
       $("readerText");
 
@@ -879,71 +721,163 @@
       return;
     }
 
+    var source =
+      String(
+        text || ""
+      )
+        .replace(
+          /\r\n/g,
+          "\n"
+        )
+        .replace(
+          /\r/g,
+          "\n"
+        );
+
+    var pageLang =
+      detectPageLanguage(
+        source
+      );
+
     box.innerHTML =
       "";
 
-    var words =
-      String(
-        text || ""
-      ).match(
-        /\S+/g
-      ) || [];
+    box.className =
+      "rtext " +
+      (
+        pageLang ===
+        "en"
+          ? "en ltr"
+          : pageLang ===
+            "ar"
+          ? "ar rtl"
+          : pageLang ===
+            "fa"
+          ? "fa rtl"
+          : "ku rtl"
+      );
+
+    box.style.fontSize =
+      readerFont +
+      "px";
 
     var fragment =
       document.createDocumentFragment();
 
-    var pageLang =
-      currentBook &&
-      currentBook.lang
-        ? currentBook.lang
-        : detectPageLanguage(
-            text
-          );
+    var lines =
+      source.split(
+        "\n"
+      );
 
-    words.forEach(
-      function (word, index) {
-        var span =
-          document.createElement(
-            "span"
-          );
+    lines.forEach(
+      function (
+        line,
+        lineIndex
+      ) {
 
-        span.className =
-          "rw";
+        var words =
+          line.match(
+            /\S+/g
+          ) || [];
 
-        span.textContent =
-          word;
+        words.forEach(
+          function (
+            rawWord,
+            wordIndex
+          ) {
 
-        var clean =
-          word.replace(
-            /^[.,!?;:()"'،؛؟]+|[.,!?;:()"'،؛؟]+$/g,
-            ""
-          );
+            var word =
+              cleanWord(
+                rawWord
+              );
 
-        if (clean) {
-          span.setAttribute(
-            "data-word",
-            clean
-          );
-        }
+            var span =
+              document.createElement(
+                "span"
+              );
 
-        applyWordFont(
-          span,
-          clean || word,
-          pageLang
-        );
+            span.className =
+              "rw";
 
-        fragment.appendChild(
-          span
+            span.textContent =
+              rawWord;
+
+            if (word) {
+
+              span.setAttribute(
+                "data-word",
+                word
+              );
+
+              var wordLang =
+                detectWordLanguage(
+                  word,
+                  pageLang
+                );
+
+              if (
+                wordLang ===
+                "ku"
+              ) {
+
+                span.classList.add(
+                  "lang-ku"
+                );
+
+              } else if (
+                wordLang ===
+                "ar"
+              ) {
+
+                span.classList.add(
+                  "lang-ar"
+                );
+
+              } else if (
+                wordLang ===
+                "fa"
+              ) {
+
+                span.classList.add(
+                  "lang-fa"
+                );
+
+              } else {
+
+                span.classList.add(
+                  "lang-en"
+                );
+              }
+            }
+
+            fragment.appendChild(
+              span
+            );
+
+            if (
+              wordIndex <
+              words.length -
+                1
+            ) {
+
+              fragment.appendChild(
+                document.createTextNode(
+                  " "
+                )
+              );
+            }
+          }
         );
 
         if (
-          index <
-          words.length -
+          lineIndex <
+          lines.length -
             1
         ) {
+
           fragment.appendChild(
-            document.createTextNode(
-              " "
+            document.createElement(
+              "br"
             )
           );
         }
@@ -955,76 +889,939 @@
     );
   }
 
-  function detectPageLanguage(
+  /* =======================================================
+     PDF TEXT RECONSTRUCTION
+     ======================================================= */
+
+  function reconstructPdfText(
+    items
+  ) {
+    if (
+      !items ||
+      !items.length
+    ) {
+      return "";
+    }
+
+    var clean =
+      items
+        .filter(
+          function (
+            item
+          ) {
+            return (
+              item &&
+              String(
+                item.str ||
+                  ""
+              ).length >
+                0 &&
+              item.transform &&
+              item.transform.length >=
+                6
+            );
+          }
+        )
+        .map(
+          function (
+            item
+          ) {
+
+            var t =
+              item.transform;
+
+            var x =
+              Number(
+                t[4]
+              ) || 0;
+
+            var y =
+              Number(
+                t[5]
+              ) || 0;
+
+            var a =
+              Number(
+                t[0]
+              ) || 0;
+
+            var b =
+              Number(
+                t[1]
+              ) || 0;
+
+            var fontSize =
+              Math.sqrt(
+                a * a +
+                  b * b
+              ) ||
+              Number(
+                item.height
+              ) ||
+              10;
+
+            var width =
+              Number(
+                item.width
+              );
+
+            if (
+              !Number.isFinite(
+                width
+              )
+            ) {
+
+              width =
+                Math.max(
+                  1,
+                  String(
+                    item.str ||
+                      ""
+                  ).length *
+                    fontSize *
+                    0.45
+                );
+            }
+
+            return {
+              str:
+                String(
+                  item.str ||
+                    ""
+                ),
+
+              x:
+                x,
+
+              y:
+                y,
+
+              width:
+                Math.max(
+                  0,
+                  width
+                ),
+
+              fontSize:
+                Math.max(
+                  1,
+                  fontSize
+                ),
+
+              dir:
+                item.dir ||
+                ""
+            };
+          }
+        );
+
+    if (!clean.length) {
+      return "";
+    }
+
+    clean.sort(
+      function (
+        a,
+        b
+      ) {
+        return (
+          b.y -
+          a.y
+        );
+      }
+    );
+
+    var lines = [];
+
+    clean.forEach(
+      function (
+        item
+      ) {
+
+        var found =
+          null;
+
+        for (
+          var i = 0;
+          i < lines.length;
+          i++
+        ) {
+
+          var line =
+            lines[i];
+
+          var tolerance =
+            Math.max(
+              2.5,
+              Math.min(
+                9,
+                Math.max(
+                  line.fontSize,
+                  item.fontSize
+                ) *
+                  0.55
+              )
+            );
+
+          if (
+            Math.abs(
+              line.y -
+                item.y
+            ) <=
+            tolerance
+          ) {
+
+            found =
+              line;
+
+            break;
+          }
+        }
+
+        if (!found) {
+
+          found = {
+            y:
+              item.y,
+
+            fontSize:
+              item.fontSize,
+
+            items:
+              []
+          };
+
+          lines.push(
+            found
+          );
+        }
+
+        found.items.push(
+          item
+        );
+
+        found.fontSize =
+          Math.max(
+            found.fontSize,
+            item.fontSize
+          );
+      }
+    );
+
+    lines.sort(
+      function (
+        a,
+        b
+      ) {
+        return (
+          b.y -
+          a.y
+        );
+      }
+    );
+
+    function getDirection(
+      line
+    ) {
+
+      var rtl =
+        0;
+
+      var ltr =
+        0;
+
+      line.items.forEach(
+        function (
+          item
+        ) {
+
+          var value =
+            item.str;
+
+          if (
+            item.dir ===
+            "rtl"
+          ) {
+            rtl++;
+          }
+
+          if (
+            item.dir ===
+            "ltr"
+          ) {
+            ltr++;
+          }
+
+          if (
+            /[\u0600-\u06FF]/.test(
+              value
+            )
+          ) {
+            rtl++;
+          }
+
+          if (
+            /[A-Za-z]/.test(
+              value
+            )
+          ) {
+            ltr++;
+          }
+        }
+      );
+
+      return rtl >
+        ltr
+        ? "rtl"
+        : "ltr";
+    }
+
+    function buildLine(
+      line
+    ) {
+
+      var direction =
+        getDirection(
+          line
+        );
+
+      line.items.sort(
+        function (
+          a,
+          b
+        ) {
+
+          return direction ===
+            "rtl"
+            ? b.x -
+                a.x
+            : a.x -
+                b.x;
+        }
+      );
+
+      var useful =
+        line.items.filter(
+          function (
+            item
+          ) {
+            return String(
+              item.str
+            ).trim().length > 0;
+          }
+        );
+
+      var singleLetters =
+        useful.filter(
+          function (
+            item
+          ) {
+
+            return /^[A-Za-z]$/.test(
+              String(
+                item.str
+              ).trim()
+            );
+          }
+        ).length;
+
+      var charByCharEnglish =
+        direction ===
+          "ltr" &&
+        useful.length >=
+          3 &&
+        singleLetters /
+          useful.length >=
+          0.55;
+
+      var parts = [];
+
+      useful.forEach(
+        function (
+          current
+        ) {
+
+          if (!parts.length) {
+
+            parts.push({
+              text:
+                current.str,
+
+              left:
+                current.x,
+
+              right:
+                current.x +
+                current.width,
+
+              fontSize:
+                current.fontSize
+            });
+
+            return;
+          }
+
+          var previous =
+            parts[
+              parts.length -
+                1
+            ];
+
+          var currentLeft =
+            current.x;
+
+          var currentRight =
+            current.x +
+            current.width;
+
+          var gap;
+
+          if (
+            direction ===
+            "rtl"
+          ) {
+
+            gap =
+              previous.left -
+              currentRight;
+
+          } else {
+
+            gap =
+              currentLeft -
+              previous.right;
+          }
+
+          if (
+            !Number.isFinite(
+              gap
+            )
+          ) {
+            gap = 0;
+          }
+
+          var fontSize =
+            Math.max(
+              1,
+              previous.fontSize,
+              current.fontSize
+            );
+
+          var threshold;
+
+          if (
+            charByCharEnglish
+          ) {
+
+            threshold =
+              Math.max(
+                0.7,
+                fontSize *
+                  0.82
+              );
+
+          } else {
+
+            threshold =
+              Math.max(
+                1.8,
+                fontSize *
+                  0.48
+              );
+          }
+
+          var explicitSpace =
+            /\s$/.test(
+              previous.text
+            ) ||
+            /^\s/.test(
+              current.str
+            );
+
+          if (
+            explicitSpace ||
+            gap >
+              threshold
+          ) {
+
+            previous.text =
+              previous.text.replace(
+                /\s+$/g,
+                ""
+              ) +
+              " ";
+
+            parts.push({
+              text:
+                current.str,
+
+              left:
+                currentLeft,
+
+              right:
+                currentRight,
+
+              fontSize:
+                current.fontSize
+            });
+
+          } else {
+
+            previous.text +=
+              current.str;
+
+            previous.left =
+              Math.min(
+                previous.left,
+                currentLeft
+              );
+
+            previous.right =
+              Math.max(
+                previous.right,
+                currentRight
+              );
+
+            previous.fontSize =
+              Math.max(
+                previous.fontSize,
+                current.fontSize
+              );
+          }
+        }
+      );
+
+      return parts
+        .map(
+          function (
+            part
+          ) {
+            return part.text;
+          }
+        )
+        .join("")
+        .replace(
+          /[ \t]+/g,
+          " "
+        )
+        .trim();
+    }
+
+    var output = [];
+
+    lines.forEach(
+      function (
+        line
+      ) {
+
+        var text =
+          buildLine(
+            line
+          );
+
+        if (
+          text
+        ) {
+
+          output.push({
+            y:
+              line.y,
+
+            fontSize:
+              line.fontSize,
+
+            text:
+              text
+          });
+        }
+      }
+    );
+
+    var result =
+      "";
+
+    for (
+      var i = 0;
+      i < output.length;
+      i++
+    ) {
+
+      var current =
+        output[i];
+
+      if (!result) {
+
+        result =
+          current.text;
+
+        continue;
+      }
+
+      var previous =
+        output[
+          i - 1
+        ];
+
+      var verticalGap =
+        Math.abs(
+          previous.y -
+            current.y
+        );
+
+      var size =
+        Math.max(
+          1,
+          previous.fontSize,
+          current.fontSize
+        );
+
+      result +=
+        (
+          verticalGap >
+          size *
+            1.8
+            ? "\n\n"
+            : "\n"
+        ) +
+        current.text;
+    }
+
+    return result
+      .replace(
+        /[ \t]+\n/g,
+        "\n"
+      )
+      .replace(
+        /\n[ \t]+/g,
+        "\n"
+      )
+      .replace(
+        /[ \t]{2,}/g,
+        " "
+      )
+      .trim();
+  }
+
+  /* =======================================================
+     CANVAS PDF
+     ======================================================= */
+
+  function renderCanvasPage() {
+
+    if (
+      !currentPdfDoc
+    ) {
+      return Promise.reject(
+        new Error(
+          "PDF document نەدۆزرایەوە"
+        )
+      );
+    }
+
+    var canvas =
+      $("pdfCanvas");
+
+    var text =
+      $("readerText");
+
+    if (
+      !canvas
+    ) {
+      return Promise.reject(
+        new Error(
+          "Canvas نەدۆزرایەوە"
+        )
+      );
+    }
+
+    if (text) {
+      text.style.display =
+        "none";
+    }
+
+    canvas.style.display =
+      "block";
+
+    var pageNumber =
+      currentPage +
+      1;
+
+    return currentPdfDoc
+      .getPage(
+        pageNumber
+      )
+      .then(
+        function (
+          page
+        ) {
+
+          var viewport =
+            page.getViewport({
+              scale:
+                2
+            });
+
+          var context =
+            canvas.getContext(
+              "2d"
+            );
+
+          if (!context) {
+            throw new Error(
+              "Canvas context missing"
+            );
+          }
+
+          canvas.width =
+            Math.ceil(
+              viewport.width
+            );
+
+          canvas.height =
+            Math.ceil(
+              viewport.height
+            );
+
+          return page
+            .render({
+              canvasContext:
+                context,
+
+              viewport:
+                viewport
+            })
+            .promise;
+        }
+      )
+      .then(
+        function () {
+          applyCanvasZoom();
+          updateZoomReadout();
+        }
+      );
+  }
+
+  /* =======================================================
+     TEXT PAGE
+     ======================================================= */
+
+  function renderTextPage(
+    requestId
+  ) {
+
+    var canvas =
+      $("pdfCanvas");
+
+    var box =
+      $("readerText");
+
+    if (!box) {
+      return;
+    }
+
+    if (canvas) {
+      canvas.style.display =
+        "none";
+    }
+
+    box.style.display =
+      "block";
+
+    if (!currentBook) {
+      return;
+    }
+
+    var key =
+      currentBook.id +
+      "_" +
+      currentPage;
+
+    /*
+     * AI OCR text has priority.
+     */
+    if (
+      aiPages[key]
+    ) {
+
+      paintText(
+        aiPages[key]
+      );
+
+      updateZoomReadout();
+
+      return Promise.resolve();
+    }
+
+    /*
+     * Rebuild text directly from the live PDF.
+     * This fixes old stored English text too.
+     */
+    if (
+      currentPdfDoc
+    ) {
+
+      return currentPdfDoc
+        .getPage(
+          currentPage +
+            1
+        )
+        .then(
+          function (
+            page
+          ) {
+
+            return page.getTextContent({
+              normalizeWhitespace:
+                false,
+
+              disableCombineTextItems:
+                true
+            });
+          }
+        )
+        .then(
+          function (
+            content
+          ) {
+
+            if (
+              requestId !==
+              renderRequestId
+            ) {
+              return;
+            }
+
+            var rebuilt =
+              reconstructPdfText(
+                content.items
+              );
+
+            if (
+              rebuilt
+            ) {
+
+              if (
+                currentBook.pages
+              ) {
+
+                currentBook.pages[
+                  currentPage
+                ] =
+                  rebuilt;
+              }
+
+              paintText(
+                rebuilt
+              );
+
+              updateZoomReadout();
+
+              return;
+            }
+
+            renderStoredText(
+              box,
+              ""
+            );
+          }
+        )
+        .catch(
+          function (
+            error
+          ) {
+
+            console.error(
+              "Text extraction:",
+              error
+            );
+
+            if (
+              requestId !==
+              renderRequestId
+            ) {
+              return;
+            }
+
+            renderStoredText(
+              box,
+              currentBook.pages &&
+                currentBook.pages[
+                  currentPage
+                ]
+                ? currentBook.pages[
+                    currentPage
+                  ]
+                : ""
+            );
+          }
+        );
+    }
+
+    renderStoredText(
+      box,
+      currentBook.pages &&
+        currentBook.pages[
+          currentPage
+        ]
+        ? currentBook.pages[
+            currentPage
+          ]
+        : ""
+    );
+  }
+
+  function renderStoredText(
+    box,
     text
   ) {
+
     var value =
       String(
         text || ""
-      );
+      ).trim();
 
-    var ku =
-      (
-        value.match(
-          /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7\u06F6]/g
-        ) || []
-      ).length;
+    if (!value) {
 
-    var en =
-      (
-        value.match(
-          /[A-Za-z]/g
-        ) || []
-      ).length;
+      box.className =
+        "rtext en ltr";
 
-    var ar =
-      (
-        value.match(
-          /[\u0600-\u06FF]/g
-        ) || []
-      ).length;
+      box.style.fontSize =
+        "14px";
 
-    var fa =
-      (
-        value.match(
-          /[\u067E\u0686\u0698\u06AF]/g
-        ) || []
-      ).length;
+      box.innerHTML =
+        '<div style="padding:55px 18px;text-align:center;color:var(--muted);line-height:2">' +
 
-    if (
-      ku >= 2
-    ) {
-      return "ku";
+        '<i class="fa-solid fa-robot" style="font-size:34px;color:var(--b);display:block;margin-bottom:10px"></i>' +
+
+        "لەسەر ئەم لاپەڕەیە دەقی دیجیتاڵی نییە.<br>" +
+
+        "دوگمەی 🤖 دابگرە بۆ دەرهێنانی دەق." +
+
+        "</div>";
+
+      updateZoomReadout();
+
+      return;
     }
 
-    if (
-      fa >= 2 &&
-      en === 0
-    ) {
-      return "fa";
-    }
+    paintText(
+      value
+    );
 
-    if (
-      en > ar
-    ) {
-      return "en";
-    }
-
-    if (
-      ar > 0
-    ) {
-      return "ar";
-    }
-
-    return "en";
+    updateZoomReadout();
   }
+
+  /* =======================================================
+     GEMINI OCR
+     ======================================================= */
 
   function getGeminiKey() {
     try {
       return (
         localStorage.getItem(
           "kh_gemini_key"
-        ) || ""
+        ) ||
+        ""
       ).trim();
     } catch (e) {
       return "";
@@ -1034,14 +1831,23 @@
   function geminiPromptFor(
     language
   ) {
+
     if (
       language ===
       "en"
     ) {
+
       return (
-        "Extract this page exactly as readable English text. " +
-        "Preserve words, paragraphs, punctuation and numbers. " +
-        "Return only the extracted text."
+        "Read this book page carefully and extract the text exactly as readable English text.\n" +
+        "IMPORTANT:\n" +
+        "- Never put spaces between letters of the same English word.\n" +
+        "- Keep normal English word boundaries.\n" +
+        "- Preserve punctuation.\n" +
+        "- Preserve headings and paragraphs.\n" +
+        "- Preserve numbers.\n" +
+        "- Do not summarize.\n" +
+        "- Do not explain.\n" +
+        "- Return only the extracted text."
       );
     }
 
@@ -1049,44 +1855,36 @@
       language ===
       "ar"
     ) {
+
       return (
-        "استخرج نص الصفحة كما هو باللغة العربية الفصحى. " +
-        "حافظ على الكلمات وعلامات الترقيم والفقرات. " +
-        "أعد النص فقط دون شرح."
+        "اقرأ صفحة الكتاب بدقة واستخرج النص العربي كما يظهر.\n" +
+        "- لا تضع مسافات بين حروف الكلمة الواحدة.\n" +
+        "- حافظ على الكلمات وعلامات الترقيم والفقرات والعناوين والأرقام.\n" +
+        "- لا تلخص.\n" +
+        "- لا تشرح.\n" +
+        "- أعد النص فقط."
       );
     }
 
     return (
-      "ئەم لاپەڕەیە بە وردی بخوێنەوە و تەنها دەقی " +
-      "کوردی سۆرانیی ستاندارد و پاک بۆ دەربکە. " +
-      "بادینی، کورمانجی، فارسی یان لاتینی بەکارمەهێنە. " +
-      "هەموو وشەکان، خاڵبەندی و ڕیزبەندی پاراگرافەکان بپارێزە. " +
-      "تەنها خودی دەقەکە بنووسەوە."
+      "ئەم لاپەڕەی کتێبە بە وردی بخوێنەوە و دەقەکەی دەربهێنە.\n" +
+      "- تەنها کوردی سۆرانیی ستاندارد بەکاربهێنە.\n" +
+      "- بادینی یان کورمانجی بەکارمەهێنە.\n" +
+      "- فارسی بەجێی وشەی کوردی مەهێنە.\n" +
+      "- لاتینی مەنووسە.\n" +
+      "- لەنێوان پیتەکانی هەمان وشەدا بۆشایی مەخە.\n" +
+      "- وشە، خاڵبەندی، سەردێڕ و پاراگرافەکان بپارێزە.\n" +
+      "- پوختە مەکە.\n" +
+      "- هیچ شروڤەیەک مەدە.\n" +
+      "- تەنها دەقی دەرهێنراو بگەڕێنەوە."
     );
   }
 
   function extractTextWithGemini() {
+
     if (
       aiLoading
     ) {
-      return;
-    }
-
-    var key =
-      getGeminiKey();
-
-    if (!key) {
-      toast(
-        "تکایە کلیلی Gemini لە ڕێکخستنەکان دابنێ"
-      );
-
-      if (
-        window.AppLib &&
-        window.AppLib.openSettings
-      ) {
-        window.AppLib.openSettings();
-      }
-
       return;
     }
 
@@ -1094,6 +1892,7 @@
       !currentBook ||
       !currentPdfDoc
     ) {
+
       toast(
         "لاپەڕەی PDF بەردەست نییە"
       );
@@ -1101,331 +1900,391 @@
       return;
     }
 
+    var apiKey =
+      getGeminiKey();
+
+    if (!apiKey) {
+
+      toast(
+        "تکایە کلیلی Gemini لە ڕێکخستنەکان دابنێ"
+      );
+
+      if (
+        window.AppLib &&
+        typeof window.AppLib.openSettings ===
+          "function"
+      ) {
+
+        window.AppLib.openSettings();
+      }
+
+      return;
+    }
+
     aiLoading =
       true;
 
+    var button =
+      $("viewToggleBtn");
+
+    if (button) {
+
+      button.disabled =
+        true;
+
+      button.innerHTML =
+        '<i class="fa-solid fa-spinner fa-spin"></i>' +
+        "<span>خەریکە...</span>";
+    }
+
     toast(
-      "Gemini خەریکی دەرهێنانی دەقەکەیە..."
+      "Gemini خەریکی خوێندنەوەی لاپەڕەکەیە..."
     );
 
     currentPdfDoc
       .getPage(
-        currentPage + 1
+        currentPage +
+          1
       )
-      .then(function (page) {
-        var viewport =
-          page.getViewport({
-            scale: 2
-          });
+      .then(
+        function (
+          page
+        ) {
 
-        var canvas =
-          document.createElement(
-            "canvas"
-          );
+          var viewport =
+            page.getViewport({
+              scale:
+                2
+            });
 
-        canvas.width =
-          Math.ceil(
-            viewport.width
-          );
+          var tempCanvas =
+            document.createElement(
+              "canvas"
+            );
 
-        canvas.height =
-          Math.ceil(
-            viewport.height
-          );
+          tempCanvas.width =
+            Math.ceil(
+              viewport.width
+            );
 
-        var context =
-          canvas.getContext(
-            "2d"
-          );
+          tempCanvas.height =
+            Math.ceil(
+              viewport.height
+            );
 
-        if (!context) {
-          throw new Error(
-            "Canvas context missing"
+          var context =
+            tempCanvas.getContext(
+              "2d"
+            );
+
+          if (!context) {
+            throw new Error(
+              "Temporary canvas unavailable"
+            );
+          }
+
+          return page
+            .render({
+              canvasContext:
+                context,
+
+              viewport:
+                viewport
+            })
+            .promise
+            .then(
+              function () {
+
+                return tempCanvas
+                  .toDataURL(
+                    "image/jpeg",
+                    0.9
+                  )
+                  .split(
+                    ","
+                  )[1];
+              }
+            );
+        }
+      )
+      .then(
+        function (
+          base64
+        ) {
+
+          var endpoint =
+            "https://generativelanguage.googleapis.com/v1beta/models/" +
+            encodeURIComponent(
+              GEMINI_MODEL
+            ) +
+            ":generateContent";
+
+          var payload = {
+            contents: [
+              {
+                parts: [
+                  {
+                    text:
+                      geminiPromptFor(
+                        currentBook.lang
+                      )
+                  },
+
+                  {
+                    inline_data: {
+                      mime_type:
+                        "image/jpeg",
+
+                      data:
+                        base64
+                    }
+                  }
+                ]
+              }
+            ]
+          };
+
+          return fetch(
+            endpoint,
+            {
+              method:
+                "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json",
+
+                "x-goog-api-key":
+                  apiKey
+              },
+
+              body:
+                JSON.stringify(
+                  payload
+                )
+            }
           );
         }
-
-        return page
-          .render({
-            canvasContext:
-              context,
-            viewport:
-              viewport
-          })
-          .promise
-          .then(
-            function () {
-              return canvas
-                .toDataURL(
-                  "image/jpeg",
-                  0.88
-                )
-                .split(",")[1];
-            }
-          );
-      })
-      .then(function (
-        base64
-      ) {
-        var url =
-          "https://generativelanguage.googleapis.com/v1beta/models/" +
-          encodeURIComponent(
-            GEMINI_MODEL
-          ) +
-          ":generateContent";
-
-        var payload = {
-          contents: [
-            {
-              parts: [
-                {
-                  text:
-                    geminiPromptFor(
-                      currentBook.lang
-                    )
-                },
-                {
-                  inline_data: {
-                    mime_type:
-                      "image/jpeg",
-                    data:
-                      base64
-                  }
-                }
-              ]
-            }
-          ]
-        };
-
-        return fetch(
-          url,
-          {
-            method:
-              "POST",
-            headers: {
-              "Content-Type":
-                "application/json",
-              "x-goog-api-key":
-                key
-            },
-            body:
-              JSON.stringify(
-                payload
-              )
-          }
-        );
-      })
+      )
       .then(
-        function (response) {
-          if (!response.ok) {
-            return response
-              .json()
-              .catch(
-                function () {
-                  return null;
-                }
-              )
-              .then(function (
+        function (
+          response
+        ) {
+
+          return response
+            .json()
+            .catch(
+              function () {
+                return {};
+              }
+            )
+            .then(
+              function (
                 data
               ) {
-                var message =
-                  data &&
-                  data.error &&
-                  data.error
-                    .message
-                    ? data.error
-                        .message
-                    : "HTTP " +
-                      response.status;
 
-                throw new Error(
-                  message
-                );
-              });
+                if (
+                  !response.ok
+                ) {
+
+                  var message =
+                    data &&
+                    data.error &&
+                    data.error.message
+                      ? data.error.message
+                      : "Gemini HTTP " +
+                        response.status;
+
+                  throw new Error(
+                    message
+                  );
+                }
+
+                return data;
+              }
+            );
+        }
+      )
+      .then(
+        function (
+          data
+        ) {
+
+          var parts =
+            data &&
+            data.candidates &&
+            data.candidates[0] &&
+            data.candidates[0]
+              .content &&
+            data.candidates[0]
+              .content.parts
+              ? data.candidates[0]
+                  .content.parts
+              : [];
+
+          var text =
+            parts
+              .map(
+                function (
+                  part
+                ) {
+
+                  return (
+                    part &&
+                    part.text
+                      ? part.text
+                      : ""
+                  );
+                }
+              )
+              .join(
+                "\n"
+              )
+              .trim();
+
+          if (!text) {
+
+            throw new Error(
+              "Gemini دەقی لاپەڕەکە نەگەڕاندەوە"
+            );
           }
 
-          return response.json();
-        }
-      )
-      .then(function (
-        data
-      ) {
-        var parts =
-          data &&
-          data.candidates &&
-          data.candidates[0] &&
-          data.candidates[0]
-            .content &&
-          data.candidates[0]
-            .content.parts
-            ? data.candidates[0]
-                .content.parts
-            : [];
+          var key =
+            currentBook.id +
+            "_" +
+            currentPage;
 
-        var text =
-          parts
-            .map(function (part) {
-              return part &&
-                part.text
-                ? part.text
-                : "";
-            })
-            .join("\n")
-            .trim();
+          aiPages[key] =
+            text;
 
-        if (!text) {
-          throw new Error(
-            "دەق نەدۆزرایەوە"
+          saveJSON(
+            "kh_ai_pages",
+            aiPages
+          );
+
+          viewMode =
+            "text";
+
+          pageKurdish =
+            false;
+
+          var kurButton =
+            $("readerKurdish");
+
+          if (kurButton) {
+            kurButton.classList.remove(
+              "active"
+            );
+          }
+
+          aiLoading =
+            false;
+
+          updateViewButton();
+          updateReaderStatus();
+
+          renderPage();
+
+          toast(
+            "دەقەکە بە سەرکەوتوویی دەرهێنرا"
           );
         }
-
-        var pageKey =
-          currentBook.id +
-          "_" +
-          currentPage;
-
-        aiPages[
-          pageKey
-        ] = text;
-
-        saveJSON(
-          "kh_ai_pages",
-          aiPages
-        );
-
-        viewMode =
-          "text";
-
-        aiLoading =
-          false;
-
-        renderPage();
-
-        toast(
-          "دەقەکە دەرهێنرا ✨"
-        );
-      })
-      .catch(function (
-        error
-      ) {
-        aiLoading =
-          false;
-
-        console.error(
-          "Gemini OCR:",
-          error
-        );
-
-        toast(
-          "Gemini: " +
-            (
-              error.message ||
-              "هەڵە"
-            ).slice(
-              0,
-              90
-            )
-        );
-      });
-  }
-
-  function detectSourceLang(
-    text
-  ) {
-    if (
-      window.AppLib &&
-      typeof window.AppLib.detectSourceLang ===
-        "function"
-    ) {
-      return window.AppLib.detectSourceLang(
-        text
-      );
-    }
-
-    var value =
-      String(
-        text || ""
-      ).trim();
-
-    var ku =
-      (
-        value.match(
-          /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7\u06F6]/g
-        ) || []
-      ).length;
-
-    var english =
-      (
-        value.match(
-          /[A-Za-z]/g
-        ) || []
-      ).length;
-
-    var arabic =
-      (
-        value.match(
-          /[\u0600-\u06FF]/g
-        ) || []
-      ).length;
-
-    if (
-      ku >= 1
-    ) {
-      return "ku";
-    }
-
-    if (
-      english &&
-      english >= arabic
-    ) {
-      return "en";
-    }
-
-    return "ar";
-  }
-
-  function translateText(
-    text,
-    targetLang
-  ) {
-    if (
-      window.AppLib &&
-      typeof window.AppLib.translateText ===
-        "function"
-    ) {
-      return window.AppLib.translateText(
-        text,
-        targetLang
-      );
-    }
-
-    return Promise.reject(
-      new Error(
-        "translateText unavailable"
       )
-    );
+      .catch(
+        function (
+          error
+        ) {
+
+          aiLoading =
+            false;
+
+          console.error(
+            "Gemini OCR:",
+            error
+          );
+
+          updateViewButton();
+
+          toast(
+            "Gemini: " +
+              (
+                error.message ||
+                "هەڵە"
+              ).slice(
+                0,
+                120
+              )
+          );
+        }
+      )
+      .finally(
+        function () {
+
+          aiLoading =
+            false;
+
+          if (button) {
+            button.disabled =
+              false;
+          }
+
+          updateViewButton();
+        }
+      );
   }
 
-  function showTranslatedPage(
-    text
-  ) {
-    var box =
-      $("readerText");
+  function updateViewButton() {
 
-    if (!box) return;
+    var button =
+      $("viewToggleBtn");
 
-    box.className =
-      "rtext ku rtl";
+    if (!button) {
+      return;
+    }
 
-    box.style.fontSize =
-      readerFont +
-      "px";
+    button.disabled =
+      false;
 
-    paintText(
-      text
-    );
+    if (aiLoading) {
+
+      button.innerHTML =
+        '<i class="fa-solid fa-spinner fa-spin"></i>' +
+        "<span>خەریکە...</span>";
+
+      return;
+    }
+
+    if (
+      viewMode ===
+      "canvas"
+    ) {
+
+      button.innerHTML =
+        '<i class="fa-solid fa-robot"></i>' +
+        "<span>دەق</span>";
+
+      button.classList.remove(
+        "active"
+      );
+
+    } else {
+
+      button.innerHTML =
+        '<i class="fa-regular fa-image"></i>' +
+        "<span>وێنە</span>";
+
+      button.classList.add(
+        "active"
+      );
+    }
   }
+
+  /* =======================================================
+     KURDISH PAGE TRANSLATION
+     ======================================================= */
 
   function toggleKurdishPage() {
+
     if (!currentBook) {
       return;
     }
@@ -1439,6 +2298,7 @@
       $("readerKurdish");
 
     if (button) {
+
       button.classList.toggle(
         "active",
         pageKurdish
@@ -1448,6 +2308,7 @@
     if (
       !pageKurdish
     ) {
+
       renderPage();
       return;
     }
@@ -1457,32 +2318,40 @@
       "_" +
       currentPage;
 
-    if (
-      translatedPages[key]
-    ) {
-      showTranslatedPage(
-        translatedPages[key]
+    var cached =
+      translatedPages[key];
+
+    if (cached) {
+
+      viewMode =
+        "text";
+
+      paintText(
+        cached
       );
+
+      updateViewButton();
+      updateZoomReadout();
 
       return;
     }
 
     var sourceText =
+      aiPages[key] ||
       (
-        aiPages[key] ||
-        (
-          currentBook.pages &&
-          currentBook.pages[
-            currentPage
-          ]
-        ) ||
-        ""
+        currentBook.pages &&
+        currentBook.pages[
+          currentPage
+        ]
+      ) ||
+      "";
+
+    sourceText =
+      String(
+        sourceText
       ).trim();
 
     if (!sourceText) {
-      toast(
-        "سەرەتا دەقی لاپەڕەکە بە 🤖 دەربهێنە"
-      );
 
       pageKurdish =
         false;
@@ -1493,390 +2362,180 @@
         );
       }
 
-      renderPage();
+      toast(
+        "سەرەتا دەقی لاپەڕەکە دەربهێنە"
+      );
+
       return;
     }
 
     var box =
       $("readerText");
 
-    if (box) {
-      box.className =
-        "rtext ku rtl";
-
-      box.textContent =
-        "خەریکی وەرگێڕانە...";
-    }
-
-    translateText(
-      sourceText,
-      "ckb"
-    )
-      .then(function (
-        translation
-      ) {
-        if (!translation) {
-          throw new Error(
-            "empty translation"
-          );
-        }
-
-        translatedPages[key] =
-          translation;
-
-        saveJSON(
-          "kh_translated_pages",
-          translatedPages
-        );
-
-        showTranslatedPage(
-          translation
-        );
-
-        toast(
-          "وەرگێڕان تەواو بوو"
-        );
-      })
-      .catch(function (
-        error
-      ) {
-        console.error(
-          "Page translation:",
-          error
-        );
-
-        pageKurdish =
-          false;
-
-        if (button) {
-          button.classList.remove(
-            "active"
-          );
-        }
-
-        renderPage();
-
-        toast(
-          "وەرگێڕان سەرکەوتوو نەبوو"
-        );
-      });
-  }
-
-  function applyCanvasZoom() {
     var canvas =
       $("pdfCanvas");
-
-    if (!canvas) {
-      return;
-    }
-
-    canvas.style.display =
-      "block";
-
-    canvas.style.width =
-      (
-        canvasZoom * 100
-      ).toFixed(0) +
-      "%";
-
-    canvas.style.maxWidth =
-      "none";
-
-    canvas.style.height =
-      "auto";
-
-    canvas.style.margin =
-      "0 auto";
-
-    var paper =
-      document.querySelector(
-        ".paper"
-      );
-
-    if (paper) {
-      paper.style.width =
-        "100%";
-
-      paper.style.maxWidth =
-        "820px";
-
-      paper.style.overflow =
-        "visible";
-    }
-  }
-
-  function setCanvasZoom(
-    value
-  ) {
-    canvasZoom =
-      Math.max(
-        0.75,
-        Math.min(
-          2.5,
-          Number(value) || 1
-        )
-      );
-
-    applyCanvasZoom();
-  }
-
-  function renderCanvasPage() {
-    if (
-      !currentPdfDoc ||
-      !currentBook
-    ) {
-      return Promise.resolve();
-    }
-
-    var canvas =
-      $("pdfCanvas");
-
-    if (!canvas) {
-      return Promise.reject(
-        new Error(
-          "pdfCanvas نەدۆزرایەوە"
-        )
-      );
-    }
-
-    var text =
-      $("readerText");
-
-    if (text) {
-      text.style.display =
-        "none";
-    }
-
-    canvas.style.display =
-      "block";
-
-    return currentPdfDoc
-      .getPage(
-        currentPage + 1
-      )
-      .then(function (page) {
-        var scale =
-          2;
-
-        var viewport =
-          page.getViewport({
-            scale:
-              scale
-          });
-
-        var context =
-          canvas.getContext(
-            "2d"
-          );
-
-        if (!context) {
-          throw new Error(
-            "Canvas context missing"
-          );
-        }
-
-        canvas.width =
-          Math.floor(
-            viewport.width
-          );
-
-        canvas.height =
-          Math.floor(
-            viewport.height
-          );
-
-        return page
-          .render({
-            canvasContext:
-              context,
-            viewport:
-              viewport
-          })
-          .promise;
-      })
-      .then(function () {
-        applyCanvasZoom();
-      });
-  }
-
-  function renderTextPage() {
-    var canvas =
-      $("pdfCanvas");
-
-    var box =
-      $("readerText");
 
     if (canvas) {
       canvas.style.display =
         "none";
     }
 
-    if (!box) {
-      return;
-    }
+    if (box) {
 
-    box.style.display =
-      "block";
+      box.style.display =
+        "block";
 
-    var key =
-      currentBook.id +
-      "_" +
-      currentPage;
-
-    var text =
-      (
-        aiPages[key] ||
-        (
-          currentBook.pages &&
-          currentBook.pages[
-            currentPage
-          ]
-        ) ||
-        ""
-      ).trim();
-
-    if (!text) {
       box.className =
-        "rtext " +
-        (
-          currentBook.lang ===
-          "en"
-            ? "en ltr"
-            : currentBook.lang ===
-              "ar"
-            ? "ar rtl"
-            : "ku rtl"
-        );
+        "rtext ku rtl";
 
       box.style.fontSize =
-        "14px";
+        readerFont +
+        "px";
 
       box.innerHTML =
-        '<div style="padding:55px 18px;text-align:center;color:var(--muted);line-height:2">' +
-        '<i class="fa-solid fa-robot" style="font-size:34px;color:var(--b);display:block;margin-bottom:10px"></i>' +
-        "لەسەر ئەم لاپەڕەیە دەقی دیجیتاڵی نییە.<br>" +
-        "دوگمەی 🤖 دابگرە بۆ دەرهێنانی دەق." +
-        "</div>";
-
-      return;
+        '<div class="dictionary-loading">خەریکی وەرگێڕانە...</div>';
     }
 
-    var lang =
-      currentBook.lang;
+    translateText(
+      sourceText,
+      "ckb"
+    )
+      .then(
+        function (
+          translated
+        ) {
+
+          if (!translated) {
+            throw new Error(
+              "Empty translation"
+            );
+          }
+
+          translatedPages[key] =
+            translated;
+
+          saveJSON(
+            "kh_translated_pages",
+            translatedPages
+          );
+
+          viewMode =
+            "text";
+
+          paintText(
+            translated
+          );
+
+          updateViewButton();
+          updateZoomReadout();
+
+          toast(
+            "وەرگێڕانی کوردی تەواو بوو"
+          );
+        }
+      )
+      .catch(
+        function (
+          error
+        ) {
+
+          console.error(
+            "Kurdish translation:",
+            error
+          );
+
+          pageKurdish =
+            false;
+
+          if (button) {
+            button.classList.remove(
+              "active"
+            );
+          }
+
+          renderPage();
+
+          toast(
+            "وەرگێڕان سەرکەوتوو نەبوو"
+          );
+        }
+      );
+  }
+
+  function translateText(
+    text,
+    targetLang
+  ) {
 
     if (
-      aiPages[key]
+      window.AppLib &&
+      typeof window.AppLib.translateText ===
+        "function"
     ) {
-      lang =
-        detectPageLanguage(
-          text
-        );
+
+      return window.AppLib.translateText(
+        text,
+        targetLang
+      );
     }
 
-    box.className =
-      "rtext " +
-      (
-        lang ===
-        "en"
-          ? "en ltr"
-          : lang ===
-            "ar"
-          ? "ar rtl"
-          : lang ===
-            "fa"
-          ? "fa rtl"
-          : "ku rtl"
-      );
-
-    box.style.fontSize =
-      readerFont +
-      "px";
-
-    paintText(
-      text
+    return Promise.reject(
+      new Error(
+        "Translation service unavailable"
+      )
     );
   }
 
-  function updateViewButton() {
-    var button =
-      $("viewToggleBtn");
-
-    if (!button) {
-      return;
-    }
-
-    if (
-      viewMode ===
-      "canvas"
-    ) {
-      button.innerHTML =
-        '<i class="fa-solid fa-robot"></i>' +
-        '<span>دەق</span>';
-
-      button.classList.remove(
-        "active"
-      );
-
-      return;
-    }
-
-    button.innerHTML =
-      '<i class="fa-regular fa-image"></i>' +
-      '<span>وێنە</span>';
-
-    button.classList.add(
-      "active"
-    );
-  }
+  /* =======================================================
+     PAGE RENDER
+     ======================================================= */
 
   function renderPage() {
-    if (
-      !currentBook
-    ) {
+
+    if (!currentBook) {
       return;
     }
+
+    var requestId =
+      ++renderRequestId;
 
     stopSpeech();
 
     updateReaderStatus();
-
-    var key =
-      currentBook.id +
-      "_" +
-      currentPage;
-
-    if (
-      $("rTitle")
-    ) {
-      $("rTitle").textContent =
-        currentBook.title;
-    }
-
-    var savedPage =
-      Number(
-        currentBook.currentPage
-      ) || 0;
-
-    setBookmarkVisual(
-      savedPage ===
-        currentPage &&
-        currentBook.bookmarked ===
-          true
-    );
+    updateZoomReadout();
+    updateViewButton();
 
     if (
       pageKurdish
     ) {
-      var translated =
-        translatedPages[key];
 
-      if (translated) {
-        showTranslatedPage(
-          translated
+      var key =
+        currentBook.id +
+        "_" +
+        currentPage;
+
+      if (
+        translatedPages[key]
+      ) {
+
+        viewMode =
+          "text";
+
+        paintText(
+          translatedPages[key]
         );
-      } else {
-        toggleKurdishPage();
+
+        updateViewButton();
+        updateZoomReadout();
+
+        return;
       }
+
+      /*
+       * If no translated cache exists, translation
+       * function will be called by toggleKurdishPage.
+       */
+      toggleKurdishPage();
 
       return;
     }
@@ -1886,73 +2545,61 @@
         "canvas" &&
       currentPdfDoc
     ) {
-      renderCanvasPage().catch(
-        function (error) {
-          console.error(
-            "Canvas render:",
+
+      renderCanvasPage()
+        .catch(
+          function (
             error
-          );
+          ) {
 
-          viewMode =
-            "text";
+            if (
+              requestId !==
+              renderRequestId
+            ) {
+              return;
+            }
 
-          renderTextPage();
+            console.error(
+              "Canvas render error:",
+              error
+            );
 
-          updateViewButton();
+            viewMode =
+              "text";
 
-          toast(
-            "پیشاندانی PDF سەرکەوتوو نەبوو"
-          );
-        }
-      );
+            updateViewButton();
+
+            renderTextPage(
+              requestId
+            );
+
+            updateZoomReadout();
+          }
+        );
+
     } else {
-      renderTextPage();
-    }
 
-    updateViewButton();
-
-    currentBook.currentPage =
-      currentPage;
-
-    currentBook.progress =
-      currentBook.pageCount >
-      1
-        ? currentPage /
-          (
-            currentBook.pageCount -
-            1
-          )
-        : 1;
-
-    currentBook.updatedAt =
-      Date.now();
-
-    if (
-      window.AppLib &&
-      typeof window.AppLib.dbPut ===
-        "function"
-    ) {
-      window.AppLib.dbPut(
-        currentBook
-      ).catch(
-        function (error) {
-          console.error(
-            "reader save:",
-            error
-          );
-        }
+      renderTextPage(
+        requestId
       );
     }
+
+    updateReaderStatus();
+    updateZoomReadout();
   }
 
   function changePage(
     delta
   ) {
-    if (
-      !currentBook
-    ) {
+
+    if (!currentBook) {
       return;
     }
+
+    var total =
+      Number(
+        currentBook.pageCount
+      ) || 1;
 
     var next =
       currentPage +
@@ -1961,7 +2608,7 @@
     if (
       next < 0 ||
       next >=
-        currentBook.pageCount
+        total
     ) {
       return;
     }
@@ -1974,6 +2621,73 @@
     pageKurdish =
       false;
 
+    canvasZoom =
+      1;
+
+    var kurButton =
+      $("readerKurdish");
+
+    if (kurButton) {
+      kurButton.classList.remove(
+        "active"
+      );
+    }
+
+    updateReaderStatus();
+    updateZoomReadout();
+
+    renderPage();
+  }
+
+  function goToPage(
+    pageNumber
+  ) {
+
+    if (!currentBook) {
+      return;
+    }
+
+    var total =
+      Number(
+        currentBook.pageCount
+      ) || 1;
+
+    var number =
+      Number(
+        pageNumber
+      );
+
+    if (
+      !Number.isFinite(
+        number
+      )
+    ) {
+      return;
+    }
+
+    number =
+      Math.max(
+        1,
+        Math.min(
+          total,
+          Math.round(
+            number
+          )
+        )
+      );
+
+    stopSpeech();
+
+    currentPage =
+      number -
+      1;
+
+    pageKurdish =
+      false;
+
+    canvasZoom =
+      1;
+
     var button =
       $("readerKurdish");
 
@@ -1983,16 +2697,19 @@
       );
     }
 
-    canvasZoom =
-      1;
+    updateReaderStatus();
+    updateZoomReadout();
 
     renderPage();
   }
 
+  /* =======================================================
+     VIEW TOGGLE
+     ======================================================= */
+
   function toggleView() {
-    if (
-      !currentBook
-    ) {
+
+    if (!currentBook) {
       return;
     }
 
@@ -2007,13 +2724,17 @@
       viewMode ===
       "canvas"
     ) {
+
       if (
         aiPages[key]
       ) {
+
         viewMode =
           "text";
 
         renderPage();
+        updateViewButton();
+        updateZoomReadout();
 
         return;
       }
@@ -2026,13 +2747,33 @@
     viewMode =
       "canvas";
 
+    pageKurdish =
+      false;
+
+    var kurButton =
+      $("readerKurdish");
+
+    if (kurButton) {
+      kurButton.classList.remove(
+        "active"
+      );
+    }
+
+    canvasZoom =
+      1;
+
     renderPage();
+    updateViewButton();
+    updateZoomReadout();
   }
 
+  /* =======================================================
+     BOOKMARK / SAVE
+     ======================================================= */
+
   function saveProgress() {
-    if (
-      !currentBook
-    ) {
+
+    if (!currentBook) {
       return;
     }
 
@@ -2057,27 +2798,408 @@
       typeof window.AppLib.dbPut ===
         "function"
     ) {
+
       window.AppLib.dbPut(
         currentBook
       )
-        .then(function () {
-          setBookmarkVisual(
-            true
-          );
+        .then(
+          function () {
 
-          toast(
-            "شوێنی خوێندنەوە پاشەکەوت کرا"
-          );
-        })
-        .catch(function () {
-          toast(
-            "پاشەکەوتکردن سەرکەوتوو نەبوو"
-          );
-        });
+            setBookmarkVisual(
+              true
+            );
+
+            toast(
+              "شوێنی خوێندنەوە پاشەکەوت کرا"
+            );
+          }
+        )
+        .catch(
+          function (
+            error
+          ) {
+
+            console.error(
+              error
+            );
+
+            toast(
+              "پاشەکەوتکردن سەرکەوتوو نەبوو"
+            );
+          }
+        );
     }
   }
 
+  /* =======================================================
+     SPEECH
+     ======================================================= */
+
+  function clearSpeechHighlight() {
+
+    document
+      .querySelectorAll(
+        ".rw.speaking"
+      )
+      .forEach(
+        function (
+          item
+        ) {
+
+          item.classList.remove(
+            "speaking"
+          );
+        }
+      );
+  }
+
+  function updateSpeechButton() {
+
+    var button =
+      $("readerSpeak");
+
+    if (!button) {
+      return;
+    }
+
+    button.classList.toggle(
+      "speaking",
+      speechState ===
+        "playing"
+    );
+
+    button.innerHTML =
+      speechState ===
+        "playing"
+        ? '<i class="fa-solid fa-pause"></i>'
+        : '<i class="fa-solid fa-play"></i>';
+  }
+
+  function stopSpeech(
+    reset
+  ) {
+
+    if (
+      window.speechSynthesis
+    ) {
+      window.speechSynthesis.cancel();
+    }
+
+    clearTimeout(
+      speechTimer
+    );
+
+    speechTimer =
+      null;
+
+    speechState =
+      "stopped";
+
+    clearSpeechHighlight();
+
+    if (
+      reset !==
+      false
+    ) {
+      speechWordIndex =
+        0;
+    }
+
+    updateSpeechButton();
+  }
+
+  function getSpeechLang(
+    value
+  ) {
+
+    var lang =
+      detectWordLanguage(
+        value,
+        currentBook &&
+          currentBook.lang
+      );
+
+    if (
+      lang ===
+      "ku"
+    ) {
+      return "ku-Arab";
+    }
+
+    if (
+      lang ===
+      "ar"
+    ) {
+      return "ar-SA";
+    }
+
+    if (
+      lang ===
+      "fa"
+    ) {
+      return "fa-IR";
+    }
+
+    return "en-US";
+  }
+
+  function speakCurrentWord(
+    element
+  ) {
+
+    if (
+      !element ||
+      !window.speechSynthesis
+    ) {
+      return;
+    }
+
+    var text =
+      element.textContent.trim();
+
+    if (!text) {
+      return;
+    }
+
+    var utterance =
+      new SpeechSynthesisUtterance(
+        text
+      );
+
+    utterance.lang =
+      getSpeechLang(
+        text
+      );
+
+    utterance.rate =
+      speechRate;
+
+    utterance.volume =
+      speechVolume;
+
+    utterance.onstart =
+      function () {
+
+        clearSpeechHighlight();
+
+        element.classList.add(
+          "speaking"
+        );
+      };
+
+    utterance.onend =
+      function () {
+
+        element.classList.remove(
+          "speaking"
+        );
+      };
+
+    utterance.onerror =
+      function () {
+
+        element.classList.remove(
+          "speaking"
+        );
+      };
+
+    window.speechSynthesis.cancel();
+
+    window.speechSynthesis.speak(
+      utterance
+    );
+  }
+
+  function speechWords() {
+    return Array.from(
+      document.querySelectorAll(
+        ".rw"
+      )
+    );
+  }
+
+  function speechDelay(
+    text
+  ) {
+
+    var value =
+      String(
+        text || ""
+      );
+
+    var base =
+      210;
+
+    var length =
+      Math.max(
+        1,
+        value.length
+      );
+
+    var delay =
+      base +
+      length *
+        30;
+
+    if (
+      /[.!?؟]/.test(
+        value
+      )
+    ) {
+
+      delay +=
+        400;
+
+    } else if (
+      /[,،;:]/.test(
+        value
+      )
+    ) {
+
+      delay +=
+        180;
+    }
+
+    return (
+      delay /
+      Math.max(
+        .4,
+        speechRate
+      )
+    );
+  }
+
+  function speechLoop() {
+
+    if (
+      speechState !==
+      "playing"
+    ) {
+      return;
+    }
+
+    var words =
+      speechWords();
+
+    if (
+      speechWordIndex >=
+      words.length
+    ) {
+
+      stopSpeech();
+      return;
+    }
+
+    clearSpeechHighlight();
+
+    var current =
+      words[
+        speechWordIndex
+      ];
+
+    if (!current) {
+      stopSpeech();
+      return;
+    }
+
+    current.classList.add(
+      "speaking"
+    );
+
+    try {
+      current.scrollIntoView({
+        block:
+          "center",
+        behavior:
+          "smooth"
+      });
+    } catch (e) {}
+
+    speechWordIndex++;
+
+    speechTimer =
+      setTimeout(
+        speechLoop,
+        speechDelay(
+          current.textContent
+        )
+      );
+  }
+
+  function startSpeech() {
+
+    if (
+      !window.speechSynthesis
+    ) {
+
+      toast(
+        "خوێندنەوەی دەنگی بەردەست نییە"
+      );
+
+      return;
+    }
+
+    if (
+      viewMode ===
+      "canvas"
+    ) {
+
+      toast(
+        "سەرەتا دەقەکە بە 🤖 دەربهێنە"
+      );
+
+      return;
+    }
+
+    if (
+      speechState ===
+      "playing"
+    ) {
+
+      stopSpeech(
+        false
+      );
+
+      speechState =
+        "paused";
+
+      updateSpeechButton();
+
+      return;
+    }
+
+    if (
+      speechState ===
+      "paused"
+    ) {
+
+      speechState =
+        "playing";
+
+      updateSpeechButton();
+
+      speechLoop();
+
+      return;
+    }
+
+    speechWordIndex =
+      0;
+
+    speechState =
+      "playing";
+
+    updateSpeechButton();
+
+    speechLoop();
+  }
+
+  /* =======================================================
+     TOOLS
+     ======================================================= */
+
   function showReaderTools() {
+
     var tools =
       $("readerTools");
 
@@ -2091,7 +3213,7 @@
       return;
     }
 
-    var musicVol =
+    var musicVolume =
       window.AppLib &&
       typeof window.AppLib.getMusicVolume ===
         "function"
@@ -2102,33 +3224,45 @@
       '<div class="vols">' +
 
       '<div class="vol">' +
-      '<label><span>🎵 دەنگی مۆسیقا</span><b id="mvt">' +
+
+      '<label>' +
+      "<span>🎵 دەنگی مۆسیقا</span>" +
+      '<b id="mvt">' +
       Math.round(
-        musicVol *
+        musicVolume *
           100
       ) +
-      "%</b></label>" +
+      "%</b>" +
+      "</label>" +
+
       '<input id="mvr" type="range" min="0" max="100" value="' +
       Math.round(
-        musicVol *
+        musicVolume *
           100
       ) +
       '">' +
+
       "</div>" +
 
       '<div class="vol">' +
-      '<label><span>🔊 دەنگی خوێندنەوە</span><b id="svt">' +
+
+      "<label>" +
+      "<span>🔊 دەنگی خوێندنەوە</span>" +
+      '<b id="svt">' +
       Math.round(
         speechVolume *
           100
       ) +
-      "%</b></label>" +
+      "%</b>" +
+      "</label>" +
+
       '<input id="svr" type="range" min="0" max="100" value="' +
       Math.round(
         speechVolume *
           100
       ) +
       '">' +
+
       "</div>" +
 
       "</div>" +
@@ -2140,33 +3274,40 @@
       Object.keys(
         THEMES
       )
-        .map(function (key) {
-          var theme =
-            THEMES[key];
+        .map(
+          function (
+            key
+          ) {
 
-          return (
-            '<button data-reader-theme-choice="' +
-            esc(key) +
-            '" title="' +
-            esc(
-              theme.name
-            ) +
-            '" style="background:' +
-            theme.bg +
-            ";outline:" +
-            (
-              key ===
-              readerTheme
-                ? "2px solid var(--a)"
-                : "none"
-            ) +
-            '">' +
-            '<span style="background:' +
-            theme.fg +
-            '"></span>' +
-            "</button>"
-          );
-        })
+            var theme =
+              THEMES[key];
+
+            return (
+              '<button data-reader-theme-choice="' +
+              esc(key) +
+              '" title="' +
+              esc(
+                theme.name
+              ) +
+              '" style="background:' +
+              theme.bg +
+              ";outline:" +
+              (
+                key ===
+                readerTheme
+                  ? "2px solid var(--a)"
+                  : "none"
+              ) +
+              '">' +
+
+              '<span style="background:' +
+              theme.fg +
+              '"></span>' +
+
+              "</button>"
+            );
+          }
+        )
         .join("") +
 
       "</div>";
@@ -2174,21 +3315,24 @@
     var musicRange =
       $("mvr");
 
-    if (
-      musicRange
-    ) {
-      musicRange.oninput =
+    if (musicRange) {
+
+      musicRange.addEventListener(
+        "input",
         function () {
+
           var value =
             Number(
               this.value
-            ) / 100;
+            ) /
+            100;
 
           if (
             window.AppLib &&
             typeof window.AppLib.setMusicVolume ===
               "function"
           ) {
+
             window.AppLib.setMusicVolume(
               value
             );
@@ -2198,6 +3342,7 @@
             $("mvt");
 
           if (label) {
+
             label.textContent =
               Math.round(
                 value *
@@ -2205,26 +3350,41 @@
               ) +
               "%";
           }
-        };
+        }
+      );
     }
 
     var speechRange =
       $("svr");
 
-    if (
-      speechRange
-    ) {
-      speechRange.oninput =
+    if (speechRange) {
+
+      speechRange.addEventListener(
+        "input",
         function () {
+
           speechVolume =
             Number(
               this.value
-            ) / 100;
+            ) /
+            100;
+
+          try {
+
+            localStorage.setItem(
+              "kh_speech_volume",
+              String(
+                speechVolume
+              )
+            );
+
+          } catch (e) {}
 
           var label =
             $("svt");
 
           if (label) {
+
             label.textContent =
               Math.round(
                 speechVolume *
@@ -2232,16 +3392,8 @@
               ) +
               "%";
           }
-
-          try {
-            localStorage.setItem(
-              "kh_speech_volume",
-              String(
-                speechVolume
-              )
-            );
-          } catch (e) {}
-        };
+        }
+      );
     }
 
     tools.classList.add(
@@ -2250,17 +3402,24 @@
   }
 
   function closeReaderTools() {
+
     var tools =
       $("readerTools");
 
     if (tools) {
+
       tools.classList.remove(
         "show"
       );
     }
   }
 
+  /* =======================================================
+     IDLE UI
+     ======================================================= */
+
   function revealChrome() {
+
     var reader =
       $("reader");
 
@@ -2279,11 +3438,13 @@
     idleTimer =
       setTimeout(
         function () {
+
           if (
             reader.classList.contains(
               "show"
             )
           ) {
+
             reader.classList.add(
               "reader-idle"
             );
@@ -2293,196 +3454,218 @@
       );
   }
 
+  /* =======================================================
+     READER ENGINE
+     ======================================================= */
+
   window.ReaderEngine = {
-    open: function (book) {
-      stopSpeech();
 
-      loadSettings();
-
-      currentBook =
-        book;
-
-      currentPdfDoc =
-        null;
-
-      currentPage =
-        Math.max(
-          0,
-          Math.min(
-            (
-              currentBook.pageCount ||
-              1
-            ) - 1,
-            Number(
-              currentBook.currentPage
-            ) || 0
-          )
-        );
-
-      pageKurdish =
-        false;
-
-      canvasZoom =
-        1;
-
-      applyTheme();
-
-      setBookmarkVisual(
-        currentBook.bookmarked ===
-          true
-      );
-
-      var reader =
-        $("reader");
-
-      if (reader) {
-        reader.classList.add(
-          "show"
-        );
-      }
-
-      revealChrome();
-
-      var pageText =
-        (
-          currentBook.pages &&
-          currentBook.pages[
-            currentPage
-          ]
-        ) ||
-        "";
-
-      if (
-        currentBook.lang ===
-        "en" &&
-        pageText.trim()
+    open:
+      function (
+        book
       ) {
-        viewMode =
-          "text";
-      } else {
+
+        if (!book) {
+          return;
+        }
+
+        stopSpeech();
+
+        loadSettings();
+
+        currentBook =
+          book;
+
+        currentPdfDoc =
+          null;
+
+        var storedPage =
+          Number(
+            currentBook.currentPage
+          ) || 0;
+
+        var total =
+          Number(
+            currentBook.pageCount
+          ) || 1;
+
+        currentPage =
+          Math.max(
+            0,
+            Math.min(
+              total -
+                1,
+              storedPage
+            )
+          );
+
         viewMode =
           currentBook.pdfData
             ? "canvas"
             : "text";
-      }
 
-      updateReaderStatus();
+        pageKurdish =
+          false;
 
-      var toggle =
-        $("readerKurdish");
+        canvasZoom =
+          1;
 
-      if (toggle) {
-        toggle.classList.remove(
-          "active"
+        applyTheme();
+
+        updateReaderStatus();
+        updateZoomReadout();
+        setBookmarkVisual(
+          currentBook.bookmarked ===
+            true
         );
-      }
 
-      if (
-        currentBook.pdfData
-      ) {
-        var bytes =
-          new Uint8Array(
-            currentBook.pdfData
-          ).slice(
-            0
+        var reader =
+          $("reader");
+
+        if (reader) {
+
+          reader.classList.add(
+            "show"
           );
-
-        if (
-          !window.pdfjsLib
-        ) {
-          toast(
-            "PDF.js بەردەست نییە"
-          );
-
-          viewMode =
-            "text";
-
-          renderPage();
-
-          return;
         }
 
-        pdfjsLib
-          .getDocument({
-            data: bytes
-          })
-          .promise
-          .then(
-            function (pdf) {
-              currentPdfDoc =
-                pdf;
+        revealChrome();
 
-              renderPage();
-            }
-          )
-          .catch(
-            function (error) {
-              console.error(
-                "PDF load:",
-                error
-              );
+        var kurButton =
+          $("readerKurdish");
 
-              currentPdfDoc =
-                null;
-
-              viewMode =
-                "text";
-
-              renderPage();
-
-              toast(
-                "PDF نەکراوە، دەقی بەردەست پیشان دەدرێت"
-              );
-            }
+        if (kurButton) {
+          kurButton.classList.remove(
+            "active"
           );
-      } else {
-        renderPage();
-      }
+        }
 
-      if (
-        window.AppLib &&
-        typeof window.AppLib.updateTelegram ===
-          "function"
-      ) {
-        window.AppLib.updateTelegram();
-      }
-    },
+        updateViewButton();
 
-    close: function () {
-      stopSpeech();
+        /*
+         * Always send a fresh COPY to PDF.js.
+         * This prevents ArrayBuffer detachment
+         * from destroying the stored PDF.
+         */
+        if (
+          currentBook.pdfData &&
+          window.pdfjsLib
+        ) {
 
-      clearTimeout(
-        idleTimer
-      );
+          var bytes =
+            new Uint8Array(
+              currentBook.pdfData
+            ).slice(
+              0
+            );
 
-      closeReaderTools();
+          pdfjsLib
+            .getDocument({
+              data:
+                bytes
+            })
+            .promise
+            .then(
+              function (
+                pdf
+              ) {
 
-      var reader =
-        $("reader");
+                currentPdfDoc =
+                  pdf;
 
-      if (reader) {
-        reader.classList.remove(
-          "show"
+                renderPage();
+              }
+            )
+            .catch(
+              function (
+                error
+              ) {
+
+                console.error(
+                  "PDF load:",
+                  error
+                );
+
+                currentPdfDoc =
+                  null;
+
+                viewMode =
+                  "text";
+
+                updateViewButton();
+                renderPage();
+
+                toast(
+                  "PDF بە Canvas نەکراوە، دەقی بەردەست پیشان دەدرێت"
+                );
+              }
+            );
+
+        } else {
+
+          renderPage();
+        }
+
+        if (
+          window.AppLib &&
+          typeof window.AppLib.updateTelegram ===
+            "function"
+        ) {
+
+          window.AppLib.updateTelegram();
+        }
+      },
+
+    close:
+      function () {
+
+        stopSpeech();
+
+        clearTimeout(
+          idleTimer
         );
-      }
 
-      currentBook =
-        null;
+        closeReaderTools();
 
-      currentPdfDoc =
-        null;
+        var reader =
+          $("reader");
 
-      pageKurdish =
-        false;
+        if (reader) {
 
-      if (
-        window.AppLib &&
-        typeof window.AppLib.updateTelegram ===
-          "function"
-      ) {
-        window.AppLib.updateTelegram();
-      }
-    },
+          reader.classList.remove(
+            "show"
+          );
+
+          reader.classList.remove(
+            "reader-idle"
+          );
+        }
+
+        currentBook =
+          null;
+
+        currentPdfDoc =
+          null;
+
+        currentPage =
+          0;
+
+        pageKurdish =
+          false;
+
+        ++renderRequestId;
+
+        updateZoomReadout();
+
+        if (
+          window.AppLib &&
+          typeof window.AppLib.updateTelegram ===
+            "function"
+        ) {
+
+          window.AppLib.updateTelegram();
+        }
+      },
 
     setFontSize:
       setFontSize,
@@ -2491,9 +3674,16 @@
       applyTheme
   };
 
+  /* =======================================================
+     ACTIONS
+     ======================================================= */
+
   document.addEventListener(
     "click",
-    function (event) {
+    function (
+      event
+    ) {
+
       var action =
         event.target.closest(
           "[data-action]"
@@ -2510,44 +3700,9 @@
 
       if (
         name ===
-        "toggle-view"
-      ) {
-        toggleView();
-        return;
-      }
-
-      if (
-        name ===
-        "run-gemini"
-      ) {
-        extractTextWithGemini();
-        return;
-      }
-
-      if (
-        name ===
-        "page-prev"
-      ) {
-        changePage(
-          -1
-        );
-        return;
-      }
-
-      if (
-        name ===
-        "page-next"
-      ) {
-        changePage(
-          1
-        );
-        return;
-      }
-
-      if (
-        name ===
         "reader-close"
       ) {
+
         window.ReaderEngine.close();
         return;
       }
@@ -2556,6 +3711,7 @@
         name ===
         "reader-speak"
       ) {
+
         startSpeech();
         return;
       }
@@ -2564,7 +3720,17 @@
         name ===
         "reader-kurdish"
       ) {
+
         toggleKurdishPage();
+        return;
+      }
+
+      if (
+        name ===
+        "toggle-view"
+      ) {
+
+        toggleView();
         return;
       }
 
@@ -2574,6 +3740,7 @@
         name ===
         "reader-music"
       ) {
+
         showReaderTools();
         return;
       }
@@ -2582,7 +3749,32 @@
         name ===
         "tools-close"
       ) {
+
         closeReaderTools();
+        return;
+      }
+
+      if (
+        name ===
+        "page-prev"
+      ) {
+
+        changePage(
+          -1
+        );
+
+        return;
+      }
+
+      if (
+        name ===
+        "page-next"
+      ) {
+
+        changePage(
+          1
+        );
+
         return;
       }
 
@@ -2590,26 +3782,22 @@
         name ===
         "font-up"
       ) {
+
         if (
           viewMode ===
           "canvas"
         ) {
+
           setCanvasZoom(
             canvasZoom +
               0.25
           );
 
-          toast(
-            "زووم: " +
-              Math.round(
-                canvasZoom *
-                  100
-              ) +
-              "%"
-          );
         } else {
+
           setFontSize(
-            readerFont + 1
+            readerFont +
+              1
           );
         }
 
@@ -2620,26 +3808,22 @@
         name ===
         "font-down"
       ) {
+
         if (
           viewMode ===
           "canvas"
         ) {
+
           setCanvasZoom(
             canvasZoom -
               0.25
           );
 
-          toast(
-            "زووم: " +
-              Math.round(
-                canvasZoom *
-                  100
-              ) +
-              "%"
-          );
         } else {
+
           setFontSize(
-            readerFont - 1
+            readerFont -
+              1
           );
         }
 
@@ -2650,58 +3834,34 @@
         name ===
         "save-progress"
       ) {
+
         saveProgress();
-        return;
-      }
-
-      if (
-        name ===
-        "reader-theme"
-      ) {
-        var themeChoice =
-          action.getAttribute(
-            "data-theme"
-          );
-
-        if (
-          themeChoice &&
-          THEMES[
-            themeChoice
-          ]
-        ) {
-          readerTheme =
-            themeChoice;
-
-          try {
-            localStorage.setItem(
-              "kh_reader_theme",
-              readerTheme
-            );
-          } catch (e) {}
-
-          applyTheme();
-          renderPage();
-        }
-
         return;
       }
     }
   );
 
+  /* =======================================================
+     READER THEME CHOICE
+     ======================================================= */
+
   document.addEventListener(
     "click",
-    function (event) {
-      var colorButton =
+    function (
+      event
+    ) {
+
+      var button =
         event.target.closest(
           "[data-reader-theme-choice]"
         );
 
-      if (!colorButton) {
+      if (!button) {
         return;
       }
 
       var key =
-        colorButton.getAttribute(
+        button.getAttribute(
           "data-reader-theme-choice"
         );
 
@@ -2715,104 +3875,166 @@
         key;
 
       try {
+
         localStorage.setItem(
           "kh_reader_theme",
           readerTheme
         );
+
       } catch (e) {}
 
       applyTheme();
-
       showReaderTools();
     }
   );
+
+  /* =======================================================
+     PAGE INPUT
+     ======================================================= */
 
   var pageInput =
     $("pageInput");
 
   if (pageInput) {
+
     pageInput.addEventListener(
       "change",
       function () {
-        if (
-          !currentBook
-        ) {
-          return;
-        }
 
-        var number =
-          Number(
-            this.value || 1
-          );
-
-        number =
-          Math.max(
-            1,
-            Math.min(
-              currentBook.pageCount,
-              number
-            )
-          );
-
-        stopSpeech();
-
-        currentPage =
-          number - 1;
-
-        pageKurdish =
-          false;
-
-        canvasZoom =
-          1;
-
-        var button =
-          $("readerKurdish");
-
-        if (button) {
-          button.classList.remove(
-            "active"
-          );
-        }
-
-        renderPage();
-      }
-    );
-  }
-
-  var reader =
-    $("reader");
-
-  if (reader) {
-    [
-      "pointerdown",
-      "keydown",
-      "wheel",
-      "touchstart",
-      "click"
-    ].forEach(
-      function (eventName) {
-        reader.addEventListener(
-          eventName,
-          revealChrome,
-          {
-            passive: true
-          }
+        goToPage(
+          this.value
         );
       }
     );
+
+    pageInput.addEventListener(
+      "keydown",
+      function (
+        event
+      ) {
+
+        if (
+          event.key ===
+          "Enter"
+        ) {
+
+          goToPage(
+            this.value
+          );
+
+          this.blur();
+        }
+      }
+    );
   }
 
-  var body =
+  /* =======================================================
+     WORD CLICK
+     ======================================================= */
+
+  document.addEventListener(
+    "click",
+    function (
+      event
+    ) {
+
+      var word =
+        event.target.closest(
+          ".rw"
+        );
+
+      if (!word) {
+        return;
+      }
+
+      /*
+       * Do not open dictionary when user is
+       * selecting text by dragging.
+       */
+      var selection =
+        window.getSelection
+          ? window
+              .getSelection()
+              .toString()
+              .trim()
+          : "";
+
+      if (
+        selection &&
+        selection.length >
+          1
+      ) {
+        return;
+      }
+
+      var value =
+        word.getAttribute(
+          "data-word"
+        );
+
+      if (!value) {
+        return;
+      }
+
+      /*
+       * script.js owns the dictionary modal.
+       */
+      if (
+        window.AppLib &&
+        typeof window.AppLib.openWordModal ===
+          "function"
+      ) {
+
+        window.AppLib.openWordModal(
+          value
+        );
+
+        return;
+      }
+
+      /*
+       * The current script.js keeps the word
+       * modal internal, so this fallback dispatches
+       * a custom event for compatibility.
+       */
+      try {
+
+        document.dispatchEvent(
+          new CustomEvent(
+            "xwendnga:word",
+            {
+              detail: {
+                word:
+                  value
+              }
+            }
+          )
+        );
+
+      } catch (e) {}
+    }
+  );
+
+  /* =======================================================
+     TOUCH / SWIPE / PINCH
+     ======================================================= */
+
+  var readerBody =
     $("readerBody");
 
-  if (body) {
-    body.addEventListener(
+  if (readerBody) {
+
+    readerBody.addEventListener(
       "touchstart",
-      function (event) {
+      function (
+        event
+      ) {
+
         if (
           event.touches.length ===
           2
         ) {
+
           var dx =
             event.touches[0]
               .clientX -
@@ -2833,10 +4055,12 @@
 
           pinchStartZoom =
             canvasZoom;
+
         } else if (
           event.touches.length ===
           1
         ) {
+
           touchStartX =
             event.touches[0]
               .clientX;
@@ -2847,13 +4071,17 @@
         }
       },
       {
-        passive: true
+        passive:
+          true
       }
     );
 
-    body.addEventListener(
+    readerBody.addEventListener(
       "touchmove",
-      function (event) {
+      function (
+        event
+      ) {
+
         if (
           event.touches.length ===
             2 &&
@@ -2862,6 +4090,7 @@
           pinchStartDistance >
             0
         ) {
+
           var dx =
             event.touches[0]
               .clientX -
@@ -2880,27 +4109,38 @@
               dy
             );
 
-          setCanvasZoom(
-            pinchStartZoom *
-              (
-                distance /
-                pinchStartDistance
-              )
-          );
+          if (
+            distance >
+            0
+          ) {
+
+            setCanvasZoom(
+              pinchStartZoom *
+                (
+                  distance /
+                  pinchStartDistance
+                )
+            );
+          }
         }
       },
       {
-        passive: true
+        passive:
+          true
       }
     );
 
-    body.addEventListener(
+    readerBody.addEventListener(
       "touchend",
-      function (event) {
+      function (
+        event
+      ) {
+
         if (
           pinchStartDistance >
           0
         ) {
+
           pinchStartDistance =
             0;
 
@@ -2908,9 +4148,11 @@
             Math.round(
               canvasZoom *
                 20
-            ) / 20;
+            ) /
+            20;
 
           applyCanvasZoom();
+          updateZoomReadout();
 
           return;
         }
@@ -2923,6 +4165,7 @@
         }
 
         if (
+          !event.changedTouches ||
           !event.changedTouches.length
         ) {
           return;
@@ -2940,11 +4183,12 @@
 
         if (
           Math.abs(dx) >
-            64 &&
+            65 &&
           Math.abs(dx) >
             Math.abs(dy) *
               1.35
         ) {
+
           changePage(
             dx < 0
               ? 1
@@ -2953,14 +4197,22 @@
         }
       },
       {
-        passive: true
+        passive:
+          true
       }
     );
   }
 
+  /* =======================================================
+     KEYBOARD
+     ======================================================= */
+
   document.addEventListener(
     "keydown",
-    function (event) {
+    function (
+      event
+    ) {
+
       var reader =
         $("reader");
 
@@ -2977,54 +4229,69 @@
         event.key ===
         "ArrowLeft"
       ) {
+
         changePage(
           1
         );
+
+        return;
       }
 
       if (
         event.key ===
         "ArrowRight"
       ) {
+
         changePage(
           -1
         );
+
+        return;
       }
 
       if (
         event.key ===
         "Escape"
       ) {
+
         window.ReaderEngine.close();
+
+        return;
       }
 
       if (
         event.key ===
-        "+" ||
+          "+" ||
         event.key ===
-        "="
+          "="
       ) {
+
         if (
           viewMode ===
           "canvas"
         ) {
+
           setCanvasZoom(
             canvasZoom +
               0.25
           );
         }
+
+        return;
       }
 
       if (
         event.key ===
-        "-" ||
+          "-" ||
         event.key ===
-        "_"
+          "_"
       ) {
+
         if (
           viewMode ===
           "canvas"
         ) {
+
           setCanvasZoom(
             canvasZoom -
               0.25
@@ -3033,4 +4300,37 @@
       }
     }
   );
+
+  /* =======================================================
+     IDLE CHROME
+     ======================================================= */
+
+  var reader =
+    $("reader");
+
+  if (reader) {
+
+    [
+      "pointerdown",
+      "keydown",
+      "wheel",
+      "touchstart",
+      "click"
+    ].forEach(
+      function (
+        eventName
+      ) {
+
+        reader.addEventListener(
+          eventName,
+          revealChrome,
+          {
+            passive:
+              true
+          }
+        );
+      }
+    );
+  }
+
 })();
