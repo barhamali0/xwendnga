@@ -1977,7 +1977,9 @@
       "en"
         ? "english-text"
         : currentWordLang ===
-          "ar"
+            "ar" ||
+          currentWordLang ===
+            "fa"
         ? "arabic-text"
         : "kurdish-text";
 
@@ -2286,7 +2288,19 @@
 
                   '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800;color:#f4c85c;font-size:17px">' +
 
-                  "<span>" +
+                  '<span class="source-word ' +
+                  (
+                    source ===
+                    "en"
+                      ? "english-text"
+                      : source ===
+                          "ar" ||
+                        source ===
+                          "fa"
+                      ? "arabic-text"
+                      : "kurdish-text"
+                  ) +
+                  '">' +
                   esc(item.word) +
                   "</span>" +
 
