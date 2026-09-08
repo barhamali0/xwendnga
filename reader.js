@@ -7,7 +7,7 @@
   "use strict";
 
   var GEMINI_MODEL =
-    "gemini-1.5-flash";
+    "gemini-3.8-flash";
 
   var currentBook = null;
   var currentPage = 0;
@@ -743,7 +743,8 @@
   }
 
   function paintText(
-    text
+    text,
+    contextLang
   ) {
     var box =
       $("readerText");
@@ -772,17 +773,22 @@
             "span"
           );
 
-        span.className =
-          "rw";
-
-        span.textContent =
-          word;
-
         var clean =
           word.replace(
             /^[.,!?;:()"'،؛؟]+|[.,!?;:()"'،؛؟]+$/g,
             ""
           );
+
+        span.className =
+          "rw lang-" +
+          detectWordLang(
+            clean ||
+              word,
+            contextLang
+          );
+
+        span.textContent =
+          word;
 
         if (clean) {
           span.setAttribute(
@@ -954,10 +960,7 @@
           encodeURIComponent(
             GEMINI_MODEL
           ) +
-          ":generateContent?key=" +
-          encodeURIComponent(
-            key
-          );
+          ":generateContent";
 
         var payload = {
           contents: [
@@ -970,8 +973,8 @@
                     )
                 },
                 {
-                  inlineData: {
-                    mimeType:
+                  inline_data: {
+                    mime_type:
                       "image/jpeg",
                     data:
                       base64
@@ -989,7 +992,9 @@
               "POST",
             headers: {
               "Content-Type":
-                "application/json"
+                "application/json",
+              "x-goog-api-key":
+                key
             },
             body:
               JSON.stringify(
@@ -1157,6 +1162,129 @@
     return "ar";
   }
 
+  /*
+   * دیاریکردنی زمانی هەر وشەیەک بە تاکی (بۆ فۆنتی جیاواز بۆ هەر وشەیەک).
+   * پیتی تایبەت بە کوردی (ئ ڕ ڵ ۆ ێ ڤ) نیشانەیەکی بەهێزە — هەر کاتێک
+   * هەبوو، وشەکە بە دڵنیاییەوە کوردییە. بەڵام زۆربەی وشە عەرەبییەکان
+   * پیتی هاوبەشیان لەگەڵ کوردیدا هەیە و هیچ پیتی جیاکەرەوەیان تێدا نییە،
+   * بۆیە لەو حاڵەتەدا پشت بە زمانی گشتیی لاپەڕەکە (contextLang) دەبەستین
+   * نەک هەڵە بکرێت و فۆنتی عەرەبی بدرێتە وشەیەکی کوردی یان بەپێچەوانەوە.
+   */
+  function detectWordLang(
+    word,
+    contextLang
+  ) {
+    var w =
+      String(
+        word || ""
+      );
+
+    if (
+      /[A-Za-z]/.test(
+        w
+      )
+    ) {
+      return "en";
+    }
+
+    if (
+      /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7]/.test(
+        w
+      )
+    ) {
+      return "ku";
+    }
+
+    if (
+      /[\u0600-\u06FF]/.test(
+        w
+      )
+    ) {
+      // پیتی عەرەبی/کوردی هاوبەش — هیچ نیشانەیەکی دیاریکراو نییە،
+      // بۆیە زمانی گشتیی لاپەڕەکە دەسەڵات وەردەگرێت.
+      return contextLang ===
+        "ku"
+        ? "ku"
+        : "ar";
+    }
+
+    // ژمارە/هێما بێ پیت — پشت بە زمانی گشتیی لاپەڕەکە دەبەستین.
+    if (
+      contextLang ===
+        "ku" ||
+      contextLang ===
+        "ar" ||
+      contextLang ===
+        "fa"
+    ) {
+      return contextLang ===
+        "fa"
+        ? "ar"
+        : contextLang;
+    }
+
+    return "en";
+  }
+
+  /*
+   * دیاریکردنی زمانی گشتیی لاپەڕەیەک (بۆ دەقی دەرهێنراوی Gemini).
+   * لێرەدا پێویستمان بە بەربەستێکی بەهێزترە (دووجار پیتی تایبەت بە
+   * کوردی) نەک تەنیا یەک دانە — چونکە ئەگەر نەخێر، یەک پیتی کوردی
+   * لەناو لاپەڕەیەکی سەرەتاییی عەرەبیدا دەتوانێت هەموو لاپەڕەکە
+   * بخاتە دۆخی فۆنتی کوردییەوە. ئەم فەنکشنە تەنیا زمانی سەرەکیی
+   * لاپەڕەکە دیاری دەکات؛ فۆنتی هەر وشەیەک بە detectWordLang خۆی
+   * دیاریدەکرێت.
+   */
+  function detectPageLang(
+    text
+  ) {
+    var sample =
+      String(
+        text || ""
+      ).slice(
+        0,
+        20000
+      );
+
+    var ku =
+      (
+        sample.match(
+          /[\u06D5\u06CE\u0695\u06B5\u06A4\u06C6\u06B7]/g
+        ) || []
+      ).length;
+
+    var en =
+      (
+        sample.match(
+          /[A-Za-z]/g
+        ) || []
+      ).length;
+
+    var ar =
+      (
+        sample.match(
+          /[\u0600-\u06FF]/g
+        ) || []
+      ).length;
+
+    if (ku >= 2) {
+      return "ku";
+    }
+
+    if (
+      en > 0 &&
+      en >= ar
+    ) {
+      return "en";
+    }
+
+    if (ar > 0) {
+      return "ar";
+    }
+
+    return "en";
+  }
+
   function translateText(
     text,
     targetLang
@@ -1195,7 +1323,8 @@
       "px";
 
     paintText(
-      text
+      text,
+      "ku"
     );
   }
 
@@ -1544,18 +1673,10 @@
       currentBook.lang;
 
     if (aiPages[key]) {
-      if (
-        /[A-Za-z]/.test(
+      lang =
+        detectPageLang(
           text
-        ) &&
-        !/[\u0600-\u06FF]/.test(
-          text
-        )
-      ) {
-        lang = "en";
-      } else {
-        lang = "ku";
-      }
+        );
     }
 
     box.className =
@@ -1575,7 +1696,8 @@
       "px";
 
     paintText(
-      text
+      text,
+      lang
     );
   }
 
