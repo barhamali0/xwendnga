@@ -8,6 +8,14 @@
   font-display:swap;
 }
 
+@font-face{
+  font-family:"Noon";
+  src:url("./Noon.ttf") format("truetype");
+  font-style:normal;
+  font-weight:100 900;
+  font-display:swap;
+}
+
 :root{
   --bg:#07111f;
   --bg2:#0d182a;
@@ -24,6 +32,9 @@
   --reader-bg:#f4f6f9;
   --paper:#fff;
   --reader-fg:#1d2a3d;
+  --font-ku:"K24Kurdish","Vazirmatn",sans-serif;
+  --font-ar:"Noon","Noto Naskh Arabic",serif;
+  --font-en:"Manrope",Georgia,"Times New Roman",sans-serif;
 }
 
 *{
@@ -1008,44 +1019,30 @@ main{
 }
 
 .rtext.ku{
-  font-family:
-    "K24Kurdish",
-    "Noto Naskh Arabic",
-    serif;
+  font-family:var(--font-ku);
   font-weight:700;
   line-height:2.15;
 }
 
 .rtext.ar{
-  font-family:
-    "Noto Naskh Arabic",
-    serif;
+  font-family:var(--font-ar);
   line-height:2.15;
 }
 
 .rtext.fa{
-  font-family:
-    "Vazirmatn",
-    "Noto Naskh Arabic",
-    serif;
+  font-family:var(--font-ar);
   line-height:2.1;
 }
 
 .rtext.en{
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif;
+  font-family:var(--font-en);
 }
 
 .source-word.kurdish-text,
 .translation-box.ku-translation,
 .meaning-list.ku-translation,
 .saved-meanings.ku-translation{
-  font-family:
-    "K24Kurdish",
-    "Noto Naskh Arabic",
-    serif!important;
+  font-family:var(--font-ku)!important;
   font-weight:700;
 }
 
@@ -1053,16 +1050,11 @@ main{
 .translation-box.ar-translation,
 .meaning-list.ar-translation,
 .saved-meanings.ar-translation{
-  font-family:
-    "Noto Naskh Arabic",
-    serif!important;
+  font-family:var(--font-ar)!important;
 }
 
 .source-word.english-text{
-  font-family:
-    Georgia,
-    "Times New Roman",
-    serif!important;
+  font-family:var(--font-en)!important;
 }
 
 .translation-box{
@@ -1434,8 +1426,11 @@ body:has(.sheet.open) #telegramBtn{
 #pdfCanvas{border-radius:2px;box-shadow:none;transition:width .22s cubic-bezier(.2,.8,.2,1);will-change:width}
 .rtext{font-family:"Noto Naskh Arabic",serif;font-size:20px;line-height:2.15;text-rendering:optimizeLegibility}
 .rtext.en,.rtext.ltr,.source-word.english-text{font-family:"Manrope",system-ui,sans-serif!important;line-height:1.8;letter-spacing:0}
-.rtext.ku,.source-word.kurdish-text,.translation-box.ku-translation,.meaning-list.ku-translation,.saved-meanings.ku-translation{font-family:"K24Kurdish","Vazirmatn",sans-serif!important;direction:rtl;text-align:right;unicode-bidi:plaintext}
-.rtext.ar,.source-word.arabic-text,.translation-box.ar-translation,.meaning-list.ar-translation,.saved-meanings.ar-translation{font-family:"Noto Naskh Arabic",serif!important;direction:rtl;text-align:right;unicode-bidi:plaintext}
+.rtext.ku,.source-word.kurdish-text,.translation-box.ku-translation,.meaning-list.ku-translation,.saved-meanings.ku-translation{font-family:var(--font-ku)!important;direction:rtl;text-align:right;unicode-bidi:plaintext}
+.rtext.ar,.source-word.arabic-text,.translation-box.ar-translation,.meaning-list.ar-translation,.saved-meanings.ar-translation{font-family:var(--font-ar)!important;direction:rtl;text-align:right;unicode-bidi:plaintext}
+.rw.lang-ku{font-family:var(--font-ku)!important}
+.rw.lang-ar{font-family:var(--font-ar)!important}
+.rw.lang-en{font-family:var(--font-en)!important}
 .rw{border-radius:4px}
 .rw.selected{background:color-mix(in srgb,var(--reader-accent) 28%,transparent);color:inherit}
 .reader-bottom{
