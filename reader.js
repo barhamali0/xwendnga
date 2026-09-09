@@ -46,6 +46,9 @@
   var openRequestId = 0;
   var aiRequestId = 0;
   var translationRequestId = 0;
+  var pdfLoadingTask = null;
+
+  var pinchActive = false;
 
   var THEMES = {
     paper: {
@@ -1520,9 +1523,10 @@
       try {
         currentRenderTask.cancel();
       } catch (e) {}
-    }
 
-    currentRenderTask = null;
+      currentRenderTask =
+        null;
+    }
   }
 
   function renderCanvasPage(
@@ -1556,7 +1560,14 @@
 
     if (
       requestId !==
-      renderRequestId
+        renderRequestId ||
+      pdfDoc !==
+        currentPdfDoc ||
+      !currentBook ||
+      currentBook.id !==
+        bookId ||
+      currentPage !==
+        pageIndex
     ) {
       return Promise.resolve();
     }
@@ -1625,7 +1636,7 @@
               viewport.height
             );
 
-          currentRenderTask =
+          var renderTask =
             page.render({
               canvasContext:
                 context,
@@ -1634,7 +1645,10 @@
                 viewport
             });
 
-          return currentRenderTask
+          currentRenderTask =
+            renderTask;
+
+          return renderTask
             .promise
             .then(
               function () {
@@ -1675,14 +1689,21 @@
             )
             .finally(
               function () {
-                currentRenderTask =
-                  null;
+
+                if (
+                  currentRenderTask ===
+                  renderTask
+                ) {
+                  currentRenderTask =
+                    null;
+                }
               }
             );
         }
       );
-           }
-     /* =======================================================
+  }
+
+  /* =======================================================
      TEXT PAGE
      ======================================================= */
 
@@ -2041,8 +2062,7 @@
             currentBook.id !==
               bookId ||
             currentPage !==
-              pageIndex ||
-            !currentPdfDoc
+              pageIndex
           ) {
             throw new Error(
               "OCR request expired"
@@ -2423,8 +2443,9 @@
         "active"
       );
     }
-                 }
-     /* =======================================================
+  }
+
+  /* =======================================================
      KURDISH PAGE TRANSLATION
      ======================================================= */
 
@@ -2605,11 +2626,6 @@
           error
         ) {
 
-          console.error(
-            "Kurdish translation:",
-            error
-          );
-
           if (
             requestId !==
               translationRequestId ||
@@ -2621,6 +2637,11 @@
           ) {
             return;
           }
+
+          console.error(
+            "Kurdish translation:",
+            error
+          );
 
           pageKurdish =
             false;
@@ -2949,6 +2970,9 @@
         "active"
       );
     }
+
+    canvasZoom =
+      1;
 
     renderPage();
     updateViewButton();
@@ -3381,7 +3405,8 @@
 
     speechLoop();
   }
-     /* =======================================================
+
+  /* =======================================================
      TOOLS
      ======================================================= */
 
@@ -3668,6 +3693,39 @@
 
         cancelCurrentRender();
 
+        if (pdfLoadingTask) {
+          try {
+            var oldDestroy =
+              pdfLoadingTask.destroy();
+
+            if (
+              oldDestroy &&
+              typeof oldDestroy.catch ===
+                "function"
+            ) {
+              oldDestroy.catch(
+                function () {}
+              );
+            }
+          } catch (e) {}
+
+          pdfLoadingTask =
+            null;
+        }
+
+        if (
+          currentPdfDoc &&
+          typeof currentPdfDoc.destroy ===
+            "function"
+        ) {
+          try {
+            currentPdfDoc.destroy();
+          } catch (e) {}
+        }
+
+        currentPdfDoc =
+          null;
+
         loadSettings();
 
         currentBook =
@@ -3676,19 +3734,8 @@
         var thisOpenId =
           openRequestId;
 
-        if (
-          currentPdfDoc &&
-          typeof currentPdfDoc.destroy ===
-            "function"
-        ) {
-
-          try {
-            currentPdfDoc.destroy();
-          } catch (e) {}
-        }
-
-        currentPdfDoc =
-          null;
+        var bookId =
+          currentBook.id;
 
         var storedPage =
           Number(
@@ -3721,11 +3768,16 @@
         canvasZoom =
           1;
 
+        pinchActive =
+          false;
+
+        pinchStartDistance =
+          0;
+
         applyTheme();
 
         updateReaderStatus();
         updateZoomReadout();
-
         setBookmarkVisual(
           currentBook.bookmarked ===
             true
@@ -3747,7 +3799,6 @@
           $("readerKurdish");
 
         if (kurButton) {
-
           kurButton.classList.remove(
             "active"
           );
@@ -3755,6 +3806,10 @@
 
         updateViewButton();
 
+        /*
+         * Always send an independent byte copy
+         * to PDF.js.
+         */
         if (
           currentBook.pdfData &&
           window.pdfjsLib
@@ -3767,12 +3822,13 @@
               0
             );
 
-          pdfjsLib
-            .getDocument({
+          pdfLoadingTask =
+            pdfjsLib.getDocument({
               data:
                 bytes
-            })
-            .promise
+            });
+
+          pdfLoadingTask.promise
             .then(
               function (
                 pdf
@@ -3783,7 +3839,7 @@
                     openRequestId ||
                   !currentBook ||
                   currentBook.id !==
-                    book.id
+                    bookId
                 ) {
 
                   try {
@@ -3795,6 +3851,9 @@
 
                 currentPdfDoc =
                   pdf;
+
+                pdfLoadingTask =
+                  null;
 
                 renderPage();
               }
@@ -3809,10 +3868,13 @@
                     openRequestId ||
                   !currentBook ||
                   currentBook.id !==
-                    book.id
+                    bookId
                 ) {
                   return;
                 }
+
+                pdfLoadingTask =
+                  null;
 
                 console.error(
                   "PDF load:",
@@ -3864,6 +3926,26 @@
 
         cancelCurrentRender();
 
+        if (pdfLoadingTask) {
+          try {
+            var destroyResult =
+              pdfLoadingTask.destroy();
+
+            if (
+              destroyResult &&
+              typeof destroyResult.catch ===
+                "function"
+            ) {
+              destroyResult.catch(
+                function () {}
+              );
+            }
+          } catch (e) {}
+
+          pdfLoadingTask =
+            null;
+        }
+
         clearTimeout(
           idleTimer
         );
@@ -3907,7 +3989,14 @@
         pageKurdish =
           false;
 
-        ++renderRequestId;
+        canvasZoom =
+          1;
+
+        pinchActive =
+          false;
+
+        pinchStartDistance =
+          0;
 
         updateZoomReadout();
 
@@ -3990,9 +4079,9 @@
 
       if (
         name ===
-          "reader-tools" ||
+        "reader-tools" ||
         name ===
-          "reader-music"
+        "reader-music"
       ) {
 
         showReaderTools();
@@ -4141,7 +4230,8 @@
       showReaderTools();
     }
   );
-     /* =======================================================
+
+  /* =======================================================
      PAGE INPUT
      ======================================================= */
 
@@ -4200,6 +4290,10 @@
         return;
       }
 
+      /*
+       * Do not open dictionary when user is
+       * selecting text by dragging.
+       */
       var selection =
         window.getSelection
           ? window
@@ -4225,6 +4319,9 @@
         return;
       }
 
+      /*
+       * script.js owns the dictionary modal.
+       */
       if (
         window.AppLib &&
         typeof window.AppLib.openWordModal ===
@@ -4238,6 +4335,11 @@
         return;
       }
 
+      /*
+       * The current script.js keeps the word
+       * modal internal, so this fallback dispatches
+       * a custom event for compatibility.
+       */
       try {
 
         document.dispatchEvent(
@@ -4272,7 +4374,7 @@
       ) {
 
         if (
-          event.touches.length ===
+          event.touches.length >=
           2
         ) {
 
@@ -4297,9 +4399,23 @@
           pinchStartZoom =
             canvasZoom;
 
-        } else if (
+          pinchActive =
+            pinchStartDistance >
+              0 &&
+            viewMode ===
+              "canvas";
+
+          if (pinchActive) {
+            event.preventDefault();
+          }
+
+          return;
+        }
+
+        if (
           event.touches.length ===
-          1
+            1 &&
+          !pinchActive
         ) {
 
           touchStartX =
@@ -4313,7 +4429,7 @@
       },
       {
         passive:
-          true
+          false
       }
     );
 
@@ -4324,8 +4440,9 @@
       ) {
 
         if (
-          event.touches.length ===
+          event.touches.length >=
             2 &&
+          pinchActive &&
           viewMode ===
             "canvas" &&
           pinchStartDistance >
@@ -4379,10 +4496,18 @@
         event
       ) {
 
-        if (
-          pinchStartDistance >
-          0
-        ) {
+        if (pinchActive) {
+
+          if (
+            event.touches &&
+            event.touches.length >
+              0
+          ) {
+            return;
+          }
+
+          pinchActive =
+            false;
 
           pinchStartDistance =
             0;
@@ -4444,6 +4569,22 @@
           true
       }
     );
+
+    readerBody.addEventListener(
+      "touchcancel",
+      function () {
+
+        pinchActive =
+          false;
+
+        pinchStartDistance =
+          0;
+      },
+      {
+        passive:
+          true
+      }
+    );
   }
 
   /* =======================================================
@@ -4468,10 +4609,35 @@
         return;
       }
 
+      var target =
+        event.target;
+
+      var tagName =
+        target && target.tagName
+          ? String(
+              target.tagName
+            ).toLowerCase()
+          : "";
+
+      if (
+        tagName ===
+          "input" ||
+        tagName ===
+          "textarea" ||
+        tagName ===
+          "select" ||
+        (target &&
+          target.isContentEditable)
+      ) {
+        return;
+      }
+
       if (
         event.key ===
         "ArrowLeft"
       ) {
+
+        event.preventDefault();
 
         changePage(
           1
@@ -4484,6 +4650,8 @@
         event.key ===
         "ArrowRight"
       ) {
+
+        event.preventDefault();
 
         changePage(
           -1
@@ -4514,6 +4682,8 @@
           "canvas"
         ) {
 
+          event.preventDefault();
+
           setCanvasZoom(
             canvasZoom +
               0.25
@@ -4534,6 +4704,8 @@
           viewMode ===
           "canvas"
         ) {
+
+          event.preventDefault();
 
           setCanvasZoom(
             canvasZoom -
