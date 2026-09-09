@@ -3,8 +3,9 @@
    2026 Premium Cinematic Library
    Compatible with:
    - index.html (new)
-   - script.js (new)
-   - reader.js (new)
+   - app.js
+   - script.js
+   - reader.js
    ========================================================= */
 
 
@@ -520,6 +521,31 @@ main{
 
 .section{
   margin-top:20px;
+}
+
+
+/* =========================================================
+   06A — APP VIEWS
+   ========================================================= */
+
+.app-view{
+  display:block;
+  min-width:0;
+}
+
+.app-view[hidden]{
+  display:none!important;
+}
+
+.app-view-page{
+  min-height:
+    calc(
+      100vh - 150px
+    );
+}
+
+.app-view-page > .section:first-child{
+  margin-top:0;
 }
 
 
@@ -3087,7 +3113,7 @@ main{
   display:grid;
 
   grid-template-columns:
-    repeat(4,1fr);
+    repeat(5,minmax(0,1fr));
 
   gap:3px;
 }
@@ -5235,6 +5261,62 @@ body:has(.reader.show)
 
 
 /* =========================================================
+   33A — APP VIEW SEARCH / PAGE STATES
+   ========================================================= */
+
+#globalSearchResults:empty::before{
+  content:"هێشتا گەڕانێک نەکراوە";
+
+  display:block;
+
+  grid-column:1/-1;
+
+  padding:
+    34px
+    16px;
+
+  color:var(--muted);
+
+  text-align:center;
+
+  font-size:10px;
+}
+
+.app-view-page .section-head{
+  margin-bottom:14px;
+}
+
+.app-view-page .hero-search{
+  max-width:760px;
+}
+
+.app-view-page .empty{
+  min-height:260px;
+
+  padding:
+    34px
+    18px;
+
+  border:
+    1px solid
+    rgba(255,255,255,.055);
+
+  border-radius:22px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.035),
+      rgba(255,255,255,.018)
+    );
+
+  box-shadow:
+    0 15px 35px
+    rgba(0,0,0,.12);
+}
+
+
+/* =========================================================
    34 — EMPTY
    ========================================================= */
 
@@ -5460,6 +5542,9 @@ body:has(.reader.show)
 
   .bottom-in{
     max-width:none;
+
+    grid-template-columns:
+      repeat(5,minmax(0,1fr));
   }
 
   .telegram-desktop{
@@ -5897,6 +5982,19 @@ body:has(.reader.show)
     grid-template-columns:
       1fr;
   }
+
+  .bottom-in{
+    grid-template-columns:
+      repeat(5,minmax(0,1fr));
+  }
+
+  .nav{
+    min-width:0;
+  }
+
+  .nav span{
+    white-space:nowrap;
+  }
 }
 
 
@@ -5995,6 +6093,26 @@ body:has(.reader.show)
   .sheet{
     padding-inline:11px;
   }
+
+  .bottom{
+    padding-inline:7px;
+  }
+
+  .bottom-in{
+    gap:2px;
+  }
+
+  .nav{
+    min-height:55px;
+
+    gap:3px;
+
+    font-size:7px;
+  }
+
+  .nav i{
+    font-size:14px;
+  }
 }
 
 
@@ -6092,6 +6210,19 @@ body:has(.reader.show)
 
     font-size:8px;
   }
+
+  .bottom{
+    padding-inline:4px;
+  }
+
+  .nav{
+    min-height:53px;
+    font-size:6px;
+  }
+
+  .nav i{
+    font-size:13px;
+  }
 }
 
 
@@ -6117,4 +6248,4 @@ body:has(.reader.show)
     transition-duration:
       .01ms !important;
   }
-   }
+     }
