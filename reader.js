@@ -2113,6 +2113,20 @@
             .then(
               function () {
 
+                if (
+                  requestId !==
+                    aiRequestId ||
+                  !currentBook ||
+                  currentBook.id !==
+                    bookId ||
+                  currentPage !==
+                    pageIndex
+                ) {
+                  throw new Error(
+                    "OCR request expired"
+                  );
+                }
+
                 return tempCanvas
                   .toDataURL(
                     "image/jpeg",
@@ -2492,6 +2506,22 @@
       viewMode =
         "text";
 
+      var cachedCanvas =
+        $("pdfCanvas");
+
+      if (cachedCanvas) {
+        cachedCanvas.style.display =
+          "none";
+      }
+
+      var cachedText =
+        $("readerText");
+
+      if (cachedText) {
+        cachedText.style.display =
+          "block";
+      }
+
       paintText(
         cached
       );
@@ -2609,6 +2639,22 @@
           viewMode =
             "text";
 
+          var translatedCanvas =
+            $("pdfCanvas");
+
+          if (translatedCanvas) {
+            translatedCanvas.style.display =
+              "none";
+          }
+
+          var translatedText =
+            $("readerText");
+
+          if (translatedText) {
+            translatedText.style.display =
+              "block";
+          }
+
           paintText(
             translated
           );
@@ -2719,6 +2765,22 @@
 
         viewMode =
           "text";
+
+        var translatedCanvas =
+          $("pdfCanvas");
+
+        if (translatedCanvas) {
+          translatedCanvas.style.display =
+            "none";
+        }
+
+        var translatedText =
+          $("readerText");
+
+        if (translatedText) {
+          translatedText.style.display =
+            "block";
+        }
 
         paintText(
           translatedPages[key]
@@ -3718,6 +3780,7 @@
           typeof currentPdfDoc.destroy ===
             "function"
         ) {
+
           try {
             currentPdfDoc.destroy();
           } catch (e) {}
@@ -3778,6 +3841,7 @@
 
         updateReaderStatus();
         updateZoomReadout();
+
         setBookmarkVisual(
           currentBook.bookmarked ===
             true
@@ -4336,9 +4400,7 @@
       }
 
       /*
-       * The current script.js keeps the word
-       * modal internal, so this fallback dispatches
-       * a custom event for compatibility.
+       * Fallback event for compatibility.
        */
       try {
 
