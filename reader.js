@@ -42,6 +42,11 @@
   var renderRequestId = 0;
   var wordRenderTimer = null;
 
+  var currentRenderTask = null;
+  var openRequestId = 0;
+  var aiRequestId = 0;
+  var translationRequestId = 0;
+
   var THEMES = {
     paper: {
       name: "سپی",
@@ -1506,11 +1511,28 @@
      CANVAS PDF
      ======================================================= */
 
-  function renderCanvasPage() {
-
+  function cancelCurrentRender() {
     if (
-      !currentPdfDoc
+      currentRenderTask &&
+      typeof currentRenderTask.cancel ===
+        "function"
     ) {
+      try {
+        currentRenderTask.cancel();
+      } catch (e) {}
+    }
+
+    currentRenderTask = null;
+  }
+
+  function renderCanvasPage(
+    requestId,
+    pdfDoc,
+    bookId,
+    pageIndex
+  ) {
+
+    if (!pdfDoc) {
       return Promise.reject(
         new Error(
           "PDF document نەدۆزرایەوە"
@@ -1524,15 +1546,22 @@
     var text =
       $("readerText");
 
-    if (
-      !canvas
-    ) {
+    if (!canvas) {
       return Promise.reject(
         new Error(
           "Canvas نەدۆزرایەوە"
         )
       );
     }
+
+    if (
+      requestId !==
+      renderRequestId
+    ) {
+      return Promise.resolve();
+    }
+
+    cancelCurrentRender();
 
     if (text) {
       text.style.display =
@@ -1543,10 +1572,10 @@
       "block";
 
     var pageNumber =
-      currentPage +
+      pageIndex +
       1;
 
-    return currentPdfDoc
+    return pdfDoc
       .getPage(
         pageNumber
       )
@@ -1554,6 +1583,20 @@
         function (
           page
         ) {
+
+          if (
+            requestId !==
+              renderRequestId ||
+            pdfDoc !==
+              currentPdfDoc ||
+            !currentBook ||
+            currentBook.id !==
+              bookId ||
+            currentPage !==
+              pageIndex
+          ) {
+            return null;
+          }
 
           var viewport =
             page.getViewport({
@@ -1582,26 +1625,64 @@
               viewport.height
             );
 
-          return page
-            .render({
+          currentRenderTask =
+            page.render({
               canvasContext:
                 context,
 
               viewport:
                 viewport
-            })
-            .promise;
-        }
-      )
-      .then(
-        function () {
-          applyCanvasZoom();
-          updateZoomReadout();
+            });
+
+          return currentRenderTask
+            .promise
+            .then(
+              function () {
+
+                if (
+                  requestId !==
+                    renderRequestId ||
+                  pdfDoc !==
+                    currentPdfDoc ||
+                  !currentBook ||
+                  currentBook.id !==
+                    bookId ||
+                  currentPage !==
+                    pageIndex
+                ) {
+                  return;
+                }
+
+                applyCanvasZoom();
+                updateZoomReadout();
+              }
+            )
+            .catch(
+              function (
+                error
+              ) {
+
+                if (
+                  error &&
+                  error.name ===
+                    "RenderingCancelledException"
+                ) {
+                  return;
+                }
+
+                throw error;
+              }
+            )
+            .finally(
+              function () {
+                currentRenderTask =
+                  null;
+              }
+            );
         }
       );
-  }
-
-  /* =======================================================
+           }
+     /* =======================================================
      TEXT PAGE
      ======================================================= */
 
@@ -1636,9 +1717,6 @@
       "_" +
       currentPage;
 
-    /*
-     * AI OCR text has priority.
-     */
     if (
       aiPages[key]
     ) {
@@ -1652,10 +1730,6 @@
       return Promise.resolve();
     }
 
-    /*
-     * Rebuild text directly from the live PDF.
-     * This fixes old stored English text too.
-     */
     if (
       currentPdfDoc
     ) {
@@ -1924,6 +1998,15 @@
     aiLoading =
       true;
 
+    var requestId =
+      ++aiRequestId;
+
+    var bookId =
+      currentBook.id;
+
+    var pageIndex =
+      currentPage;
+
     var button =
       $("viewToggleBtn");
 
@@ -1943,13 +2026,28 @@
 
     currentPdfDoc
       .getPage(
-        currentPage +
+        pageIndex +
           1
       )
       .then(
         function (
           page
         ) {
+
+          if (
+            requestId !==
+              aiRequestId ||
+            !currentBook ||
+            currentBook.id !==
+              bookId ||
+            currentPage !==
+              pageIndex ||
+            !currentPdfDoc
+          ) {
+            throw new Error(
+              "OCR request expired"
+            );
+          }
 
           var viewport =
             page.getViewport({
@@ -2011,6 +2109,20 @@
         function (
           base64
         ) {
+
+          if (
+            requestId !==
+              aiRequestId ||
+            !currentBook ||
+            currentBook.id !==
+              bookId ||
+            currentPage !==
+              pageIndex
+          ) {
+            throw new Error(
+              "OCR request expired"
+            );
+          }
 
           var endpoint =
             "https://generativelanguage.googleapis.com/v1beta/models/" +
@@ -2150,9 +2262,9 @@
           }
 
           var key =
-            currentBook.id +
+            bookId +
             "_" +
-            currentPage;
+            pageIndex;
 
           aiPages[key] =
             text;
@@ -2161,6 +2273,18 @@
             "kh_ai_pages",
             aiPages
           );
+
+          if (
+            requestId !==
+              aiRequestId ||
+            !currentBook ||
+            currentBook.id !==
+              bookId ||
+            currentPage !==
+              pageIndex
+          ) {
+            return;
+          }
 
           viewMode =
             "text";
@@ -2195,6 +2319,21 @@
           error
         ) {
 
+          if (
+            requestId !==
+            aiRequestId
+          ) {
+            return;
+          }
+
+          if (
+            error &&
+            error.message ===
+              "OCR request expired"
+          ) {
+            return;
+          }
+
           aiLoading =
             false;
 
@@ -2219,6 +2358,13 @@
       )
       .finally(
         function () {
+
+          if (
+            requestId !==
+            aiRequestId
+          ) {
+            return;
+          }
 
           aiLoading =
             false;
@@ -2277,9 +2423,8 @@
         "active"
       );
     }
-  }
-
-  /* =======================================================
+                 }
+     /* =======================================================
      KURDISH PAGE TRANSLATION
      ======================================================= */
 
@@ -2369,6 +2514,15 @@
       return;
     }
 
+    var requestId =
+      ++translationRequestId;
+
+    var bookId =
+      currentBook.id;
+
+    var pageIndex =
+      currentPage;
+
     var box =
       $("readerText");
 
@@ -2419,6 +2573,18 @@
             translatedPages
           );
 
+          if (
+            requestId !==
+              translationRequestId ||
+            !currentBook ||
+            currentBook.id !==
+              bookId ||
+            currentPage !==
+              pageIndex
+          ) {
+            return;
+          }
+
           viewMode =
             "text";
 
@@ -2443,6 +2609,18 @@
             "Kurdish translation:",
             error
           );
+
+          if (
+            requestId !==
+              translationRequestId ||
+            !currentBook ||
+            currentBook.id !==
+              bookId ||
+            currentPage !==
+              pageIndex
+          ) {
+            return;
+          }
 
           pageKurdish =
             false;
@@ -2531,10 +2709,6 @@
         return;
       }
 
-      /*
-       * If no translated cache exists, translation
-       * function will be called by toggleKurdishPage.
-       */
       toggleKurdishPage();
 
       return;
@@ -2546,7 +2720,12 @@
       currentPdfDoc
     ) {
 
-      renderCanvasPage()
+      renderCanvasPage(
+        requestId,
+        currentPdfDoc,
+        currentBook.id,
+        currentPage
+      )
         .catch(
           function (
             error
@@ -2615,14 +2794,20 @@
 
     stopSpeech();
 
+    ++renderRequestId;
+    ++aiRequestId;
+    ++translationRequestId;
+
+    aiLoading =
+      false;
+
+    cancelCurrentRender();
+
     currentPage =
       next;
 
     pageKurdish =
       false;
-
-    canvasZoom =
-      1;
 
     var kurButton =
       $("readerKurdish");
@@ -2678,15 +2863,21 @@
 
     stopSpeech();
 
+    ++renderRequestId;
+    ++aiRequestId;
+    ++translationRequestId;
+
+    aiLoading =
+      false;
+
+    cancelCurrentRender();
+
     currentPage =
       number -
       1;
 
     pageKurdish =
       false;
-
-    canvasZoom =
-      1;
 
     var button =
       $("readerKurdish");
@@ -2758,9 +2949,6 @@
         "active"
       );
     }
-
-    canvasZoom =
-      1;
 
     renderPage();
     updateViewButton();
@@ -3193,8 +3381,7 @@
 
     speechLoop();
   }
-
-  /* =======================================================
+     /* =======================================================
      TOOLS
      ======================================================= */
 
@@ -3471,10 +3658,34 @@
 
         stopSpeech();
 
+        ++openRequestId;
+        ++renderRequestId;
+        ++aiRequestId;
+        ++translationRequestId;
+
+        aiLoading =
+          false;
+
+        cancelCurrentRender();
+
         loadSettings();
 
         currentBook =
           book;
+
+        var thisOpenId =
+          openRequestId;
+
+        if (
+          currentPdfDoc &&
+          typeof currentPdfDoc.destroy ===
+            "function"
+        ) {
+
+          try {
+            currentPdfDoc.destroy();
+          } catch (e) {}
+        }
 
         currentPdfDoc =
           null;
@@ -3514,6 +3725,7 @@
 
         updateReaderStatus();
         updateZoomReadout();
+
         setBookmarkVisual(
           currentBook.bookmarked ===
             true
@@ -3535,6 +3747,7 @@
           $("readerKurdish");
 
         if (kurButton) {
+
           kurButton.classList.remove(
             "active"
           );
@@ -3542,11 +3755,6 @@
 
         updateViewButton();
 
-        /*
-         * Always send a fresh COPY to PDF.js.
-         * This prevents ArrayBuffer detachment
-         * from destroying the stored PDF.
-         */
         if (
           currentBook.pdfData &&
           window.pdfjsLib
@@ -3570,6 +3778,21 @@
                 pdf
               ) {
 
+                if (
+                  thisOpenId !==
+                    openRequestId ||
+                  !currentBook ||
+                  currentBook.id !==
+                    book.id
+                ) {
+
+                  try {
+                    pdf.destroy();
+                  } catch (e) {}
+
+                  return;
+                }
+
                 currentPdfDoc =
                   pdf;
 
@@ -3580,6 +3803,16 @@
               function (
                 error
               ) {
+
+                if (
+                  thisOpenId !==
+                    openRequestId ||
+                  !currentBook ||
+                  currentBook.id !==
+                    book.id
+                ) {
+                  return;
+                }
 
                 console.error(
                   "PDF load:",
@@ -3621,6 +3854,16 @@
 
         stopSpeech();
 
+        ++openRequestId;
+        ++renderRequestId;
+        ++aiRequestId;
+        ++translationRequestId;
+
+        aiLoading =
+          false;
+
+        cancelCurrentRender();
+
         clearTimeout(
           idleTimer
         );
@@ -3643,6 +3886,17 @@
 
         currentBook =
           null;
+
+        if (
+          currentPdfDoc &&
+          typeof currentPdfDoc.destroy ===
+            "function"
+        ) {
+
+          try {
+            currentPdfDoc.destroy();
+          } catch (e) {}
+        }
 
         currentPdfDoc =
           null;
@@ -3736,9 +3990,9 @@
 
       if (
         name ===
-        "reader-tools" ||
+          "reader-tools" ||
         name ===
-        "reader-music"
+          "reader-music"
       ) {
 
         showReaderTools();
@@ -3887,8 +4141,7 @@
       showReaderTools();
     }
   );
-
-  /* =======================================================
+     /* =======================================================
      PAGE INPUT
      ======================================================= */
 
@@ -3947,10 +4200,6 @@
         return;
       }
 
-      /*
-       * Do not open dictionary when user is
-       * selecting text by dragging.
-       */
       var selection =
         window.getSelection
           ? window
@@ -3976,9 +4225,6 @@
         return;
       }
 
-      /*
-       * script.js owns the dictionary modal.
-       */
       if (
         window.AppLib &&
         typeof window.AppLib.openWordModal ===
@@ -3992,11 +4238,6 @@
         return;
       }
 
-      /*
-       * The current script.js keeps the word
-       * modal internal, so this fallback dispatches
-       * a custom event for compatibility.
-       */
       try {
 
         document.dispatchEvent(
@@ -4114,6 +4355,8 @@
             0
           ) {
 
+            event.preventDefault();
+
             setCanvasZoom(
               pinchStartZoom *
                 (
@@ -4126,7 +4369,7 @@
       },
       {
         passive:
-          true
+          false
       }
     );
 
