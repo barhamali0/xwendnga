@@ -1,0 +1,2929 @@
+<!doctype html>
+<html lang="ckb" dir="rtl">
+
+<head>
+
+  <meta charset="utf-8">
+
+  <meta
+    name="viewport"
+    content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"
+  >
+
+  <meta
+    name="theme-color"
+    content="#07111f"
+  >
+
+  <meta
+    name="description"
+    content="گەڕانی گشتی — خوێندنگە"
+  >
+
+  <title>گەڕان — خوێندنگە</title>
+
+
+  <!-- =====================================================
+       FONTS
+       ===================================================== -->
+
+  <link
+    rel="preconnect"
+    href="https://fonts.googleapis.com"
+  >
+
+  <link
+    rel="preconnect"
+    href="https://fonts.gstatic.com"
+    crossorigin
+  >
+
+  <link
+    href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700;800&family=Vazirmatn:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  >
+
+
+  <!-- =====================================================
+       ICONS
+       ===================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+  >
+
+
+  <!-- =====================================================
+       EXISTING SITE STYLE
+       ===================================================== -->
+
+  <link
+    rel="stylesheet"
+    href="style.css"
+  >
+
+
+  <!-- =====================================================
+       SEARCH PAGE STYLE
+       ===================================================== -->
+
+  <style>
+
+    /* ===================================================
+       PAGE
+       =================================================== */
+
+    .search-page{
+
+      min-height:100vh;
+
+      padding-bottom:
+        calc(
+          104px +
+          env(safe-area-inset-bottom,0px)
+        );
+
+      background:
+
+        radial-gradient(
+          circle at 100% 0%,
+          color-mix(
+            in srgb,
+            var(--a) 14%,
+            transparent
+          ),
+          transparent 28%
+        ),
+
+        radial-gradient(
+          circle at 0% 20%,
+          color-mix(
+            in srgb,
+            var(--b) 12%,
+            transparent
+          ),
+          transparent 27%
+        ),
+
+        var(--bg);
+    }
+
+
+    /* ===================================================
+       TOPBAR
+       =================================================== */
+
+    .search-topbar{
+
+      position:sticky;
+
+      top:0;
+
+      z-index:80;
+
+      padding:
+        calc(
+          10px +
+          env(safe-area-inset-top,0px)
+        )
+        14px
+        10px;
+
+      background:
+        rgba(5,13,25,.94);
+
+      border-bottom:
+        1px solid
+        rgba(255,255,255,.055);
+
+      backdrop-filter:
+        blur(22px)
+        saturate(145%);
+
+      -webkit-backdrop-filter:
+        blur(22px)
+        saturate(145%);
+    }
+
+
+    .search-topbar-in{
+
+      width:100%;
+
+      max-width:1180px;
+
+      min-height:52px;
+
+      margin:0 auto;
+
+      display:grid;
+
+      grid-template-columns:
+        1fr
+        auto
+        1fr;
+
+      align-items:center;
+
+      gap:12px;
+    }
+
+
+    /* Profile */
+
+    .search-profile{
+
+      justify-self:start;
+
+      width:43px;
+
+      height:43px;
+
+      display:grid;
+
+      place-items:center;
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius:50%;
+
+      background:
+        var(--surface);
+
+      color:#eef5fb;
+
+      transition:
+        transform .15s ease,
+        border-color .18s ease;
+    }
+
+
+    .search-profile:hover{
+
+      border-color:
+        color-mix(
+          in srgb,
+          var(--a) 45%,
+          var(--line)
+        );
+    }
+
+
+    .search-profile:active{
+
+      transform:
+        scale(.94);
+    }
+
+
+    /* Brand */
+
+    .search-brand{
+
+      justify-self:center;
+
+      display:flex;
+
+      flex-direction:column;
+
+      align-items:center;
+
+      text-align:center;
+
+      user-select:none;
+    }
+
+
+    .search-brand-main{
+
+      display:flex;
+
+      align-items:center;
+
+      gap:7px;
+    }
+
+
+    .search-brand-logo{
+
+      width:28px;
+
+      height:28px;
+
+      display:grid;
+
+      place-items:center;
+
+      border-radius:9px;
+
+      color:#fff;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--a),
+          var(--b)
+        );
+
+      font-size:11px;
+    }
+
+
+    .search-brand-title{
+
+      color:#fff;
+
+      font-size:14px;
+
+      font-weight:900;
+    }
+
+
+    .search-brand-sub{
+
+      margin-top:4px;
+
+      color:#71869d;
+
+      font-family:
+        "Manrope",
+        sans-serif;
+
+      font-size:6px;
+
+      letter-spacing:1.1px;
+    }
+
+
+    /* Notification */
+
+    .search-notification{
+
+      justify-self:end;
+
+      position:relative;
+
+      width:43px;
+
+      height:43px;
+
+      display:grid;
+
+      place-items:center;
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius:50%;
+
+      background:
+        var(--surface);
+
+      color:#eef5fb;
+    }
+
+
+    .search-notification:active{
+
+      transform:
+        scale(.94);
+    }
+
+
+    .search-notification i{
+
+      font-size:16px;
+    }
+
+
+    .search-notification-dot{
+
+      position:absolute;
+
+      top:7px;
+
+      right:7px;
+
+      width:8px;
+
+      height:8px;
+
+      border-radius:50%;
+
+      background:
+        var(--a);
+
+      border:
+        2px solid
+        #0a1422;
+    }
+
+
+    /* ===================================================
+       MAIN
+       =================================================== */
+
+    .search-main{
+
+      width:100%;
+
+      max-width:1050px;
+
+      margin:0 auto;
+
+      padding:
+        21px
+        14px
+        35px;
+    }
+
+
+    /* ===================================================
+       HERO
+       =================================================== */
+
+    .search-hero{
+
+      position:relative;
+
+      overflow:hidden;
+
+      padding:
+        25px
+        17px
+        19px;
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius:25px;
+
+      background:
+
+        radial-gradient(
+          circle at 100% 0%,
+          color-mix(
+            in srgb,
+            var(--a) 17%,
+            transparent
+          ),
+          transparent 34%
+        ),
+
+        radial-gradient(
+          circle at 0% 100%,
+          color-mix(
+            in srgb,
+            var(--b) 13%,
+            transparent
+          ),
+          transparent 34%
+        ),
+
+        var(--surface);
+
+      box-shadow:
+        0 25px 60px
+        rgba(0,0,0,.22);
+
+      text-align:center;
+    }
+
+
+    .search-hero::before{
+
+      content:"";
+
+      position:absolute;
+
+      width:230px;
+
+      height:230px;
+
+      left:-120px;
+
+      bottom:-125px;
+
+      border:
+
+        1px solid
+        rgba(255,255,255,.065);
+
+      border-radius:50%;
+
+      pointer-events:none;
+    }
+
+
+    .search-kicker{
+
+      position:relative;
+
+      z-index:2;
+
+      color:
+        color-mix(
+          in srgb,
+          var(--a) 76%,
+          #fff
+        );
+
+      font-family:
+        "Manrope",
+        sans-serif;
+
+      font-size:7px;
+
+      font-weight:800;
+
+      letter-spacing:1.2px;
+    }
+
+
+    .search-hero h1{
+
+      position:relative;
+
+      z-index:2;
+
+      margin:
+        5px
+        0
+        6px;
+
+      color:#fff;
+
+      font-size:
+        clamp(
+          27px,
+          7vw,
+          43px
+        );
+
+      line-height:1.35;
+
+      font-weight:900;
+    }
+
+
+    .search-hero p{
+
+      position:relative;
+
+      z-index:2;
+
+      max-width:620px;
+
+      margin:
+        0
+        auto;
+
+      color:#91a5b9;
+
+      font-size:9px;
+
+      line-height:1.9;
+    }
+
+
+    /* ===================================================
+       SEARCH BOX
+       =================================================== */
+
+    .global-search-box{
+
+      position:relative;
+
+      z-index:2;
+
+      width:100%;
+
+      min-height:64px;
+
+      display:flex;
+
+      align-items:center;
+
+      gap:11px;
+
+      margin-top:18px;
+
+      padding:
+        0
+        14px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.10);
+
+      border-radius:18px;
+
+      background:
+        rgba(3,9,17,.78);
+
+      box-shadow:
+
+        inset
+        0 1px 0
+        rgba(255,255,255,.035),
+
+        0 15px 35px
+        rgba(0,0,0,.18);
+
+      backdrop-filter:
+        blur(16px);
+
+      -webkit-backdrop-filter:
+        blur(16px);
+
+      transition:
+        border-color .18s ease,
+        box-shadow .18s ease;
+    }
+
+
+    .global-search-box:focus-within{
+
+      border-color:
+        color-mix(
+          in srgb,
+          var(--a) 60%,
+          var(--line)
+        );
+
+      box-shadow:
+
+        0 18px 38px
+        rgba(0,0,0,.20),
+
+        0 0 0 3px
+        color-mix(
+          in srgb,
+          var(--a) 6%,
+          transparent
+        );
+    }
+
+
+    .global-search-icon{
+
+      flex:0 0 auto;
+
+      color:var(--a);
+
+      font-size:17px;
+    }
+
+
+    #globalSearchInput{
+
+      width:100%;
+
+      min-width:0;
+
+      border:0;
+
+      outline:0;
+
+      background:transparent;
+
+      color:#fff;
+
+      font-size:12px;
+
+      text-align:right;
+    }
+
+
+    #globalSearchInput::placeholder{
+
+      color:#687d92;
+    }
+
+
+    .global-search-clear{
+
+      width:32px;
+
+      height:32px;
+
+      flex:0 0 32px;
+
+      display:grid;
+
+      place-items:center;
+
+      border-radius:10px;
+
+      background:
+        rgba(255,255,255,.045);
+
+      color:#8094a8;
+
+      opacity:0;
+
+      pointer-events:none;
+
+      transition:
+        opacity .18s ease,
+        transform .15s ease;
+    }
+
+
+    .global-search-clear.show{
+
+      opacity:1;
+
+      pointer-events:auto;
+    }
+
+
+    .global-search-clear:active{
+
+      transform:
+        scale(.92);
+    }
+
+
+    /* ===================================================
+       TYPE FILTERS
+       =================================================== */
+
+    .search-types{
+
+      display:flex;
+
+      align-items:center;
+
+      gap:7px;
+
+      margin-top:15px;
+
+      overflow-x:auto;
+
+      padding:
+        2px
+        2px
+        5px;
+
+      scrollbar-width:none;
+    }
+
+
+    .search-types::-webkit-scrollbar{
+
+      display:none;
+    }
+
+
+    .search-type{
+
+      flex:0 0 auto;
+
+      min-height:38px;
+
+      display:inline-flex;
+
+      align-items:center;
+
+      gap:7px;
+
+      padding:
+        8px
+        13px;
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius:999px;
+
+      background:
+        var(--surface);
+
+      color:#9bafc1;
+
+      font-size:9px;
+
+      font-weight:700;
+
+      transition:
+        .18s ease;
+    }
+
+
+    .search-type i{
+
+      font-size:10px;
+    }
+
+
+    .search-type:hover{
+
+      color:#fff;
+
+      background:
+        var(--surface2);
+    }
+
+
+    .search-type.active{
+
+      color:#fff;
+
+      border-color:
+        var(--a);
+
+      background:
+        color-mix(
+          in srgb,
+          var(--a) 14%,
+          var(--surface)
+        );
+
+      box-shadow:
+        0 8px 20px
+        color-mix(
+          in srgb,
+          var(--a) 9%,
+          transparent
+        );
+    }
+
+
+    /* ===================================================
+       SEARCH INFO
+       =================================================== */
+
+    .search-results-head{
+
+      display:flex;
+
+      align-items:flex-end;
+
+      justify-content:space-between;
+
+      gap:12px;
+
+      margin-top:24px;
+
+      margin-bottom:11px;
+    }
+
+
+    .search-results-kicker{
+
+      margin-bottom:3px;
+
+      color:#73879b;
+
+      font-family:
+        "Manrope",
+        sans-serif;
+
+      font-size:6px;
+
+      font-weight:800;
+
+      letter-spacing:1px;
+    }
+
+
+    .search-results-title{
+
+      margin:0;
+
+      color:#fff;
+
+      font-size:19px;
+
+      line-height:1.4;
+
+      font-weight:850;
+    }
+
+
+    .search-result-count{
+
+      flex:0 0 auto;
+
+      color:#7f93a8;
+
+      font-size:8px;
+    }
+
+
+    /* ===================================================
+       SEARCH RESULTS
+       =================================================== */
+
+    .search-results{
+
+      display:grid;
+
+      gap:10px;
+    }
+
+
+    /* ===================================================
+       RESULT CARD
+       =================================================== */
+
+    .search-result-card{
+
+      position:relative;
+
+      display:flex;
+
+      align-items:center;
+
+      gap:11px;
+
+      min-width:0;
+
+      padding:10px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.055);
+
+      border-radius:17px;
+
+      background:
+
+        linear-gradient(
+          145deg,
+          rgba(255,255,255,.04),
+          rgba(255,255,255,.018)
+        );
+
+      box-shadow:
+        0 13px 30px
+        rgba(0,0,0,.12);
+
+      transition:
+        transform .18s ease,
+        border-color .18s ease,
+        background .18s ease;
+    }
+
+
+    .search-result-card:hover{
+
+      transform:
+        translateY(-2px);
+
+      border-color:
+        color-mix(
+          in srgb,
+          var(--a) 30%,
+          rgba(255,255,255,.055)
+        );
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(255,255,255,.055),
+          rgba(255,255,255,.022)
+        );
+    }
+
+
+    .search-result-icon{
+
+      width:58px;
+
+      height:72px;
+
+      flex:0 0 58px;
+
+      display:grid;
+
+      place-items:center;
+
+      border-radius:11px;
+
+      color:#fff;
+
+      background:
+
+        radial-gradient(
+          circle at 25% 8%,
+          color-mix(
+            in srgb,
+            var(--a) 25%,
+            transparent
+          ),
+          transparent 33%
+        ),
+
+        linear-gradient(
+          145deg,
+          #294a62,
+          #14243a
+        );
+
+      box-shadow:
+        0 11px 23px
+        rgba(0,0,0,.20);
+    }
+
+
+    .search-result-icon i{
+
+      font-size:22px;
+    }
+
+
+    .search-result-content{
+
+      min-width:0;
+
+      flex:1;
+    }
+
+
+    .search-result-type{
+
+      display:inline-flex;
+
+      align-items:center;
+
+      gap:5px;
+
+      padding:
+        3px
+        7px;
+
+      border-radius:7px;
+
+      color:var(--a);
+
+      background:
+        color-mix(
+          in srgb,
+          var(--a) 9%,
+          transparent
+        );
+
+      font-size:7px;
+
+      font-weight:800;
+    }
+
+
+    .search-result-title{
+
+      margin:
+        6px
+        0
+        2px;
+
+      overflow:hidden;
+
+      color:#fff;
+
+      font-size:12px;
+
+      line-height:1.55;
+
+      font-weight:850;
+
+      white-space:nowrap;
+
+      text-overflow:ellipsis;
+    }
+
+
+    .search-result-description{
+
+      margin:0;
+
+      color:#7f93a8;
+
+      font-size:8px;
+
+      line-height:1.7;
+
+      display:-webkit-box;
+
+      -webkit-box-orient:vertical;
+
+      -webkit-line-clamp:2;
+
+      overflow:hidden;
+    }
+
+
+    .search-result-action{
+
+      width:37px;
+
+      height:37px;
+
+      flex:0 0 37px;
+
+      display:grid;
+
+      place-items:center;
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius:11px;
+
+      background:
+        var(--surface2);
+
+      color:#fff;
+    }
+
+
+    /* ===================================================
+       EMPTY
+       =================================================== */
+
+    .search-empty{
+
+      min-height:285px;
+
+      display:flex;
+
+      flex-direction:column;
+
+      align-items:center;
+
+      justify-content:center;
+
+      padding:
+        35px
+        20px;
+
+      border:
+        1px solid
+        var(--line);
+
+      border-radius:22px;
+
+      background:
+
+        linear-gradient(
+          145deg,
+          rgba(255,255,255,.04),
+          rgba(255,255,255,.018)
+        );
+
+      text-align:center;
+    }
+
+
+    .search-empty-icon{
+
+      width:68px;
+
+      height:68px;
+
+      display:grid;
+
+      place-items:center;
+
+      border-radius:21px;
+
+      color:var(--a);
+
+      background:
+        color-mix(
+          in srgb,
+          var(--a) 9%,
+          transparent
+        );
+
+      border:
+        1px solid
+        color-mix(
+          in srgb,
+          var(--a) 18%,
+          transparent
+        );
+
+      font-size:26px;
+    }
+
+
+    .search-empty h2{
+
+      margin:
+        12px
+        0
+        5px;
+
+      color:#fff;
+
+      font-size:15px;
+    }
+
+
+    .search-empty p{
+
+      max-width:500px;
+
+      margin:0;
+
+      color:#7f93a8;
+
+      font-size:9px;
+
+      line-height:1.9;
+    }
+
+
+    /* ===================================================
+       SUGGESTIONS
+       =================================================== */
+
+    .search-suggestions{
+
+      display:grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          minmax(0,1fr)
+        );
+
+      gap:9px;
+
+      margin-top:17px;
+    }
+
+
+    .suggestion{
+
+      min-height:83px;
+
+      display:flex;
+
+      align-items:center;
+
+      gap:9px;
+
+      padding:11px;
+
+      border:
+        1px solid
+        rgba(255,255,255,.055);
+
+      border-radius:16px;
+
+      background:
+        rgba(255,255,255,.025);
+
+      color:#fff;
+
+      text-align:right;
+    }
+
+
+    .suggestion-icon{
+
+      width:38px;
+
+      height:38px;
+
+      flex:0 0 38px;
+
+      display:grid;
+
+      place-items:center;
+
+      border-radius:12px;
+
+      color:var(--a);
+
+      background:
+        color-mix(
+          in srgb,
+          var(--a) 9%,
+          transparent
+        );
+    }
+
+
+    .suggestion strong{
+
+      display:block;
+
+      font-size:9px;
+    }
+
+
+    .suggestion span{
+
+      display:block;
+
+      margin-top:3px;
+
+      color:#74889d;
+
+      font-size:7px;
+
+      line-height:1.65;
+    }
+
+
+    /* ===================================================
+       BOTTOM NAV
+       =================================================== */
+
+    .search-bottom{
+
+      position:fixed;
+
+      left:0;
+      right:0;
+      bottom:0;
+
+      z-index:100;
+
+      min-height:
+        calc(
+          77px +
+          env(safe-area-inset-bottom,0px)
+        );
+
+      padding:
+        7px
+        9px
+        env(safe-area-inset-bottom,0px);
+
+      border-top:
+        1px solid
+        rgba(255,255,255,.06);
+
+      background:
+        rgba(5,13,25,.94);
+
+      backdrop-filter:
+        blur(23px)
+        saturate(150%);
+
+      -webkit-backdrop-filter:
+        blur(23px)
+        saturate(150%);
+    }
+
+
+    .search-bottom-in{
+
+      width:100%;
+
+      max-width:640px;
+
+      height:100%;
+
+      margin:0 auto;
+
+      display:grid;
+
+      grid-template-columns:
+        repeat(5,1fr);
+
+      gap:3px;
+    }
+
+
+    .search-nav{
+
+      min-height:58px;
+
+      display:flex;
+
+      flex-direction:column;
+
+      align-items:center;
+
+      justify-content:center;
+
+      gap:4px;
+
+      border-radius:14px;
+
+      background:transparent;
+
+      color:#6f8197;
+
+      font-size:7px;
+
+      font-weight:700;
+
+      transition:
+        transform .15s ease,
+        color .18s ease,
+        background .18s ease;
+    }
+
+
+    .search-nav:active{
+
+      transform:
+        scale(.95);
+    }
+
+
+    .search-nav i{
+
+      font-size:14px;
+    }
+
+
+    .search-nav.active{
+
+      color:var(--a);
+
+      background:
+        color-mix(
+          in srgb,
+          var(--a) 7%,
+          transparent
+        );
+    }
+
+
+    /* CENTER SEARCH */
+
+    .search-nav.search-main{
+
+      margin-top:-14px;
+
+      min-height:72px;
+
+      width:65px;
+
+      justify-self:center;
+
+      border:
+        4px solid
+        #0a1422;
+
+      border-radius:50%;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--a),
+          var(--b)
+        );
+
+      color:#fff;
+
+      box-shadow:
+        0 13px 28px
+        color-mix(
+          in srgb,
+          var(--a) 22%,
+          transparent
+        );
+    }
+
+
+    .search-nav.search-main i{
+
+      font-size:19px;
+    }
+
+
+    .search-nav.search-main span{
+
+      display:none;
+    }
+
+
+    /* ===================================================
+       DESKTOP
+       =================================================== */
+
+    @media (min-width:760px){
+
+      .search-main{
+
+        padding-left:22px;
+
+        padding-right:22px;
+      }
+
+
+      .search-hero{
+
+        padding:
+          34px
+          26px
+          27px;
+      }
+
+
+      .search-suggestions{
+
+        grid-template-columns:
+          repeat(
+            4,
+            minmax(0,1fr)
+          );
+      }
+
+    }
+
+  </style>
+
+</head>
+
+
+<body>
+
+
+  <div class="search-page">
+
+
+    <!-- =================================================
+         TOPBAR
+         ================================================= -->
+
+    <header class="search-topbar">
+
+      <div class="search-topbar-in">
+
+
+        <!-- PROFILE -->
+
+        <a
+          class="search-profile"
+          href="profile.html"
+          aria-label="پڕۆفایل"
+          title="پڕۆفایل"
+        >
+
+          <i class="fa-solid fa-user"></i>
+
+        </a>
+
+
+        <!-- BRAND -->
+
+        <a
+          class="search-brand"
+          href="index.html"
+          aria-label="سەرەتا"
+        >
+
+          <div class="search-brand-main">
+
+            <span class="search-brand-logo">
+              <i class="fa-solid fa-book-open"></i>
+            </span>
+
+            <span class="search-brand-title">
+              خوێندنگە
+            </span>
+
+          </div>
+
+          <span class="search-brand-sub">
+            XWENDNGA
+          </span>
+
+        </a>
+
+
+        <!-- NOTIFICATION -->
+
+        <button
+          class="search-notification"
+          type="button"
+          id="notificationButton"
+          aria-label="ئاگادارییەکان"
+          title="ئاگادارییەکان"
+        >
+
+          <i class="fa-regular fa-bell"></i>
+
+          <span
+            class="search-notification-dot"
+            id="notificationDot"
+            aria-hidden="true"
+          ></span>
+
+        </button>
+
+      </div>
+
+    </header>
+
+
+    <!-- =================================================
+         MAIN
+         ================================================= -->
+
+    <main class="search-main">
+
+
+      <!-- =================================================
+           HERO
+           ================================================= -->
+
+      <section class="search-hero">
+
+        <div class="search-kicker">
+          XWENDNGA • GLOBAL SEARCH
+        </div>
+
+        <h1>
+          چی دەگەڕێیت؟
+        </h1>
+
+        <p>
+          لە هەموو ناوەڕۆکەکانی خوێندنگە بگەڕێ؛
+          کتێب، کارتۆن، موزیک و ناوەڕۆکی داهاتوو.
+        </p>
+
+
+        <!-- SEARCH INPUT -->
+
+        <label
+          class="global-search-box"
+          for="globalSearchInput"
+        >
+
+          <i
+            class="fa-solid fa-magnifying-glass global-search-icon"
+          ></i>
+
+
+          <input
+            id="globalSearchInput"
+            type="search"
+            inputmode="search"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="ناوی کتێب، نووسەر، کارتۆن، موزیک..."
+            aria-label="گەڕانی گشتی"
+          >
+
+
+          <button
+            class="global-search-clear"
+            id="globalSearchClear"
+            type="button"
+            aria-label="پاککردنەوەی گەڕان"
+            title="پاککردنەوە"
+          >
+
+            <i class="fa-solid fa-xmark"></i>
+
+          </button>
+
+        </label>
+
+
+        <!-- =================================================
+             TYPE FILTERS
+             ================================================= -->
+
+        <div
+          class="search-types"
+          id="searchTypes"
+        >
+
+          <button
+            class="search-type active"
+            type="button"
+            data-search-type="all"
+          >
+
+            <i class="fa-solid fa-layer-group"></i>
+
+            هەموو
+
+          </button>
+
+
+          <button
+            class="search-type"
+            type="button"
+            data-search-type="book"
+          >
+
+            <i class="fa-solid fa-book-open"></i>
+
+            کتێب
+
+          </button>
+
+
+          <button
+            class="search-type"
+            type="button"
+            data-search-type="cartoon"
+          >
+
+            <i class="fa-solid fa-film"></i>
+
+            کارتۆن
+
+          </button>
+
+
+          <button
+            class="search-type"
+            type="button"
+            data-search-type="music"
+          >
+
+            <i class="fa-solid fa-music"></i>
+
+            موزیک
+
+          </button>
+
+
+        </div>
+
+      </section>
+
+
+      <!-- =================================================
+           SUGGESTIONS
+           ================================================= -->
+
+      <section
+        class="search-suggestions"
+        id="searchSuggestions"
+      >
+
+        <button
+          class="suggestion"
+          type="button"
+          data-suggestion="زمان"
+        >
+
+          <span class="suggestion-icon">
+            <i class="fa-solid fa-language"></i>
+          </span>
+
+          <span>
+
+            <strong>
+              فێربوونی زمان
+            </strong>
+
+            <span>
+              کتێب و ناوەڕۆکی زمانی
+            </span>
+
+          </span>
+
+        </button>
+
+
+        <button
+          class="suggestion"
+          type="button"
+          data-suggestion="مێژوو"
+        >
+
+          <span class="suggestion-icon">
+            <i class="fa-solid fa-landmark"></i>
+          </span>
+
+          <span>
+
+            <strong>
+              مێژوو
+            </strong>
+
+            <span>
+              کتێب و ناوەڕۆکی مێژوویی
+            </span>
+
+          </span>
+
+        </button>
+
+
+        <button
+          class="suggestion"
+          type="button"
+          data-suggestion="کارتۆن"
+        >
+
+          <span class="suggestion-icon">
+            <i class="fa-solid fa-film"></i>
+          </span>
+
+          <span>
+
+            <strong>
+              کارتۆن
+            </strong>
+
+            <span>
+              کارتۆنی فێربوونی زمان
+            </span>
+
+          </span>
+
+        </button>
+
+
+        <button
+          class="suggestion"
+          type="button"
+          data-suggestion="موزیک"
+        >
+
+          <span class="suggestion-icon">
+            <i class="fa-solid fa-headphones"></i>
+          </span>
+
+          <span>
+
+            <strong>
+              موزیک
+            </strong>
+
+            <span>
+              موزیکی گونجاو بۆ خوێندن
+            </span>
+
+          </span>
+
+        </button>
+
+      </section>
+
+
+      <!-- =================================================
+           RESULTS HEADER
+           ================================================= -->
+
+      <section>
+
+        <div class="search-results-head">
+
+          <div>
+
+            <div class="search-results-kicker">
+              RESULTS
+            </div>
+
+            <h2
+              class="search-results-title"
+              id="searchResultsTitle"
+            >
+              هەموو ئەنجامەکان
+            </h2>
+
+          </div>
+
+
+          <span
+            class="search-result-count"
+            id="searchResultCount"
+          >
+            0 ئەنجام
+          </span>
+
+        </div>
+
+
+        <!-- =================================================
+             RESULTS
+             ================================================= -->
+
+        <div
+          class="search-results"
+          id="searchResults"
+          aria-live="polite"
+        >
+
+          <div class="search-empty">
+
+            <div class="search-empty-icon">
+
+              <i class="fa-solid fa-magnifying-glass"></i>
+
+            </div>
+
+
+            <h2>
+              بگەڕێ بۆ ناوەڕۆک
+            </h2>
+
+
+            <p>
+              ناوی کتێب، نووسەر، کارتۆن یان موزیک
+              لە خانەی سەرەوە بنووسە.
+            </p>
+
+          </div>
+
+        </div>
+
+      </section>
+
+    </main>
+
+
+    <!-- =================================================
+         BOTTOM NAVIGATION
+         ================================================= -->
+
+    <nav
+      class="search-bottom"
+      aria-label="ناڤیگەیشنی سەرەکی"
+    >
+
+      <div class="search-bottom-in">
+
+
+        <!-- HOME -->
+
+        <a
+          class="search-nav"
+          href="index.html"
+        >
+
+          <i class="fa-solid fa-house"></i>
+
+          <span>
+            سەرەتا
+          </span>
+
+        </a>
+
+
+        <!-- LIBRARY -->
+
+        <a
+          class="search-nav"
+          href="library.html"
+        >
+
+          <i class="fa-solid fa-book-open"></i>
+
+          <span>
+            کتێبخانە
+          </span>
+
+        </a>
+
+
+        <!-- SEARCH -->
+
+        <a
+          class="search-nav search-main active"
+          href="search.html"
+          aria-label="گەڕان"
+          title="گەڕان"
+        >
+
+          <i class="fa-solid fa-magnifying-glass"></i>
+
+          <span>
+            گەڕان
+          </span>
+
+        </a>
+
+
+        <!-- CARTOONS -->
+
+        <a
+          class="search-nav"
+          href="cartoons.html"
+        >
+
+          <i class="fa-solid fa-film"></i>
+
+          <span>
+            کارتۆن
+          </span>
+
+        </a>
+
+
+        <!-- SETTINGS -->
+
+        <a
+          class="search-nav"
+          href="settings.html"
+        >
+
+          <i class="fa-solid fa-sliders"></i>
+
+          <span>
+            ڕێکخستنەکان
+          </span>
+
+        </a>
+
+
+      </div>
+
+    </nav>
+
+
+  </div>
+
+
+  <!-- =====================================================
+       SEARCH PAGE LOGIC
+       ===================================================== -->
+
+  <script>
+
+    (function(){
+
+      "use strict";
+
+
+      /* ===================================================
+         STATE
+         =================================================== */
+
+      var books = [];
+
+      var currentType = "all";
+
+      var currentQuery = "";
+
+
+      var DB_NAME =
+        "kh_reader_v10";
+
+      var DB_VERSION =
+        1;
+
+      var STORE_NAME =
+        "books";
+
+
+      /* ===================================================
+         ELEMENTS
+         =================================================== */
+
+      var searchInput =
+        document.getElementById(
+          "globalSearchInput"
+        );
+
+
+      var clearButton =
+        document.getElementById(
+          "globalSearchClear"
+        );
+
+
+      var resultsBox =
+        document.getElementById(
+          "searchResults"
+        );
+
+
+      var resultCount =
+        document.getElementById(
+          "searchResultCount"
+        );
+
+
+      var resultTitle =
+        document.getElementById(
+          "searchResultsTitle"
+        );
+
+
+      var suggestionsBox =
+        document.getElementById(
+          "searchSuggestions"
+        );
+
+
+      /* ===================================================
+         DATABASE
+         =================================================== */
+
+      function openDatabase(){
+
+        return new Promise(
+          function(
+            resolve,
+            reject
+          ){
+
+            if(
+              !window.indexedDB
+            ){
+
+              reject(
+                new Error(
+                  "IndexedDB بەردەست نییە"
+                )
+              );
+
+              return;
+
+            }
+
+
+            var request =
+              indexedDB.open(
+                DB_NAME,
+                DB_VERSION
+              );
+
+
+            request.onupgradeneeded =
+              function(){
+
+                var db =
+                  request.result;
+
+
+                if(
+                  !db.objectStoreNames.contains(
+                    STORE_NAME
+                  )
+                ){
+
+                  db.createObjectStore(
+                    STORE_NAME,
+                    {
+                      keyPath:
+                        "id"
+                    }
+                  );
+
+                }
+
+              };
+
+
+            request.onsuccess =
+              function(){
+
+                resolve(
+                  request.result
+                );
+
+              };
+
+
+            request.onerror =
+              function(){
+
+                reject(
+                  request.error ||
+                  new Error(
+                    "نەتوانرا بنکەی داتا بکرێتەوە"
+                  )
+                );
+
+              };
+
+          }
+        );
+
+      }
+
+
+      function getBooks(){
+
+        return openDatabase()
+          .then(
+            function(db){
+
+              return new Promise(
+                function(
+                  resolve,
+                  reject
+                ){
+
+                  var transaction;
+
+                  try{
+
+                    transaction =
+                      db.transaction(
+                        STORE_NAME,
+                        "readonly"
+                      );
+
+                  }catch(error){
+
+                    reject(error);
+
+                    return;
+
+                  }
+
+
+                  var request =
+                    transaction
+                      .objectStore(
+                        STORE_NAME
+                      )
+                      .getAll();
+
+
+                  request.onsuccess =
+                    function(){
+
+                      resolve(
+                        Array.isArray(
+                          request.result
+                        )
+                          ? request.result
+                          : []
+                      );
+
+                    };
+
+
+                  request.onerror =
+                    function(){
+
+                      reject(
+                        request.error ||
+                        new Error(
+                          "خوێندنەوەی کتێبەکان سەرکەوتوو نەبوو"
+                        )
+                      );
+
+                    };
+
+                }
+              );
+
+            }
+          );
+
+      }
+
+
+      /* ===================================================
+         ESCAPE HTML
+         =================================================== */
+
+      function escapeHtml(
+        value
+      ){
+
+        return String(
+          value == null
+            ? ""
+            : value
+        ).replace(
+          /[&<>"']/g,
+          function(char){
+
+            return {
+              "&":"&amp;",
+              "<":"&lt;",
+              ">":"&gt;",
+              '"':"&quot;",
+              "'":"&#039;"
+            }[char];
+
+          }
+        );
+
+      }
+
+
+      /* ===================================================
+         BOOK RESULTS
+         =================================================== */
+
+      function getBookResults(){
+
+        var query =
+          currentQuery
+            .toLocaleLowerCase();
+
+        var list =
+          books.slice();
+
+
+        if(
+          currentType !==
+          "all" &&
+          currentType !==
+          "book"
+        ){
+
+          return [];
+
+        }
+
+
+        if(
+          !query
+        ){
+
+          return [];
+
+        }
+
+
+        list =
+          list.filter(
+            function(book){
+
+              var text =
+                [
+
+                  book.title,
+
+                  book.author,
+
+                  book.category,
+
+                  book.lang
+
+                ]
+                  .filter(Boolean)
+                  .join(" ")
+                  .toLocaleLowerCase();
+
+
+              return (
+                text.indexOf(
+                  query
+                ) >= 0
+              );
+
+            }
+          );
+
+
+        list.sort(
+          function(a,b){
+
+            return (
+              Number(
+                b.addedAt ||
+                b.updatedAt ||
+                0
+              ) -
+              Number(
+                a.addedAt ||
+                a.updatedAt ||
+                0
+              )
+            );
+
+          }
+        );
+
+
+        return list;
+
+      }
+
+
+      /* ===================================================
+         RENDER RESULT
+         =================================================== */
+
+      function renderBookResult(
+        book
+      ){
+
+        var title =
+          book.title ||
+          "کتێب";
+
+
+        var author =
+          book.author ||
+          "نووسەری دیارینەکراو";
+
+
+        var category =
+          book.category ||
+          "گشتی";
+
+
+        return (
+
+          '<article class="search-result-card">' +
+
+            '<div class="search-result-icon">' +
+
+              '<i class="fa-solid fa-book-open"></i>' +
+
+            '</div>' +
+
+
+            '<div class="search-result-content">' +
+
+              '<span class="search-result-type">' +
+
+                '<i class="fa-solid fa-book"></i>' +
+
+                ' کتێب' +
+
+              '</span>' +
+
+
+              '<div class="search-result-title">' +
+
+                escapeHtml(
+                  title
+                ) +
+
+              '</div>' +
+
+
+              '<p class="search-result-description">' +
+
+                escapeHtml(
+                  author
+                ) +
+
+                ' • ' +
+
+                escapeHtml(
+                  category
+                ) +
+
+              '</p>' +
+
+            '</div>' +
+
+
+            '<button' +
+
+              ' class="search-result-action"' +
+
+              ' type="button"' +
+
+              ' data-open-book="' +
+
+                escapeHtml(
+                  book.id
+                ) +
+
+              '"' +
+
+              ' aria-label="کردنەوەی کتێب"' +
+
+              ' title="خوێندنەوە"' +
+
+            '>' +
+
+              '<i class="fa-solid fa-arrow-left"></i>' +
+
+            '</button>' +
+
+          '</article>'
+
+        );
+
+      }
+
+
+      /* ===================================================
+         EMPTY
+         =================================================== */
+
+      function renderEmpty(
+        hasQuery
+      ){
+
+        if(
+          hasQuery
+        ){
+
+          resultsBox.innerHTML =
+
+            '<div class="search-empty">' +
+
+              '<div class="search-empty-icon">' +
+
+                '<i class="fa-regular fa-face-frown"></i>' +
+
+              '</div>' +
+
+              '<h2>' +
+
+                'هیچ ئەنجامێک نەدۆزرایەوە' +
+
+              '</h2>' +
+
+              '<p>' +
+
+                'وشەیەکی تر تاقی بکەوە یان جۆری ناوەڕۆک بگۆڕە.' +
+
+              '</p>' +
+
+            '</div>';
+
+        }else{
+
+          resultsBox.innerHTML =
+
+            '<div class="search-empty">' +
+
+              '<div class="search-empty-icon">' +
+
+                '<i class="fa-solid fa-magnifying-glass"></i>' +
+
+              '</div>' +
+
+              '<h2>' +
+
+                'بگەڕێ بۆ ناوەڕۆک' +
+
+              '</h2>' +
+
+              '<p>' +
+
+                'ناوی کتێب، نووسەر، کارتۆن یان موزیک لە خانەی سەرەوە بنووسە.' +
+
+              '</p>' +
+
+            '</div>';
+
+        }
+
+      }
+
+
+      /* ===================================================
+         RENDER SEARCH
+         =================================================== */
+
+      function renderSearch(){
+
+        var results = [];
+
+
+        /*
+         * لەم قۆناغەدا تەنیا کتێبە ڕاستەقینەکان
+         * لە داتا هەیە.
+         *
+         * کارتۆن و موزیک دواتر کاتێک
+         * سیستەمی خۆیان دروست کرا،
+         * بۆ هەمان گەڕانی گشتی زیاد دەکرێن.
+         */
+
+        if(
+          currentQuery &&
+          (
+            currentType ===
+              "all" ||
+            currentType ===
+              "book"
+          )
+        ){
+
+          results =
+            getBookResults();
+
+        }
+
+
+        /*
+         * واتە ئەگەر جۆری کارتۆن
+         * یان موزیک هەڵبژێردراوە،
+         * لە ئێستادا ئەنجامی کتێب نیشان نادرێت.
+         *
+         * دواتر داتای ئەو بەشانە زیاد دەکرێت.
+         */
+
+
+        if(
+          resultCount
+        ){
+
+          resultCount.textContent =
+            results.length +
+            " ئەنجام";
+
+        }
+
+
+        if(
+          resultTitle
+        ){
+
+          if(
+            currentQuery
+          ){
+
+            resultTitle.textContent =
+              "ئەنجامەکانی «" +
+              currentQuery +
+              "»";
+
+          }else{
+
+            resultTitle.textContent =
+              "هەموو ئەنجامەکان";
+
+          }
+
+        }
+
+
+        if(
+          !results.length
+        ){
+
+          renderEmpty(
+            !!currentQuery
+          );
+
+          return;
+
+        }
+
+
+        resultsBox.innerHTML =
+          results
+            .map(
+              renderBookResult
+            )
+            .join("");
+
+      }
+
+
+      /* ===================================================
+         SEARCH INPUT
+         =================================================== */
+
+      if(
+        searchInput
+      ){
+
+        searchInput.addEventListener(
+          "input",
+          function(){
+
+            currentQuery =
+              String(
+                this.value
+              ).trim();
+
+
+            if(
+              clearButton
+            ){
+
+              clearButton.classList.toggle(
+                "show",
+                !!currentQuery
+              );
+
+            }
+
+
+            if(
+              suggestionsBox
+            ){
+
+              suggestionsBox.style.display =
+                currentQuery
+                  ? "none"
+                  : "grid";
+
+            }
+
+
+            renderSearch();
+
+          }
+        );
+
+      }
+
+
+      /* ===================================================
+         CLEAR SEARCH
+         =================================================== */
+
+      if(
+        clearButton
+      ){
+
+        clearButton.addEventListener(
+          "click",
+          function(){
+
+            if(
+              searchInput
+            ){
+
+              searchInput.value =
+                "";
+
+              searchInput.focus();
+
+            }
+
+
+            currentQuery =
+              "";
+
+
+            clearButton.classList.remove(
+              "show"
+            );
+
+
+            if(
+              suggestionsBox
+            ){
+
+              suggestionsBox.style.display =
+                "grid";
+
+            }
+
+
+            renderSearch();
+
+          }
+        );
+
+      }
+
+
+      /* ===================================================
+         TYPE FILTERS
+         =================================================== */
+
+      document
+        .querySelectorAll(
+          "[data-search-type]"
+        )
+        .forEach(
+          function(button){
+
+            button.addEventListener(
+              "click",
+              function(){
+
+                currentType =
+                  this.getAttribute(
+                    "data-search-type"
+                  );
+
+
+                document
+                  .querySelectorAll(
+                    "[data-search-type]"
+                  )
+                  .forEach(
+                    function(item){
+
+                      item.classList.toggle(
+                        "active",
+                        item === button
+                      );
+
+                    }
+                  );
+
+
+                renderSearch();
+
+              }
+            );
+
+          }
+        );
+
+
+      /* ===================================================
+         SUGGESTIONS
+         =================================================== */
+
+      document
+        .querySelectorAll(
+          "[data-suggestion]"
+        )
+        .forEach(
+          function(button){
+
+            button.addEventListener(
+              "click",
+              function(){
+
+                var value =
+                  this.getAttribute(
+                    "data-suggestion"
+                  );
+
+
+                if(
+                  searchInput
+                ){
+
+                  searchInput.value =
+                    value;
+
+                  searchInput.focus();
+
+                  searchInput.dispatchEvent(
+                    new Event(
+                      "input"
+                    )
+                  );
+
+                }
+
+              }
+            );
+
+          }
+        );
+
+
+      /* ===================================================
+         OPEN BOOK
+         =================================================== */
+
+      if(
+        resultsBox
+      ){
+
+        resultsBox.addEventListener(
+          "click",
+          function(event){
+
+            var button =
+              event.target.closest(
+                "[data-open-book]"
+              );
+
+
+            if(
+              !button
+            ){
+              return;
+            }
+
+
+            var id =
+              button.getAttribute(
+                "data-open-book"
+              );
+
+
+            if(
+              !id
+            ){
+              return;
+            }
+
+
+            try{
+
+              sessionStorage.setItem(
+                "xwendnga_library_book_id",
+                id
+              );
+
+            }catch(error){}
+
+
+            window.location.href =
+              "index.html";
+
+          }
+        );
+
+      }
+
+
+      /* ===================================================
+         NOTIFICATION
+         =================================================== */
+
+      var notificationButton =
+        document.getElementById(
+          "notificationButton"
+        );
+
+
+      if(
+        notificationButton
+      ){
+
+        notificationButton.addEventListener(
+          "click",
+          function(){
+
+            alert(
+              "بەشی ئاگادارییەکان لە قۆناغی داهاتوودا تەواو دەکرێت."
+            );
+
+          }
+        );
+
+      }
+
+
+      /* ===================================================
+         LOAD BOOKS
+         =================================================== */
+
+      getBooks()
+        .then(
+          function(
+            storedBooks
+          ){
+
+            books =
+              Array.isArray(
+                storedBooks
+              )
+                ? storedBooks
+                : [];
+
+
+            renderSearch();
+
+          }
+        )
+        .catch(
+          function(error){
+
+            console.error(
+              "Search books:",
+              error
+            );
+
+
+            books = [];
+
+
+            renderSearch();
+
+          }
+        );
+
+
+    })();
+
+  </script>
+
+</body>
+</html>
