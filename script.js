@@ -5537,6 +5537,9 @@
     renderProfile:
       renderProfile,
 
+    dbPut:
+      dbPut,
+
 
     authState:
       authState,
