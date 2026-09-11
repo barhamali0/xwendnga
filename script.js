@@ -352,7 +352,7 @@
         category: track.category || "",
         cover_url: track.cover_url || "",
         audio_url: track.audio_url || "",
-        duration: Number(track.duration) || 0
+        duration: Math.round(Number(track.duration)) || 0
       })
       .select(
         "id,created_at,title,artist,category,cover_url,audio_url,duration,owner_id,status,rejection_reason,reviewed_by,reviewed_at"
@@ -5210,8 +5210,12 @@
     musicInput.addEventListener(
       "change",
       function () {
+        var selectedFiles = Array.from(
+          this.files || []
+        );
+
         addMusicFiles(
-          this.files
+          selectedFiles
         );
 
         this.value =
