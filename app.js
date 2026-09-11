@@ -534,31 +534,6 @@
         return fallback;
       }
 
-      /*
-       * One-time cleanup for the old broken-encoding
-       * notification data. If the stored value contains
-       * common mojibake markers, remove it and replace it
-       * with the clean Kurdish notification above.
-       */
-      if (
-        /[ØÙÛÚÝÞÃÂÐÑ]|â€|ðŸ/.test(
-          saved
-        )
-      ) {
-        localStorage.removeItem(
-          "xwendnga_notifications"
-        );
-
-        localStorage.setItem(
-          "xwendnga_notifications",
-          JSON.stringify(
-            fallback
-          )
-        );
-
-        return fallback;
-      }
-
       var parsed =
         JSON.parse(
           saved
@@ -572,14 +547,34 @@
         localStorage.removeItem(
           "xwendnga_notifications"
         );
+        return fallback;
+      }
 
-        localStorage.setItem(
-          "xwendnga_notifications",
-          JSON.stringify(
-            fallback
-          )
+      var mojibakePattern =
+        /[ÃÂÐÑØÙÛÚÝÞ]|â€|ðŸ/i;
+
+      var hasMojibake =
+        parsed.some(
+          function (item) {
+            var text =
+              [
+                item && item.title,
+                item && item.text,
+                item && item.time
+              ]
+                .filter(Boolean)
+                .join(" ");
+
+            return mojibakePattern.test(
+              String(text)
+            );
+          }
         );
 
+      if (hasMojibake) {
+        localStorage.removeItem(
+          "xwendnga_notifications"
+        );
         return fallback;
       }
 
