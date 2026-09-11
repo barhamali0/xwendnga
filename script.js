@@ -4185,7 +4185,7 @@
                           category: "",
                           cover_url: "",
                           audio_url: uploaded.url,
-                          duration: Number(duration) || 0
+                          duration: Math.round(Number(duration)) || 0
                         }).then(resolve).catch(function (error) {
                           deleteFromStorage(MUSIC_BUCKET, path).catch(function () {});
                           resolve(Promise.reject(error));
@@ -5210,13 +5210,8 @@
     musicInput.addEventListener(
       "change",
       function () {
-        var selectedFiles =
-          Array.prototype.slice.call(
-            this.files || []
-          );
-
         addMusicFiles(
-          selectedFiles
+          this.files
         );
 
         this.value =
