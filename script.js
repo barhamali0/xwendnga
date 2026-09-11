@@ -86,7 +86,7 @@
     if (!supabaseReady()) {
       return Promise.reject(
         new Error(
-          "Supabase Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•"
+          "Supabase بەردەست نییە"
         )
       );
     }
@@ -167,10 +167,10 @@
     var lang =
       language;
 
-    if (language === "Ú©ÙˆØ±Ø¯ÛŒ") lang = "ku";
-    else if (language === "Ø¹Û•Ø±Û•Ø¨ÛŒ") lang = "ar";
-    else if (language === "ÙØ§Ø±Ø³ÛŒ") lang = "fa";
-    else if (language === "Ø¦ÛŒÙ†Ú¯Ù„ÛŒØ²ÛŒ") lang = "en";
+    if (language === "کوردی") lang = "ku";
+    else if (language === "عەرەبی") lang = "ar";
+    else if (language === "فارسی") lang = "fa";
+    else if (language === "ئینگلیزی") lang = "en";
 
     return {
       id: String(row.id),
@@ -183,7 +183,7 @@
       title: row.title || "",
       author: row.author || "",
       language: row.language || "",
-      category: row.category || "Ú¯Ø´ØªÛŒ",
+      category: row.category || "گشتی",
       description: row.description || "",
       keywords: row.keywords || "",
       cover_url: row.cover_url || "",
@@ -229,7 +229,7 @@
     book
   ) {
     if (!supabaseReady()) {
-      return Promise.reject(new Error("Supabase Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•"));
+      return Promise.reject(new Error("Supabase بەردەست نییە"));
     }
 
     return supabaseClient
@@ -238,7 +238,7 @@
         title: book.title || "",
         author: book.author || "",
         language: book.language || book.lang || "en",
-        category: book.category || "Ú¯Ø´ØªÛŒ",
+        category: book.category || "گشتی",
         description: book.description || "",
         pages: Number(book.pageCount) || 0,
         cover_url: book.cover_url || "",
@@ -341,7 +341,7 @@
     track
   ) {
     if (!supabaseReady()) {
-      return Promise.reject(new Error("Supabase Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•"));
+      return Promise.reject(new Error("Supabase بەردەست نییە"));
     }
 
     return supabaseClient
@@ -455,11 +455,11 @@
   }
 
   var AUTH_RECOVERY_NOTICE =
-    "Ù‡Û•Ú˜Ù…Ø§Ø±Û•Ú©Û•Øª Ø¯Ø±ÙˆØ³Øª Ø¨ÙˆÙˆ. Ø¦Û•Ú¯Û•Ø± Ù¾Ø´ØªÚ•Ø§Ø³ØªÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦ÛŒÙ…Û•ÛŒÚµ Ú†Ø§Ù„Ø§Ú© Ø¨ÛŽØªØŒ ØªÚ©Ø§ÛŒÛ• Ø¦ÛŒÙ…Û•ÛŒÚµÛ•Ú©Û•Øª Ù¾Ø´ØªÚ•Ø§Ø³Øª Ø¨Ú©Û•ÙˆÛ• Ùˆ Ù¾Ø§Ø´Ø§Ù† Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.";
+    "هەژمارەکەت دروست بوو. ئەگەر پشتڕاستکردنەوەی ئیمەیڵ چالاک بێت، تکایە ئیمەیڵەکەت پشتڕاست بکەوە و پاشان بچۆ ژوورەوە.";
 
   var PREMIUM_PAYMENT_INFO = {
-    fastpay: "Ú˜Ù…Ø§Ø±Û•ÛŒ FastPay Ù€Û•Ú©Û•Øª Ù„ÛŽØ±Û• Ø¯Ø§Ø¨Ù†ÛŽ",
-    fib: "Ú˜Ù…Ø§Ø±Û•ÛŒ FIB Ù€Û•Ú©Û•Øª Ù„ÛŽØ±Û• Ø¯Ø§Ø¨Ù†ÛŽ",
+    fastpay: "ژمارەی FastPay ـەکەت لێرە دابنێ",
+    fib: "ژمارەی FIB ـەکەت لێرە دابنێ",
     telegram: "@about_Barham"
   };
 
@@ -492,14 +492,14 @@
      ======================================================= */
 
   var CATEGORIES = [
-    "Ú¯Ø´ØªÛŒ",
-    "Ø²Ù…Ø§Ù†",
-    "Ø¦Û•Ø¯Û•Ø¨",
-    "Ù…ÛŽÚ˜ÙˆÙˆ",
-    "Ø²Ø§Ù†Ø³Øª",
-    "ÙÛ•Ù„Ø³Û•ÙÛ•",
-    "Ø¦Ø§ÛŒÛŒÙ†",
-    "Ø¦ÛŒÙ†Ú¯Ù„ÛŒØ²ÛŒ"
+    "گشتی",
+    "زمان",
+    "ئەدەب",
+    "مێژوو",
+    "زانست",
+    "فەلسەفە",
+    "ئایین",
+    "ئینگلیزی"
   ];
 
 
@@ -511,7 +511,7 @@
 
     cyan: {
       name:
-        "Ø´ÛŒÙ†ÛŒ Ø¦Ø§Ø³Ù…Ø§Ù†ÛŒ",
+        "شینی ئاسمانی",
       a:
         "#35bbff",
       b:
@@ -530,7 +530,7 @@
 
     violet: {
       name:
-        "Ù…Û†Ø±ÛŒ",
+        "مۆری",
       a:
         "#8b6cff",
       b:
@@ -549,7 +549,7 @@
 
     emerald: {
       name:
-        "Ø³Û•ÙˆØ²ÛŒ",
+        "سەوزی",
       a:
         "#22c98b",
       b:
@@ -568,7 +568,7 @@
 
     sunset: {
       name:
-        "Ø®Û†Ø±Ø¦Ø§ÙˆØ§Ø¨ÙˆÙˆÙ†",
+        "خۆرئاوابوون",
       a:
         "#ff8a4c",
       b:
@@ -587,7 +587,7 @@
 
     ruby: {
       name:
-        "Ø³ÙˆÙˆØ±ÛŒ",
+        "سووری",
       a:
         "#ff536d",
       b:
@@ -606,7 +606,7 @@
 
     royal: {
       name:
-        "Ø´ÛŒÙ†ÛŒ Ù‚ÙˆÙˆÚµ",
+        "شینی قووڵ",
       a:
         "#4c7dff",
       b:
@@ -625,7 +625,7 @@
 
     gold: {
       name:
-        "Ø²ÛŽÚ•ÛŒ",
+        "زێڕی",
       a:
         "#f2bf4a",
       b:
@@ -644,7 +644,7 @@
 
     rose: {
       name:
-        "Ù¾Û•Ù…Û•ÛŒÛŒ",
+        "پەمەیی",
       a:
         "#f05bd5",
       b:
@@ -663,7 +663,7 @@
 
     ocean: {
       name:
-        "Ø¯Û•Ø±ÛŒØ§ÛŒÛŒ",
+        "دەریایی",
       a:
         "#20d6d6",
       b:
@@ -682,7 +682,7 @@
 
     graphite: {
       name:
-        "Ú¯Ø±Ø§ÙØ§ÛŒØª",
+        "گرافایت",
       a:
         "#aab7c8",
       b:
@@ -701,7 +701,7 @@
 
     lime: {
       name:
-        "Ù„Ø§ÛŒÙ…ÛŒ",
+        "لایمی",
       a:
         "#a7df45",
       b:
@@ -720,7 +720,7 @@
 
     midnight: {
       name:
-        "Ù…ÛŒØ¯Ù†Ø§Ùˆ",
+        "میدناو",
       a:
         "#607dff",
       b:
@@ -747,7 +747,7 @@
 
     paper: {
       name:
-        "Ø³Ù¾ÛŒ",
+        "سپی",
       bg:
         "#f4f6f9",
       paper:
@@ -758,7 +758,7 @@
 
     cream: {
       name:
-        "Ú©Ø±ÛŽÙ…ÛŒ",
+        "کرێمی",
       bg:
         "#eee5d1",
       paper:
@@ -769,7 +769,7 @@
 
     mint: {
       name:
-        "Ø³Û•ÙˆØ²ÛŒ Ú©Ø§Úµ",
+        "سەوزی کاڵ",
       bg:
         "#dfece5",
       paper:
@@ -780,7 +780,7 @@
 
     sky: {
       name:
-        "Ø¦Ø§Ø³Ù…Ø§Ù†ÛŒ",
+        "ئاسمانی",
       bg:
         "#dceef4",
       paper:
@@ -791,7 +791,7 @@
 
     rose: {
       name:
-        "Ù¾Û•Ù…Û•ÛŒÛŒ",
+        "پەمەیی",
       bg:
         "#f0dfe2",
       paper:
@@ -802,7 +802,7 @@
 
     lavender: {
       name:
-        "Ù…Û†Ø±ÛŒ",
+        "مۆری",
       bg:
         "#e6def4",
       paper:
@@ -813,7 +813,7 @@
 
     sand: {
       name:
-        "Ø®Û†ÚµÛ•Ù…ÛŽØ´ÛŒ",
+        "خۆڵەمێشی",
       bg:
         "#e7ded2",
       paper:
@@ -824,7 +824,7 @@
 
     forest: {
       name:
-        "Ø¯Ø§Ø±Ø³ØªØ§Ù†",
+        "دارستان",
       bg:
         "#dee8de",
       paper:
@@ -835,7 +835,7 @@
 
     sepia: {
       name:
-        "Ú©Û•ØªÛŒØ¨ÛŒ Ú©Û†Ù†",
+        "کەتیبی کۆن",
       bg:
         "#e6dbc6",
       paper:
@@ -846,7 +846,7 @@
 
     slate: {
       name:
-        "Ø³ÚµÛ•ÛŒØª",
+        "سڵەیت",
       bg:
         "#dce1e7",
       paper:
@@ -857,7 +857,7 @@
 
     night: {
       name:
-        "Ø´Û•Ùˆ",
+        "شەو",
       bg:
         "#0b1420",
       paper:
@@ -868,7 +868,7 @@
 
     black: {
       name:
-        "Ú•Û•Ø´",
+        "ڕەش",
       bg:
         "#050505",
       paper:
@@ -1111,7 +1111,7 @@
         if (!window.indexedDB) {
           reject(
             new Error(
-              "IndexedDB Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•"
+              "IndexedDB بەردەست نییە"
             )
           );
 
@@ -1156,7 +1156,7 @@
             reject(
               request.error ||
                 new Error(
-                  "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ IndexedDB Ø¨Ú©Ø±ÛŽØªÛ•ÙˆÛ•"
+                  "نەتوانرا IndexedDB بکرێتەوە"
                 )
             );
           };
@@ -1257,7 +1257,7 @@
                   reject(
                     tx.error ||
                       new Error(
-                        "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ú©ØªÛŽØ¨ Ù¾Ø§Ø´Û•Ú©Û•ÙˆØª Ø¨Ú©Ø±ÛŽØª"
+                        "نەتوانرا کتێب پاشەکەوت بکرێت"
                       )
                   );
                 };
@@ -1267,7 +1267,7 @@
                   reject(
                     tx.error ||
                       new Error(
-                        "Ù¾Ø§Ø´Û•Ú©Û•ÙˆØªÚ©Ø±Ø¯Ù† Ù‡Û•ÚµÙˆÛ•Ø´Ø§ÛŒÛ•ÙˆÛ•"
+                        "پاشەکەوتکردن هەڵوەشایەوە"
                       )
                   );
                 };
@@ -1774,7 +1774,7 @@
         if (!file) {
           reject(
             new Error(
-              "PDF file Ù†Û•Ø¯Û†Ø²Ø±Ø§ÛŒÛ•ÙˆÛ•"
+              "PDF file نەدۆزرایەوە"
             )
           );
 
@@ -1784,7 +1784,7 @@
         if (!window.pdfjsLib) {
           reject(
             new Error(
-              "PDF.js Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•"
+              "PDF.js بەردەست نییە"
             )
           );
 
@@ -1806,7 +1806,7 @@
               ) {
                 reject(
                   new Error(
-                    "PDF buffer Ø¨Û•ØªØ§ÚµÛ•"
+                    "PDF buffer بەتاڵە"
                   )
                 );
 
@@ -1931,7 +1931,7 @@
             reject(
               reader.error ||
                 new Error(
-                  "PDF Ø®ÙˆÛŽÙ†Ø¯Ø±Ø§ÛŒÛ•ÙˆÛ• Ù†Û•Ø¨ÙˆÙˆ"
+                  "PDF خوێندرایەوە نەبوو"
                 )
             );
           };
@@ -1945,7 +1945,7 @@
 
 
   /* =======================================================
-     ADD PDF â†’ SUPABASE
+     ADD PDF → SUPABASE
      ======================================================= */
 
   function addPDF(
@@ -1953,17 +1953,17 @@
   ) {
     if (!file) return;
     if (!supabaseReady()) {
-      toast("Supabase Ù¾Û•ÛŒÙˆÛ•Ø³Øª Ù†ÛŒÛŒÛ•");
+      toast("Supabase پەیوەست نییە");
       return;
     }
 
-    ensureAuthenticated("Ø¨Û† Ø²ÛŒØ§Ø¯Ú©Ø±Ø¯Ù†ÛŒ Ú©ØªÛŽØ¨ Ø³Û•Ø±Û•ØªØ§ Ø¯Û•Ø¨ÛŽØª Ø¨Ú†ÛŒØªÛ• Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.")
+    ensureAuthenticated("بۆ زیادکردنی کتێب سەرەتا دەبێت بچیتە ژوورەوە.")
       .then(function (ok) {
         if (!ok) return;
         return getFreshProfile().then(function (profile) {
           if (!profile) return;
 
-          toast("PDF Ø®Û•Ø±ÛŒÚ©ÛŒ Ø¨Ø§Ø±Ú©Ø±Ø¯Ù†Û•...");
+          toast("PDF خەریکی بارکردنە...");
 
           var uid = authState.user.id;
           var safeName = file.name
@@ -1982,7 +1982,7 @@
                 var book = {
                   title: file.name.replace(/\.pdf$/i, ""),
                   author: "",
-                  category: "Ú¯Ø´ØªÛŒ",
+                  category: "گشتی",
                   description: "",
                   keywords: "",
                   lang: data.lang || "en",
@@ -2014,8 +2014,8 @@
                 console.error("reload user data after book upload", error);
               });
               toast(savedBook.status === "approved"
-                ? "Ú©ØªÛŽØ¨Û•Ú©Û• Ú•Ø§Ø³ØªÛ•ÙˆØ®Û† Ø¨ÚµØ§ÙˆÚ©Ø±Ø§ÛŒÛ•ÙˆÛ•"
-                : "Ú©ØªÛŽØ¨Û•Ú©Û• Ù†ÛŽØ±Ø¯Ø±Ø§ Ø¨Û† Ù¾Ø´Ú©Ù†ÛŒÙ†");
+                ? "کتێبەکە ڕاستەوخۆ بڵاوکرایەوە"
+                : "کتێبەکە نێردرا بۆ پشکنین");
             })
             .catch(function (error) {
               console.error("Supabase addPDF:", error);
@@ -2025,8 +2025,8 @@
                 })
                 .finally(function () {
                   toast(
-                    "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ PDF Ø²ÛŒØ§Ø¯ Ø¨Ú©Ø±ÛŽØª: " +
-                    String(error && error.message ? error.message : "Ù‡Û•ÚµÛ•").slice(0, 120)
+                    "نەتوانرا PDF زیاد بکرێت: " +
+                    String(error && error.message ? error.message : "هەڵە").slice(0, 120)
                   );
                 });
             });
@@ -2046,24 +2046,24 @@
       lang ===
       "ku"
     ) {
-      return "Ú©ÙˆØ±Ø¯ÛŒ";
+      return "کوردی";
     }
 
     if (
       lang ===
       "ar"
     ) {
-      return "Ø¹Û•Ø±Û•Ø¨ÛŒ";
+      return "عەرەبی";
     }
 
     if (
       lang ===
       "fa"
     ) {
-      return "ÙØ§Ø±Ø³ÛŒ";
+      return "فارسی";
     }
 
-    return "Ø¦ÛŒÙ†Ú¯Ù„ÛŒØ²ÛŒ";
+    return "ئینگلیزی";
   }
 
   function getLatestBook() {
@@ -2157,7 +2157,7 @@
       list = list.slice(0, 8);
     } else if (filter !== "all") {
       list = list.filter(function (book) {
-        return (book.category || "Ú¯Ø´ØªÛŒ") === filter;
+        return (book.category || "گشتی") === filter;
       });
     }
 
@@ -2326,7 +2326,7 @@
       continueTitle.textContent =
         latest
           ? title
-          : "Ú©ØªÛŽØ¨Û•Ú©Û•Øª Ù„Û•ÙˆÛŽÛŒÛ•";
+          : "کتێبەکەت لەوێیە";
     }
   }
 
@@ -2381,7 +2381,7 @@
     ) {
       hint.textContent =
         list.length +
-        " Ú©ØªÛŽØ¨";
+        " کتێب";
     }
 
     updateHomeStats();
@@ -2401,20 +2401,20 @@
         "<h3>" +
         (
           query
-            ? "Ù‡ÛŒÚ† Ø¦Û•Ù†Ø¬Ø§Ù…ÛŽÚ© Ù†Û•Ø¯Û†Ø²Ø±Ø§ÛŒÛ•ÙˆÛ•"
-            : "Ù‡ÛŽØ´ØªØ§ Ú©ØªÛŽØ¨ Ù†ÛŒÛŒÛ•"
+            ? "هیچ ئەنجامێک نەدۆزرایەوە"
+            : "هێشتا کتێب نییە"
         ) +
         "</h3>" +
         "<p>" +
         (
           query
-            ? "ÙˆØ´Û• ÛŒØ§Ù† Ù†Ø§ÙˆÛŒ Ù†ÙˆÙˆØ³Û•Ø±ÛŽÚ©ÛŒ ØªØ± ØªØ§Ù‚ÛŒ Ø¨Ú©Û•ÙˆÛ•."
-            : "PDF Ù€ÛŽÚ© Ø²ÛŒØ§Ø¯ Ø¨Ú©Û• Ø¨Û† Ø¯Û•Ø³ØªÙ¾ÛŽÚ©Ø±Ø¯Ù†ÛŒ Ø®ÙˆÛŽÙ†Ø¯Ù†Û•ÙˆÛ•."
+            ? "وشە یان ناوی نووسەرێکی تر تاقی بکەوە."
+            : "PDF ـێک زیاد بکە بۆ دەستپێکردنی خوێندنەوە."
         ) +
         "</p>" +
         '<button class="primary empty-button" type="button" data-action="add-pdf">' +
         '<i class="fa-solid fa-file-circle-plus"></i>' +
-        " Ø²ÛŒØ§Ø¯Ú©Ø±Ø¯Ù†ÛŒ PDF" +
+        " زیادکردنی PDF" +
         "</button>" +
         "</div>";
 
@@ -2486,7 +2486,7 @@
               ) +
               '">' +
 
-              '<button class="fav" data-action="fav" title="Ø¯ÚµØ®ÙˆØ§Ø²" type="button">' +
+              '<button class="fav" data-action="fav" title="دڵخواز" type="button">' +
 
               '<i class="' +
               (
@@ -2513,7 +2513,7 @@
               '<div class="book-author">' +
               esc(
                 book.author ||
-                "Ù†ÙˆÙˆØ³Û•Ø±ÛŒ Ø¯ÛŒØ§Ø±ÛŒÙ†Û•Ú©Ø±Ø§Ùˆ"
+                "نووسەری دیارینەکراو"
               ) +
               "</div>" +
 
@@ -2525,7 +2525,7 @@
                 book.pageCount ||
                 0
               ) +
-              " Ù„Ø§Ù¾Û•Ú•Û•</span>" +
+              " لاپەڕە</span>" +
 
               "<span>" +
               '<i class="fa-solid fa-language"></i> ' +
@@ -2539,7 +2539,7 @@
               '<span class="tag-badge">' +
               esc(
                 book.category ||
-                "Ú¯Ø´ØªÛŒ"
+                "گشتی"
               ) +
               "</span>" +
 
@@ -2555,11 +2555,11 @@
 
               '<button class="small primary" data-action="open-book" type="button">' +
               '<i class="fa-solid fa-book-open"></i>' +
-              " Ø®ÙˆÛŽÙ†Ø¯Ù†Û•ÙˆÛ•" +
+              " خوێندنەوە" +
               "</button>" +
 
               (authState.isAdmin
-                ? '<button class="small" data-action="del-book" title="Ø³Ú•ÛŒÙ†Û•ÙˆÛ•" type="button"><i class="fa-regular fa-trash-can"></i></button>'
+                ? '<button class="small" data-action="del-book" title="سڕینەوە" type="button"><i class="fa-regular fa-trash-can"></i></button>'
                 : '') +
 
               "</div>" +
@@ -2593,7 +2593,7 @@
 
     if (!book) {
       toast(
-        "Ú©ØªÛŽØ¨Û•Ú©Û• Ù†Û•Ø¯Û†Ø²Ø±Ø§ÛŒÛ•ÙˆÛ•"
+        "کتێبەکە نەدۆزرایەوە"
       );
 
       return;
@@ -2605,7 +2605,7 @@
       book.pdf_url
     ) {
       toast(
-        "PDF Ø®Û•Ø±ÛŒÚ©ÛŒ Ø¯Ø§Ø¨Û•Ø²Ø§Ù†Ø¯Ù†Û•..."
+        "PDF خەریکی دابەزاندنە..."
       );
 
       fetch(
@@ -2646,7 +2646,7 @@
               );
             } else {
               toast(
-                "Reader Ù‡ÛŽØ´ØªØ§ Ø¨Ø§Ø±Ù†Û•Ú©Ø±Ø§ÙˆÛ•"
+                "Reader هێشتا بارنەکراوە"
               );
             }
           }
@@ -2661,10 +2661,10 @@
             );
 
             toast(
-              "PDF Ù†Û•Ú©Ø±Ø§ÛŒÛ•ÙˆÛ•: " +
+              "PDF نەکرایەوە: " +
               String(
                 error.message ||
-                "Ù‡Û•ÚµÛ•"
+                "هەڵە"
               ).slice(
                 0,
                 100
@@ -2686,7 +2686,7 @@
       );
     } else {
       toast(
-        "Reader Ù‡ÛŽØ´ØªØ§ Ø¨Ø§Ø±Ù†Û•Ú©Ø±Ø§ÙˆÛ•"
+        "Reader هێشتا بارنەکراوە"
       );
     }
   }
@@ -2700,7 +2700,7 @@
     id
   ) {
     if (!authState.user) {
-      openAuthModal("login", "Ø¨Û† Ø¨Û•Ú©Ø§Ø±Ù‡ÛŽÙ†Ø§Ù†ÛŒ Ø¯ÚµØ®ÙˆØ§Ø²Û•Ú©Ø§Ù† Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.");
+      openAuthModal("login", "بۆ بەکارهێنانی دڵخوازەکان سەرەتا بچۆ ژوورەوە.");
       return;
     }
 
@@ -2731,11 +2731,11 @@
       else delete authState.favorites[favoriteKey("book", remoteId)];
       renderBooks();
       toast(nextState
-        ? "Ú©ØªÛŽØ¨Û•Ú©Û• Ø®Ø±Ø§ÛŒÛ• Ù†Ø§Ùˆ Ø¯ÚµØ®ÙˆØ§Ø²Û•Ú©Ø§Ù†"
-        : "Ú©ØªÛŽØ¨Û•Ú©Û• Ù„Û• Ø¯ÚµØ®ÙˆØ§Ø²Û•Ú©Ø§Ù† Ù„Ø§Ø¨Ø±Ø§");
+        ? "کتێبەکە خرایە ناو دڵخوازەکان"
+        : "کتێبەکە لە دڵخوازەکان لابرا");
     }).catch(function (error) {
       console.error("favorite:", error);
-      toast("Ù†ÙˆÛŽÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¯ÚµØ®ÙˆØ§Ø² Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+      toast("نوێکردنەوەی دڵخواز سەرکەوتوو نەبوو");
     });
   }
 
@@ -2748,7 +2748,7 @@
     id
   ) {
     if (!authState.isAdmin) {
-      toast("ØªÛ•Ù†ÛŒØ§ Ø¦Û•Ø¯Ù…ÛŒÙ† Ø¯Û•ØªÙˆØ§Ù†ÛŽØª Ú©ØªÛŽØ¨ Ø¨Ø³Ú•ÛŽØªÛ•ÙˆÛ•.");
+      toast("تەنیا ئەدمین دەتوانێت کتێب بسڕێتەوە.");
       return;
     }
 
@@ -2770,9 +2770,9 @@
 
     if (
       !window.confirm(
-        "Ø¯ÚµÙ†ÛŒØ§ÛŒØª Ù„Û• Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ Â«" +
+        "دڵنیایت لە سڕینەوەی «" +
         book.title +
-        "Â»ØŸ"
+        "»؟"
       )
     ) {
       return;
@@ -2783,7 +2783,7 @@
       supabaseReady()
     ) {
       toast(
-        "Ø®Û•Ø±ÛŒÚ©ÛŒ Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ Ú©ØªÛŽØ¨Û•Ú©Û•ÛŒÛ•..."
+        "خەریکی سڕینەوەی کتێبەکەیە..."
       );
 
       deleteRemoteBook(
@@ -2807,7 +2807,7 @@
             renderOwnerPanel();
 
             toast(
-              "Ú©ØªÛŽØ¨Û•Ú©Û• Ù„Û• Ø¯Ø§ØªØ§Ø¨Û•ÛŒØ³ Ùˆ Storage Ø³Ú•Ø§ÛŒÛ•ÙˆÛ•"
+              "کتێبەکە لە داتابەیس و Storage سڕایەوە"
             );
           }
         )
@@ -2821,12 +2821,12 @@
             );
 
             toast(
-              "Ø³Ú•ÛŒÙ†Û•ÙˆÛ• ØªÛ•ÙˆØ§Ùˆ Ù†Û•Ø¨ÙˆÙˆ: " +
+              "سڕینەوە تەواو نەبوو: " +
               String(
                 error &&
                 error.message
                   ? error.message
-                  : "Ù‡Û•ÚµÛ•"
+                  : "هەڵە"
               ).slice(
                 0,
                 110
@@ -2859,7 +2859,7 @@
           renderOwnerPanel();
 
           toast(
-            "Ú©ØªÛŽØ¨Û•Ú©Û• Ø³Ú•Ø§ÛŒÛ•ÙˆÛ•"
+            "کتێبەکە سڕایەوە"
           );
         }
       )
@@ -2873,7 +2873,7 @@
           );
 
           toast(
-            "Ø³Ú•ÛŒÙ†Û•ÙˆÛ• Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ"
+            "سڕینەوە سەرکەوتوو نەبوو"
           );
         }
       );
@@ -3358,11 +3358,11 @@
         word || ""
       )
         .replace(
-          /^[\s"'â€œâ€â€˜â€™.,!?;:()[\]{}ØŒØ›ØŸâ€¦â€”-]+/g,
+          /^[\s"'“”‘’.,!?;:()[\]{}،؛؟…—-]+/g,
           ""
         )
         .replace(
-          /[\s"'â€œâ€â€˜â€™.,!?;:()[\]{}ØŒØ›ØŸâ€¦â€”-]+$/g,
+          /[\s"'“”‘’.,!?;:()[\]{}،؛؟…—-]+$/g,
           ""
         )
         .trim();
@@ -3381,8 +3381,8 @@
 
     var target =
       isSorani
-        ? "Ú©ÙˆØ±Ø¯ÛŒ Ø³Û†Ø±Ø§Ù†ÛŒÛŒ Ø³ØªØ§Ù†Ø¯Ø§Ø±Ø¯"
-        : "Ø¹Û•Ø±Û•Ø¨ÛŒÛŒ ÙÛ•ØµÛŒØ­ Ùˆ Ø³ØªØ§Ù†Ø¯Ø§Ø±Ø¯";
+        ? "کوردی سۆرانیی ستاندارد"
+        : "عەرەبیی فەصیح و ستاندارد";
 
     var prompt =
       "You are the dictionary engine of a Kurdish learning app.\n\n" +
@@ -3548,7 +3548,7 @@
 
           if (!text) {
             throw new Error(
-              "Gemini Ù‡ÛŒÚ† ÙˆÛ•ÚµØ§Ù…ÛŽÚ©ÛŒ Ù†Û•Ø¯Ø§"
+              "Gemini هیچ وەڵامێکی نەدا"
             );
           }
 
@@ -3585,7 +3585,7 @@
               );
           } catch (error) {
             throw new Error(
-              "Gemini JSON Ù†Û•Ø¯Ø±ÙˆØ³ØªÛ•"
+              "Gemini JSON نەدروستە"
             );
           }
 
@@ -3599,7 +3599,7 @@
             !meanings.length
           ) {
             throw new Error(
-              "Gemini Ù…Ø§Ù†Ø§ÛŒ ÙˆØ´Û• Ù†Û•Ù‡ÛŽÙ†Ø§"
+              "Gemini مانای وشە نەهێنا"
             );
           }
 
@@ -3622,7 +3622,7 @@
         window)
     ) {
       toast(
-        "Ø®ÙˆÛŽÙ†Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¯Û•Ù†Ú¯ÛŒ Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•"
+        "خوێندنەوەی دەنگی بەردەست نییە"
       );
 
       return;
@@ -3717,14 +3717,14 @@
       modalKu
     ) {
       modalKu.textContent =
-        "Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†ÛŒ...";
+        "چاوەڕوانی...";
     }
 
     if (
       modalAr
     ) {
       modalAr.textContent =
-        "Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†ÛŒ...";
+        "چاوەڕوانی...";
     }
 
     var back =
@@ -3844,14 +3844,14 @@
             modalKu
           ) {
             modalKu.textContent =
-              "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ù…Ø§Ù†Ø§ Ø¨Ù‡ÛŽÙ†Ø±ÛŽØª";
+              "نەتوانرا مانا بهێنرێت";
           }
 
           if (
             modalAr
           ) {
             modalAr.textContent =
-              "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ù…Ø§Ù†Ø§ Ø¨Ù‡ÛŽÙ†Ø±ÛŽØª";
+              "نەتوانرا مانا بهێنرێت";
           }
 
           if (
@@ -3860,7 +3860,7 @@
               "NO_GEMINI_KEY"
           ) {
             toast(
-              "ØªÚ©Ø§ÛŒÛ• Ú©Ù„ÛŒÙ„ÛŒ Gemini Ù„Û• Ú•ÛŽÚ©Ø®Ø³ØªÙ†Û•Ú©Ø§Ù† Ø¯Ø§Ø¨Ù†ÛŽ"
+              "تکایە کلیلی Gemini لە ڕێکخستنەکان دابنێ"
             );
           }
         }
@@ -3880,8 +3880,8 @@
       box.innerHTML =
         '<div class="empty" style="grid-column:1/-1">' +
         '<div class="empty-icon"><i class="fa-solid fa-language"></i></div>' +
-        '<h3>Ù‡ÛŽØ´ØªØ§ ÙˆØ´Û•ÛŒÛ•Ú© Ø®Û•Ø²Ù† Ù†Û•Ú©Ø±Ø§ÙˆÛ•</h3>' +
-        '<p>ÙˆØ´Û•ÛŒÛ•Ú© Ù„Û• Reader Ù‡Û•ÚµØ¨Ú˜ÛŽØ±Û• Ùˆ Ø®Û•Ø²Ù†ÛŒ Ø¨Ú©Û•.</p>' +
+        '<h3>هێشتا وشەیەک خەزن نەکراوە</h3>' +
+        '<p>وشەیەک لە Reader هەڵبژێرە و خەزنی بکە.</p>' +
         '</div>';
       return;
     }
@@ -3894,9 +3894,9 @@
         '<div class="book-author">' + esc(item.meaning || "") + '</div>' +
         '<div class="actions">' +
         '<button class="small primary" data-vspeak="' + esc(item.word) + '" data-vlang="' + esc(item.lang || "en") + '" type="button">' +
-        '<i class="fa-solid fa-volume-high"></i> Ø¯Û•Ù†Ú¯</button>' +
+        '<i class="fa-solid fa-volume-high"></i> دەنگ</button>' +
         '<button class="small" data-vdel="' + esc(item.id) + '" type="button">' +
-        '<i class="fa-regular fa-trash-can"></i> Ø³Ú•ÛŒÙ†Û•ÙˆÛ•</button>' +
+        '<i class="fa-regular fa-trash-can"></i> سڕینەوە</button>' +
         '</div></div></article>'
       );
     }).join("");
@@ -3934,16 +3934,16 @@
       var recent = books.slice(0, 20);
       list.innerHTML = recent.length
         ? recent.map(function (book) {
-            var statusText = book.status === "pending" ? "Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†" : book.status === "rejected" ? "Ú•Û•ØªÚ©Ø±Ø§ÙˆÛ•" : "Ø¨ÚµØ§ÙˆÚ©Ø±Ø§ÙˆÛ•";
-            var actions = '<button class="icon-btn" type="button" data-admin-book-open="' + esc(book.id) + '" title="Ú©Ø±Ø¯Ù†Û•ÙˆÛ•"><i class="fa-solid fa-book-open"></i></button>';
+            var statusText = book.status === "pending" ? "چاوەڕوان" : book.status === "rejected" ? "ڕەتکراوە" : "بڵاوکراوە";
+            var actions = '<button class="icon-btn" type="button" data-admin-book-open="' + esc(book.id) + '" title="کردنەوە"><i class="fa-solid fa-book-open"></i></button>';
             if (book.status === "pending") {
-              actions += '<button class="icon-btn" type="button" data-admin-book-approve="' + esc(book.id) + '" title="Ù¾Û•Ø³Û•Ù†Ø¯Ú©Ø±Ø¯Ù†"><i class="fa-solid fa-check"></i></button>';
-              actions += '<button class="icon-btn" type="button" data-admin-book-reject="' + esc(book.id) + '" title="Ú•Û•ØªÚ©Ø±Ø¯Ù†Û•ÙˆÛ•"><i class="fa-solid fa-xmark"></i></button>';
+              actions += '<button class="icon-btn" type="button" data-admin-book-approve="' + esc(book.id) + '" title="پەسەندکردن"><i class="fa-solid fa-check"></i></button>';
+              actions += '<button class="icon-btn" type="button" data-admin-book-reject="' + esc(book.id) + '" title="ڕەتکردنەوە"><i class="fa-solid fa-xmark"></i></button>';
             }
-            actions += '<button class="icon-btn" type="button" data-admin-book-delete="' + esc(book.id) + '" title="Ø³Ú•ÛŒÙ†Û•ÙˆÛ•"><i class="fa-regular fa-trash-can"></i></button>';
-            return '<div class="owner-book-row"><div class="owner-book-main"><strong>' + esc(book.title || "Ú©ØªÛŽØ¨") + '</strong><small>' + esc(book.author || "Ø¨ÛŽ Ù†ÙˆÙˆØ³Û•Ø±") + ' Â· ' + statusText + '</small></div><div class="owner-book-actions">' + actions + '</div></div>';
+            actions += '<button class="icon-btn" type="button" data-admin-book-delete="' + esc(book.id) + '" title="سڕینەوە"><i class="fa-regular fa-trash-can"></i></button>';
+            return '<div class="owner-book-row"><div class="owner-book-main"><strong>' + esc(book.title || "کتێب") + '</strong><small>' + esc(book.author || "بێ نووسەر") + ' · ' + statusText + '</small></div><div class="owner-book-actions">' + actions + '</div></div>';
           }).join("")
-        : '<div class="empty" style="padding:20px">Ù‡ÛŽØ´ØªØ§ Ù†Ø§ÙˆÛ•Ú•Û†Ú© Ù†ÛŒÛŒÛ•.</div>';
+        : '<div class="empty" style="padding:20px">هێشتا ناوەڕۆک نییە.</div>';
 
       if (!$("adminExtraPanel")) {
         var extra = document.createElement("div");
@@ -3956,7 +3956,7 @@
     var extraPanel = $("adminExtraPanel");
     if (extraPanel) {
       extraPanel.innerHTML =
-        '<div style="display:grid;gap:8px"><strong style="font-size:12px;color:#fff">Ù…Û†ÚµÛ•Øª Ùˆ Ù†Ø§ÙˆÛ•Ú•Û†Ú©</strong><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="primary" type="button" data-action="add-pdf"><i class="fa-solid fa-file-circle-plus"></i> PDF</button><button class="primary" type="button" data-action="add-music"><i class="fa-solid fa-music"></i> Ù…ÙˆØ²ÛŒÚ©</button></div></div>' +
+        '<div style="display:grid;gap:8px"><strong style="font-size:12px;color:#fff">مۆڵەت و ناوەڕۆک</strong><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="primary" type="button" data-action="add-pdf"><i class="fa-solid fa-file-circle-plus"></i> PDF</button><button class="primary" type="button" data-action="add-music"><i class="fa-solid fa-music"></i> موزیک</button></div></div>' +
         '<div id="adminUsersList" style="display:grid;gap:8px"></div>' +
         '<div id="adminMusicPending" style="display:grid;gap:8px"></div>';
     }
@@ -3983,7 +3983,7 @@
 
     var visibleMusic = getPlayableMusic();
     if (!visibleMusic.length) {
-      box.innerHTML = '<div style="padding:15px;text-align:center;color:var(--muted);font-size:8px">Ù‡ÛŽØ´ØªØ§ Ù…ÙˆØ²ÛŒÚ©ÛŽÚ© Ù†ÛŒÛŒÛ•</div>';
+      box.innerHTML = '<div style="padding:15px;text-align:center;color:var(--muted);font-size:8px">هێشتا موزیکێک نییە</div>';
       return;
     }
 
@@ -3993,7 +3993,7 @@
         '<button type="button" data-track-play="' + index + '">' +
         '<i class="fa-solid fa-play"></i>' +
         '</button>' +
-        '<span>' + esc(track.name || "Ù…ÙˆØ²ÛŒÚ©") + '</span>' +
+        '<span>' + esc(track.name || "موزیک") + '</span>' +
         '</div>'
       );
     }).join("");
@@ -4004,11 +4004,11 @@
   ) {
     if (!files || !files.length) return;
     if (!supabaseReady()) {
-      toast("Supabase Ù¾Û•ÛŒÙˆÛ•Ø³Øª Ù†ÛŒÛŒÛ•");
+      toast("Supabase پەیوەست نییە");
       return;
     }
 
-    ensureAuthenticated("Ø¨Û† Ø²ÛŒØ§Ø¯Ú©Ø±Ø¯Ù†ÛŒ Ù…ÙˆØ²ÛŒÚ© Ø³Û•Ø±Û•ØªØ§ Ø¯Û•Ø¨ÛŽØª Ø¨Ú†ÛŒØªÛ• Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.")
+    ensureAuthenticated("بۆ زیادکردنی موزیک سەرەتا دەبێت بچیتە ژوورەوە.")
       .then(function (ok) {
         if (!ok) return;
         return getFreshProfile().then(function (profile) {
@@ -4063,7 +4063,7 @@
 
           if (!tasks.length) return;
 
-          toast("Ù…ÙˆØ²ÛŒÚ©Û•Ú©Ø§Ù† Ø®Û•Ø±ÛŒÚ©ÛŒ Ø¨Ø§Ø±Ú©Ø±Ø¯Ù†Ù†...");
+          toast("موزیکەکان خەریکی بارکردنن...");
 
           return Promise.all(tasks)
             .then(function (remoteTracks) {
@@ -4079,14 +4079,14 @@
               toast(remoteTracks.every(function (track) {
                 return track.status === "approved";
               })
-                ? "Ù…ÙˆØ²ÛŒÚ©Û•Ú©Ø§Ù† Ú•Ø§Ø³ØªÛ•ÙˆØ®Û† Ø¨ÚµØ§ÙˆÚ©Ø±Ø§Ù†Û•ÙˆÛ•"
-                : "Ù…ÙˆØ²ÛŒÚ©Û•Ú©Ø§Ù† Ù†ÛŽØ±Ø¯Ø±Ø§Ù† Ø¨Û† Ù¾Ø´Ú©Ù†ÛŒÙ†");
+                ? "موزیکەکان ڕاستەوخۆ بڵاوکرانەوە"
+                : "موزیکەکان نێردران بۆ پشکنین");
             })
             .catch(function (error) {
               console.error("Supabase addMusicFiles:", error);
               toast(
-                "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ù…ÙˆØ²ÛŒÚ© Ø²ÛŒØ§Ø¯ Ø¨Ú©Ø±ÛŽØª: " +
-                String(error && error.message ? error.message : "Ù‡Û•ÚµÛ•").slice(0, 120)
+                "نەتوانرا موزیک زیاد بکرێت: " +
+                String(error && error.message ? error.message : "هەڵە").slice(0, 120)
               );
             });
         });
@@ -4111,8 +4111,8 @@
 
       var nowName = $("nowName");
       var nowSub = $("nowSub");
-      if (nowName) nowName.textContent = track.name || "Ù…ÙˆØ²ÛŒÚ©";
-      if (nowSub) nowSub.textContent = track.artist || "Ù…ÙˆØ²ÛŒÚ©";
+      if (nowName) nowName.textContent = track.name || "موزیک";
+      if (nowSub) nowSub.textContent = track.artist || "موزیک";
 
       if (autoplay) {
         audio.play().catch(function () {});
@@ -4219,7 +4219,7 @@
 
       if (name === "premium-info") {
         if (!authState.user) {
-          openAuthModal("login", "Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ• Ø¨Û† Ø²Ø§Ù†ÛŒØ§Ø±ÛŒ Premium.");
+          openAuthModal("login", "سەرەتا بچۆ ژوورەوە بۆ زانیاری Premium.");
           return;
         }
         showPremiumInfo();
@@ -4231,7 +4231,7 @@
         "add-pdf"
       ) {
         if (!authState.user) {
-          openAuthModal("login", "Ø¨Û† Ø²ÛŒØ§Ø¯Ú©Ø±Ø¯Ù†ÛŒ PDF Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.");
+          openAuthModal("login", "بۆ زیادکردنی PDF سەرەتا بچۆ ژوورەوە.");
           return;
         }
         var pdfInput =
@@ -4251,7 +4251,7 @@
         "add-music"
       ) {
         if (!authState.user) {
-          openAuthModal("login", "Ø¨Û† Ø²ÛŒØ§Ø¯Ú©Ø±Ø¯Ù†ÛŒ Ù…ÙˆØ²ÛŒÚ© Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.");
+          openAuthModal("login", "بۆ زیادکردنی موزیک سەرەتا بچۆ ژوورەوە.");
           return;
         }
         var musicInput =
@@ -4347,7 +4347,7 @@
           );
         } else {
           toast(
-            "Ù‡ÛŽØ´ØªØ§ Ú©ØªÛŽØ¨ÛŽÚ© Ù†ÛŒÛŒÛ•"
+            "هێشتا کتێبێک نییە"
           );
         }
 
@@ -4387,7 +4387,7 @@
         "owner-panel"
       ) {
         if (!authState.isAdmin) {
-          openAuthModal("login", "ØªÛ•Ù†ÛŒØ§ Ø¦Û†Ù†Û•Ø± Ø¯Û•ØªÙˆØ§Ù†ÛŽØª Ù¾Ø§Ù†ÛŽÚµÛŒ Ø¨Û•Ú•ÛŽÙˆÛ•Ø¨Û•Ø± Ø¨Ú©Ø§ØªÛ•ÙˆÛ•.");
+          openAuthModal("login", "تەنیا ئۆنەر دەتوانێت پانێڵی بەڕێوەبەر بکاتەوە.");
           return;
         }
         openSheet(
@@ -4539,7 +4539,7 @@
         "clear-vocab"
       ) {
         if (!authState.user) {
-          openAuthModal("login", "Ø¨Û† Ø®Û•Ø²Ù†Ú©Ø±Ø¯Ù†ÛŒ ÙˆØ´Û•Ú©Ø§Ù† Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.");
+          openAuthModal("login", "بۆ خەزنکردنی وشەکان سەرەتا بچۆ ژوورەوە.");
           return;
         }
         supabaseClient.from("saved_words").delete().eq("user_id", authState.user.id)
@@ -4549,11 +4549,11 @@
           })
           .then(function () {
             renderProfile();
-            toast("ÙˆØ´Û•Ú©Ø§Ù† Ø³Ú•Ø§Ù†Û•ÙˆÛ•");
+            toast("وشەکان سڕانەوە");
           })
           .catch(function (error) {
             console.error("clear vocab:", error);
-            toast("Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ ÙˆØ´Û•Ú©Ø§Ù† Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+            toast("سڕینەوەی وشەکان سەرکەوتوو نەبوو");
           });
         return;
       }
@@ -4603,7 +4603,7 @@
           );
         } else {
           toast(
-            "Ù‡ÛŽØ´ØªØ§ Ù…ÙˆØ²ÛŒÚ©ÛŽÚ© Ù†ÛŒÛŒÛ•"
+            "هێشتا موزیکێک نییە"
           );
         }
 
@@ -4766,18 +4766,18 @@
     var approve = event.target.closest("[data-admin-book-approve]");
     if (approve) {
       updateBookStatus(approve.getAttribute("data-admin-book-approve"), "approved")
-        .then(function () { toast("Ú©ØªÛŽØ¨Û•Ú©Û• Ù¾Û•Ø³Û•Ù†Ø¯ Ú©Ø±Ø§"); })
-        .catch(function (error) { toast(String(error.message || "Ù‡Û•ÚµÛ•").slice(0, 120)); });
+        .then(function () { toast("کتێبەکە پەسەند کرا"); })
+        .catch(function (error) { toast(String(error.message || "هەڵە").slice(0, 120)); });
       return;
     }
 
     var reject = event.target.closest("[data-admin-book-reject]");
     if (reject) {
-      var reason = window.prompt("Ù‡Û†Ú©Ø§Ø±ÛŒ Ú•Û•ØªÚ©Ø±Ø¯Ù†Û•ÙˆÛ• Ø¨Ù†ÙˆÙˆØ³Û•:", "");
+      var reason = window.prompt("هۆکاری ڕەتکردنەوە بنووسە:", "");
       if (reason === null) return;
       updateBookStatus(reject.getAttribute("data-admin-book-reject"), "rejected", reason)
-        .then(function () { toast("Ú©ØªÛŽØ¨Û•Ú©Û• Ú•Û•ØªÚ©Ø±Ø§ÛŒÛ•ÙˆÛ•"); })
-        .catch(function (error) { toast(String(error.message || "Ù‡Û•ÚµÛ•").slice(0, 120)); });
+        .then(function () { toast("کتێبەکە ڕەتکرایەوە"); })
+        .catch(function (error) { toast(String(error.message || "هەڵە").slice(0, 120)); });
       return;
     }
 
@@ -4808,16 +4808,16 @@
     var approveMusic = event.target.closest("[data-admin-music-approve]");
     if (approveMusic) {
       updateMusicStatus(approveMusic.getAttribute("data-admin-music-approve"), "approved")
-        .then(function () { toast("Ù…ÙˆØ²ÛŒÚ©Û•Ú©Û• Ù¾Û•Ø³Û•Ù†Ø¯ Ú©Ø±Ø§"); });
+        .then(function () { toast("موزیکەکە پەسەند کرا"); });
       return;
     }
 
     var rejectMusic = event.target.closest("[data-admin-music-reject]");
     if (rejectMusic) {
-      var reason = window.prompt("Ù‡Û†Ú©Ø§Ø±ÛŒ Ú•Û•ØªÚ©Ø±Ø¯Ù†Û•ÙˆÛ• Ø¨Ù†ÙˆÙˆØ³Û•:", "");
+      var reason = window.prompt("هۆکاری ڕەتکردنەوە بنووسە:", "");
       if (reason === null) return;
       updateMusicStatus(rejectMusic.getAttribute("data-admin-music-reject"), "rejected", reason)
-        .then(function () { toast("Ù…ÙˆØ²ÛŒÚ©Û•Ú©Û• Ú•Û•ØªÚ©Ø±Ø§ÛŒÛ•ÙˆÛ•"); });
+        .then(function () { toast("موزیکەکە ڕەتکرایەوە"); });
       return;
     }
 
@@ -5531,9 +5531,9 @@
     modal.id = "xwAuthModal";
     modal.innerHTML =
       '<div id="xwAuthBackdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.66);backdrop-filter:blur(10px);z-index:9998;display:none"></div>' +
-      '<section id="xwAuthPanel" role="dialog" aria-modal="true" aria-label="Ù‡Û•Ú˜Ù…Ø§Ø±" style="position:fixed;inset:auto 14px 18px;max-width:520px;margin:auto;z-index:9999;background:linear-gradient(145deg,#182943,#101f34);border:1px solid rgba(255,255,255,.10);border-radius:24px;padding:18px;display:none;box-shadow:0 30px 70px rgba(0,0,0,.4)">' +
+      '<section id="xwAuthPanel" role="dialog" aria-modal="true" aria-label="هەژمار" style="position:fixed;inset:auto 14px 18px;max-width:520px;margin:auto;z-index:9999;background:linear-gradient(145deg,#182943,#101f34);border:1px solid rgba(255,255,255,.10);border-radius:24px;padding:18px;display:none;box-shadow:0 30px 70px rgba(0,0,0,.4)">' +
       '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">' +
-      '<div><div style="font-size:8px;color:#8ea1b7;letter-spacing:1px">XWENDNGA ACCOUNT</div><h3 id="xwAuthTitle" style="margin:5px 0 0;color:#fff;font-size:20px">Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ•</h3></div>' +
+      '<div><div style="font-size:8px;color:#8ea1b7;letter-spacing:1px">XWENDNGA ACCOUNT</div><h3 id="xwAuthTitle" style="margin:5px 0 0;color:#fff;font-size:20px">چوونەژوورەوە</h3></div>' +
       '<button class="icon-btn" type="button" data-action="auth-close"><i class="fa-solid fa-xmark"></i></button></div>' +
       '<div id="xwAuthMessage" style="min-height:20px;color:#9fb1c5;font-size:9px;line-height:1.8;margin-bottom:8px"></div>' +
       '<div id="xwAuthFields"></div>' +
@@ -5550,15 +5550,15 @@
     var msg = $("xwAuthMessage");
 
     mode = mode === "signup" ? "signup" : "login";
-    title.textContent = mode === "signup" ? "Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±" : "Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ•";
+    title.textContent = mode === "signup" ? "دروستکردنی هەژمار" : "چوونەژوورەوە";
     msg.textContent = message || "";
 
     fields.innerHTML =
       '<form id="xwAuthForm" style="display:grid;gap:10px">' +
-      '<label style="display:grid;gap:5px;color:#9fb1c5;font-size:9px">Ø¦ÛŒÙ…Û•ÛŒÚµ<input id="xwAuthEmail" type="email" autocomplete="email" required style="min-height:46px;border:1px solid rgba(255,255,255,.10);border-radius:13px;background:#0b1727;color:#fff;padding:0 12px"></label>' +
-      '<label style="display:grid;gap:5px;color:#9fb1c5;font-size:9px">ÙˆØ´Û•ÛŒ Ù†Ù‡ÛŽÙ†ÛŒ<input id="xwAuthPassword" type="password" autocomplete="current-password" minlength="6" required style="min-height:46px;border:1px solid rgba(255,255,255,.10);border-radius:13px;background:#0b1727;color:#fff;padding:0 12px"></label>' +
-      '<button class="primary" type="submit" style="min-height:48px">' + (mode === "signup" ? "Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±" : "Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ•") + '</button>' +
-      '<button class="ghost" type="button" data-auth-mode="' + (mode === "signup" ? "login" : "signup") + '">' + (mode === "signup" ? "Ù‡Û•Ú˜Ù…Ø§Ø±Ù… Ù‡Û•ÛŒÛ•" : "Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±") + '</button>' +
+      '<label style="display:grid;gap:5px;color:#9fb1c5;font-size:9px">ئیمەیڵ<input id="xwAuthEmail" type="email" autocomplete="email" required style="min-height:46px;border:1px solid rgba(255,255,255,.10);border-radius:13px;background:#0b1727;color:#fff;padding:0 12px"></label>' +
+      '<label style="display:grid;gap:5px;color:#9fb1c5;font-size:9px">وشەی نهێنی<input id="xwAuthPassword" type="password" autocomplete="current-password" minlength="6" required style="min-height:46px;border:1px solid rgba(255,255,255,.10);border-radius:13px;background:#0b1727;color:#fff;padding:0 12px"></label>' +
+      '<button class="primary" type="submit" style="min-height:48px">' + (mode === "signup" ? "دروستکردنی هەژمار" : "چوونەژوورەوە") + '</button>' +
+      '<button class="ghost" type="button" data-auth-mode="' + (mode === "signup" ? "login" : "signup") + '">' + (mode === "signup" ? "هەژمارم هەیە" : "دروستکردنی هەژمار") + '</button>' +
       '</form>';
 
     $("xwAuthBackdrop").style.display = "block";
@@ -5593,10 +5593,10 @@
 
   function signIn(email, password) {
     if (!supabaseReady()) {
-      authMessage("Supabase Ù¾Û•ÛŒÙˆÛ•Ø³Øª Ù†ÛŒÛŒÛ•.");
+      authMessage("Supabase پەیوەست نییە.");
       return;
     }
-    authMessage("Ø®Û•Ø±ÛŒÚ©ÛŒ Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ•ÛŒØª...");
+    authMessage("خەریکی چوونەژوورەوەیت...");
     supabaseClient.auth.signInWithPassword({ email: email, password: password })
       .then(function (result) {
         if (result.error) throw result.error;
@@ -5605,16 +5605,16 @@
       })
       .catch(function (error) {
         console.error("signIn:", error);
-        authMessage("Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ• Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ: " + String(error.message || "Ù‡Û•ÚµÛ•").slice(0, 140));
+        authMessage("چوونەژوورەوە سەرکەوتوو نەبوو: " + String(error.message || "هەڵە").slice(0, 140));
       });
   }
 
   function signUp(email, password) {
     if (!supabaseReady()) {
-      authMessage("Supabase Ù¾Û•ÛŒÙˆÛ•Ø³Øª Ù†ÛŒÛŒÛ•.");
+      authMessage("Supabase پەیوەست نییە.");
       return;
     }
-    authMessage("Ø®Û•Ø±ÛŒÚ©ÛŒ Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±Û•...");
+    authMessage("خەریکی دروستکردنی هەژمارە...");
     supabaseClient.auth.signUp({
       email: email,
       password: password
@@ -5627,7 +5627,7 @@
       authMessage(AUTH_RECOVERY_NOTICE);
     }).catch(function (error) {
       console.error("signUp:", error);
-      authMessage("Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø± Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ: " + String(error.message || "Ù‡Û•ÚµÛ•").slice(0, 140));
+      authMessage("دروستکردنی هەژمار سەرکەوتوو نەبوو: " + String(error.message || "هەڵە").slice(0, 140));
     });
   }
 
@@ -5638,7 +5638,7 @@
       closeAuthModal();
     }).catch(function (error) {
       console.error("signOut:", error);
-      toast("Ø¯Û•Ø±Ú†ÙˆÙˆÙ† Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+      toast("دەرچوون سەرکەوتوو نەبوو");
     });
   }
 
@@ -5766,7 +5766,7 @@
 
   function ensureAuthenticated(message) {
     if (authState.user) return Promise.resolve(true);
-    openAuthModal("login", message || "Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.");
+    openAuthModal("login", message || "سەرەتا بچۆ ژوورەوە.");
     return Promise.resolve(false);
   }
 
@@ -5776,24 +5776,24 @@
 
     if (!authState.user) {
       page.innerHTML =
-        '<div class="profile-hero"><div class="profile-avatar-wrap"><div class="profile-avatar"><i class="fa-solid fa-user-lock"></i></div></div><div class="profile-intro"><div class="section-kicker">ACCOUNT</div><h2 class="section-title">Ù‡Û•Ú˜Ù…Ø§Ø±ÛŽÚ©Øª Ø¯Ø±ÙˆØ³Øª Ø¨Ú©Û•</h2><p class="profile-welcome">Ø¨Û• Login Ù€Ú©Ø±Ø¯Ù† Ø¯ÚµØ®ÙˆØ§Ø²Û•Ú©Ø§Ù† Ùˆ ÙˆØ´Û• Ø®Û•Ø²Ù†Ú©Ø±Ø§ÙˆÛ•Ú©Ø§Ù†Øª Ù„Û•Ú¯Û•ÚµØª Ù„Û• Ù‡Û•Ù…ÙˆÙˆ Ø¦Ø§Ù…ÛŽØ±ÛŽÚ© Ø¯Û•Ù…ÛŽÙ†Ù†Û•ÙˆÛ•.</p></div></div>' +
-        '<div class="profile-menu"><button class="profile-menu-item" type="button" data-action="auth-login"><span class="profile-menu-icon"><i class="fa-solid fa-right-to-bracket"></i></span><span class="profile-menu-copy"><strong>Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ•</strong><small>Ø¨Ú†Û† Ù†Ø§Ùˆ Ù‡Û•Ú˜Ù…Ø§Ø±Û•Ú©Û•Øª</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
-        '<button class="profile-menu-item" type="button" data-action="auth-signup"><span class="profile-menu-icon"><i class="fa-solid fa-user-plus"></i></span><span class="profile-menu-copy"><strong>Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±</strong><small>Ø¦Û•Ú©Ø§ÙˆÙ†ØªÛŽÚ©ÛŒ Ù†ÙˆÛŽ Ø¯Ø±ÙˆØ³Øª Ø¨Ú©Û•</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button></div>';
+        '<div class="profile-hero"><div class="profile-avatar-wrap"><div class="profile-avatar"><i class="fa-solid fa-user-lock"></i></div></div><div class="profile-intro"><div class="section-kicker">ACCOUNT</div><h2 class="section-title">هەژمارێکت دروست بکە</h2><p class="profile-welcome">بە Login ـکردن دڵخوازەکان و وشە خەزنکراوەکانت لەگەڵت لە هەموو ئامێرێک دەمێننەوە.</p></div></div>' +
+        '<div class="profile-menu"><button class="profile-menu-item" type="button" data-action="auth-login"><span class="profile-menu-icon"><i class="fa-solid fa-right-to-bracket"></i></span><span class="profile-menu-copy"><strong>چوونەژوورەوە</strong><small>بچۆ ناو هەژمارەکەت</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
+        '<button class="profile-menu-item" type="button" data-action="auth-signup"><span class="profile-menu-icon"><i class="fa-solid fa-user-plus"></i></span><span class="profile-menu-copy"><strong>دروستکردنی هەژمار</strong><small>ئەکاونتێکی نوێ دروست بکە</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button></div>';
       return;
     }
 
-    var roleLabel = authState.isAdmin ? "OWNER / ADMIN ðŸ‘‘" : (authState.role === "premium" ? "PREMIUM" : "USER");
+    var roleLabel = authState.isAdmin ? "OWNER / ADMIN 👑" : (authState.role === "premium" ? "PREMIUM" : "USER");
     var profileEmail = esc(authState.user.email || "");
     var planText = authState.isAdmin
-      ? "Ø¯Û•Ø³Û•ÚµØ§ØªÛŒ ØªÛ•ÙˆØ§ÙˆÛŒ Ù¾Ù„Ø§ØªÙÛ†Ø±Ù…"
+      ? "دەسەڵاتی تەواوی پلاتفۆرم"
       : authState.role === "premium"
         ? (authState.profile && authState.profile.premium_until
-            ? "Premium Ù€ÛŒ Ú†Ø§Ù„Ø§Ú© ØªØ§ " + new Date(authState.profile.premium_until).toLocaleDateString("ku-IQ")
-            : "Premium Ù€ÛŒ Ú†Ø§Ù„Ø§Ú©")
-        : "Ø³Ù†ÙˆÙˆØ±ÛŒ Ù†ÛŽØ±Ø¯Ø§Ù†: 3 Ú©ØªÛŽØ¨ + 5 Ù…ÙˆØ²ÛŒÚ©";
+            ? "Premium ـی چالاک تا " + new Date(authState.profile.premium_until).toLocaleDateString("ku-IQ")
+            : "Premium ـی چالاک")
+        : "سنووری نێردان: 3 کتێب + 5 موزیک";
 
-    var bookLimit = authState.isAdmin ? "âˆž" : (authState.profile && authState.profile.book_limit != null ? authState.profile.book_limit : "3");
-    var musicLimit = authState.isAdmin ? "âˆž" : (authState.profile && authState.profile.music_limit != null ? authState.profile.music_limit : "5");
+    var bookLimit = authState.isAdmin ? "∞" : (authState.profile && authState.profile.book_limit != null ? authState.profile.book_limit : "3");
+    var musicLimit = authState.isAdmin ? "∞" : (authState.profile && authState.profile.music_limit != null ? authState.profile.music_limit : "5");
     var bookUsage = userBookUsage();
     var musicUsage = userMusicUsage();
 
@@ -5808,18 +5808,18 @@
       '<div class="profile-hero"><div class="profile-avatar-wrap"><div class="profile-avatar"><i class="fa-solid ' + (authState.isAdmin ? 'fa-crown' : 'fa-user') + '"></i></div><span class="profile-status" aria-hidden="true"></span></div><div class="profile-intro"><div class="section-kicker">' + roleLabel + '</div><h2 class="section-title">' + profileEmail + '</h2><p class="profile-welcome">' + planText + '</p></div></div>' +
       '<div style="display:grid;gap:9px;margin-top:12px">' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">' +
-      '<div style="padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:16px;background:rgba(255,255,255,.025)"><small style="color:#8ea1b7;font-size:7px">Ú©ØªÛŽØ¨</small><strong style="display:block;color:#fff;font-size:18px;margin-top:4px">' + bookUsage + ' / ' + bookLimit + '</strong></div>' +
-      '<div style="padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:16px;background:rgba(255,255,255,.025)"><small style="color:#8ea1b7;font-size:7px">Ù…ÙˆØ²ÛŒÚ©</small><strong style="display:block;color:#fff;font-size:18px;margin-top:4px">' + musicUsage + ' / ' + musicLimit + '</strong></div>' +
+      '<div style="padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:16px;background:rgba(255,255,255,.025)"><small style="color:#8ea1b7;font-size:7px">کتێب</small><strong style="display:block;color:#fff;font-size:18px;margin-top:4px">' + bookUsage + ' / ' + bookLimit + '</strong></div>' +
+      '<div style="padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:16px;background:rgba(255,255,255,.025)"><small style="color:#8ea1b7;font-size:7px">موزیک</small><strong style="display:block;color:#fff;font-size:18px;margin-top:4px">' + musicUsage + ' / ' + musicLimit + '</strong></div>' +
       '</div>' +
       '<div class="profile-menu">' +
-      '<button class="profile-menu-item" type="button" data-nav="favorites"><span class="profile-menu-icon"><i class="fa-solid fa-heart"></i></span><span class="profile-menu-copy"><strong>Ø¯ÚµØ®ÙˆØ§Ø²Û•Ú©Ø§Ù†Ù…</strong><small>' + Object.keys(authState.favorites).length + ' Ø¯Ø§Ù†Û•</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
-      '<button class="profile-menu-item" type="button" data-nav="vocab"><span class="profile-menu-icon"><i class="fa-solid fa-language"></i></span><span class="profile-menu-copy"><strong>ÙˆØ´Û•Ú©Ø§Ù†Ù…</strong><small>' + vocab.length + ' ÙˆØ´Û•</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
-      '<button class="profile-menu-item" type="button" data-action="premium-info"><span class="profile-menu-icon"><i class="fa-solid fa-crown"></i></span><span class="profile-menu-copy"><strong>' + (authState.role === "premium" || authState.isAdmin ? 'Ù¾Ù„Ø§Ù†ÛŒ Ø¦ÛŽØ³ØªØ§' : 'Upgrade to Premium') + '</strong><small>' + (authState.isAdmin ? 'Owner' : authState.role === 'premium' ? 'Premium' : 'Ù¾Ø§Ø±Û•Ø¯Ø§Ù† Ø¨Û• Ø¯Û•Ø³ØªÛŒ Ù„Û• Telegram') + '</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
-      (authState.isAdmin ? '<button class="profile-menu-item" type="button" data-action="owner-panel"><span class="profile-menu-icon"><i class="fa-solid fa-crown"></i></span><span class="profile-menu-copy"><strong>Ù¾Ø§Ù†ÛŽÚµÛŒ Ø¨Û•Ú•ÛŽÙˆÛ•Ø¨Û•Ø±</strong><small>Ú©Û†Ù†ØªØ±Û†ÚµÛŒ Ù‡Û•Ù…ÙˆÙˆ Ù¾Ù„Ø§ØªÙÛ†Ø±Ù…</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' : '') +
-      '<button class="profile-menu-item" type="button" data-action="auth-signout"><span class="profile-menu-icon"><i class="fa-solid fa-right-from-bracket"></i></span><span class="profile-menu-copy"><strong>Ø¯Û•Ø±Ú†ÙˆÙˆÙ†</strong><small>Ù„Û• Ù‡Û•Ú˜Ù…Ø§Ø±Û•Ú©Û•Øª Ø¯Û•Ø±Ú†Û†</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
+      '<button class="profile-menu-item" type="button" data-nav="favorites"><span class="profile-menu-icon"><i class="fa-solid fa-heart"></i></span><span class="profile-menu-copy"><strong>دڵخوازەکانم</strong><small>' + Object.keys(authState.favorites).length + ' دانە</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
+      '<button class="profile-menu-item" type="button" data-nav="vocab"><span class="profile-menu-icon"><i class="fa-solid fa-language"></i></span><span class="profile-menu-copy"><strong>وشەکانم</strong><small>' + vocab.length + ' وشە</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
+      '<button class="profile-menu-item" type="button" data-action="premium-info"><span class="profile-menu-icon"><i class="fa-solid fa-crown"></i></span><span class="profile-menu-copy"><strong>' + (authState.role === "premium" || authState.isAdmin ? 'پلانی ئێستا' : 'Upgrade to Premium') + '</strong><small>' + (authState.isAdmin ? 'Owner' : authState.role === 'premium' ? 'Premium' : 'پارەدان بە دەستی لە Telegram') + '</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
+      (authState.isAdmin ? '<button class="profile-menu-item" type="button" data-action="owner-panel"><span class="profile-menu-icon"><i class="fa-solid fa-crown"></i></span><span class="profile-menu-copy"><strong>پانێڵی بەڕێوەبەر</strong><small>کۆنترۆڵی هەموو پلاتفۆرم</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' : '') +
+      '<button class="profile-menu-item" type="button" data-action="auth-signout"><span class="profile-menu-icon"><i class="fa-solid fa-right-from-bracket"></i></span><span class="profile-menu-copy"><strong>دەرچوون</strong><small>لە هەژمارەکەت دەرچۆ</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
       '</div>' +
       '<div style="margin-top:2px;padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:18px;background:rgba(255,255,255,.02)">' +
-      '<strong style="color:#fff;font-size:11px">Ù†Ø§ÙˆÛ•Ú•Û†Ú©ÛŒ Ù…Ù†</strong>' +
+      '<strong style="color:#fff;font-size:11px">ناوەڕۆکی من</strong>' +
       '<div id="mySubmissionsList" style="display:grid;gap:7px;margin-top:9px"></div>' +
       '</div></div>';
 
@@ -5827,12 +5827,12 @@
     if (subBox) {
       var rows = [];
       myBooks.forEach(function (book) {
-        rows.push('<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px;border-radius:12px;background:rgba(255,255,255,.025)"><span style="min-width:0;color:#dbe7f3;font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(book.title) + '</span><small style="color:' + (book.status === 'approved' ? '#7ee2ad' : book.status === 'rejected' ? '#ff8b9d' : '#f5cd68') + ';font-size:7px">' + (book.status === 'approved' ? 'Ù¾Û•Ø³Û•Ù†Ø¯Ú©Ø±Ø§Ùˆ' : book.status === 'rejected' ? 'Ú•Û•ØªÚ©Ø±Ø§ÙˆÛ•' : 'Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†') + '</small></div>');
+        rows.push('<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px;border-radius:12px;background:rgba(255,255,255,.025)"><span style="min-width:0;color:#dbe7f3;font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(book.title) + '</span><small style="color:' + (book.status === 'approved' ? '#7ee2ad' : book.status === 'rejected' ? '#ff8b9d' : '#f5cd68') + ';font-size:7px">' + (book.status === 'approved' ? 'پەسەندکراو' : book.status === 'rejected' ? 'ڕەتکراوە' : 'چاوەڕوان') + '</small></div>');
       });
       myMusic.forEach(function (track) {
-        rows.push('<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px;border-radius:12px;background:rgba(255,255,255,.025)"><span style="min-width:0;color:#dbe7f3;font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(track.name) + '</span><small style="color:' + (track.status === 'approved' ? '#7ee2ad' : track.status === 'rejected' ? '#ff8b9d' : '#f5cd68') + ';font-size:7px">' + (track.status === 'approved' ? 'Ù¾Û•Ø³Û•Ù†Ø¯Ú©Ø±Ø§Ùˆ' : track.status === 'rejected' ? 'Ú•Û•ØªÚ©Ø±Ø§ÙˆÛ•' : 'Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†') + '</small></div>');
+        rows.push('<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px;border-radius:12px;background:rgba(255,255,255,.025)"><span style="min-width:0;color:#dbe7f3;font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(track.name) + '</span><small style="color:' + (track.status === 'approved' ? '#7ee2ad' : track.status === 'rejected' ? '#ff8b9d' : '#f5cd68') + ';font-size:7px">' + (track.status === 'approved' ? 'پەسەندکراو' : track.status === 'rejected' ? 'ڕەتکراوە' : 'چاوەڕوان') + '</small></div>');
       });
-      subBox.innerHTML = rows.length ? rows.join('') : '<small style="color:#7f91a6;font-size:8px">Ù‡ÛŽØ´ØªØ§ Ù‡ÛŒÚ† Ù†Ø§ÙˆÛ•Ú•Û†Ú©ÛŽÚ©Øª Ù†Û•Ù†Ø§Ø±Ø¯ÙˆÙˆÛ•.</small>';
+      subBox.innerHTML = rows.length ? rows.join('') : '<small style="color:#7f91a6;font-size:8px">هێشتا هیچ ناوەڕۆکێکت نەناردووە.</small>';
     }
   }
 
@@ -5846,7 +5846,7 @@
 
     var profileButton = document.querySelector(".profile-action");
     if (profileButton) {
-      profileButton.title = authState.user ? (authState.user.email || "Ù¾Ú•Û†ÙØ§ÛŒÙ„") : "Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ• / Ù¾Ú•Û†ÙØ§ÛŒÙ„";
+      profileButton.title = authState.user ? (authState.user.email || "پڕۆفایل") : "چوونەژوورەوە / پڕۆفایل";
       profileButton.setAttribute("aria-label", profileButton.title);
     }
   }
@@ -5918,23 +5918,23 @@
   function showPremiumInfo() {
     injectAuthUI();
     var message = authState.role === "premium" || authState.isAdmin
-      ? "Ù¾Ù„Ø§Ù†ÛŒ Ø¦ÛŽØ³ØªØ§Øª Ú†Ø§Ù„Ø§Ú©Û•."
-      : "Ø¨Û† PremiumØŒ Ù¾Ø§Ø±Û•Ú©Û• Ø¨Û• FastPay ÛŒØ§Ù† FIB Ø¨Ù†ÛŽØ±Û• Ùˆ Ù„Û• Telegram Ù¾Û•ÛŒÙˆÛ•Ù†Ø¯ÛŒÙ… Ù¾ÛŽÙˆÛ• Ø¨Ú©Û•.";
+      ? "پلانی ئێستات چالاکە."
+      : "بۆ Premium، پارەکە بە FastPay یان FIB بنێرە و لە Telegram پەیوەندیم پێوە بکە.";
 
     openAuthModal("login", message);
 
     var fields = $("xwAuthFields");
     fields.innerHTML =
       '<div style="display:grid;gap:10px">' +
-      '<div style="padding:13px;border-radius:15px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:#d9e5f1;font-size:10px;line-height:2"><strong>FastPay</strong><br>' + esc(PREMIUM_PAYMENT_INFO.fastpay) + '<br><br><strong>FIB</strong><br>' + esc(PREMIUM_PAYMENT_INFO.fib) + '<br><br>Ø¯ÙˆØ§ÛŒ Ù†Ø§Ø±Ø¯Ù†ÛŒ Ù¾Ø§Ø±Û•ØŒ Ø¦ÛŒÙ…Û•ÛŒÚµÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±Û•Ú©Û•Øª Ù„Û• Telegram Ø¨Ù†ÛŽØ±Û•.</div>' +
-      '<a href="https://t.me/' + PREMIUM_PAYMENT_INFO.telegram.replace(/^@/, "") + '" target="_blank" rel="noopener noreferrer" class="primary" style="min-height:48px;display:grid;place-items:center">Ù¾Û•ÛŒÙˆÛ•Ù†Ø¯ÛŒ Ø¨Û• Telegram</a>' +
+      '<div style="padding:13px;border-radius:15px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:#d9e5f1;font-size:10px;line-height:2"><strong>FastPay</strong><br>' + esc(PREMIUM_PAYMENT_INFO.fastpay) + '<br><br><strong>FIB</strong><br>' + esc(PREMIUM_PAYMENT_INFO.fib) + '<br><br>دوای ناردنی پارە، ئیمەیڵی هەژمارەکەت لە Telegram بنێرە.</div>' +
+      '<a href="https://t.me/' + PREMIUM_PAYMENT_INFO.telegram.replace(/^@/, "") + '" target="_blank" rel="noopener noreferrer" class="primary" style="min-height:48px;display:grid;place-items:center">پەیوەندی بە Telegram</a>' +
       '</div>';
   }
 
   function saveCurrentWordToCloud() {
     if (!currentWord) return;
     if (!authState.user) {
-      openAuthModal("login", "Ø¨Û† Ø®Û•Ø²Ù†Ú©Ø±Ø¯Ù†ÛŒ ÙˆØ´Û• Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.");
+      openAuthModal("login", "بۆ خەزنکردنی وشە سەرەتا بچۆ ژوورەوە.");
       return;
     }
 
@@ -5953,15 +5953,15 @@
         return loadSavedWords();
       })
       .then(function () {
-        toast("ÙˆØ´Û•Ú©Û• Ø®Û•Ø²Ù† Ú©Ø±Ø§");
+        toast("وشەکە خەزن کرا");
         renderProfile();
       })
       .catch(function (error) {
         console.error("save word:", error);
         if (String(error && error.message || "").toLowerCase().indexOf("duplicate") >= 0) {
-          toast("Ø¦Û•Ù… ÙˆØ´Û•ÛŒÛ• Ù¾ÛŽØ´ØªØ± Ø®Û•Ø²Ù† Ú©Ø±Ø§ÙˆÛ•");
+          toast("ئەم وشەیە پێشتر خەزن کراوە");
         } else {
-          toast("Ø®Û•Ø²Ù†Ú©Ø±Ø¯Ù†ÛŒ ÙˆØ´Û• Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+          toast("خەزنکردنی وشە سەرکەوتوو نەبوو");
         }
       });
   }
@@ -5978,16 +5978,16 @@
       })
       .then(function () {
         renderProfile();
-        toast("ÙˆØ´Û•Ú©Û• Ø³Ú•Ø§ÛŒÛ•ÙˆÛ•");
+        toast("وشەکە سڕایەوە");
       })
       .catch(function (error) {
         console.error("delete saved word:", error);
-        toast("Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ ÙˆØ´Û• Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+        toast("سڕینەوەی وشە سەرکەوتوو نەبوو");
       });
   }
 
   function updateBookStatus(id, status, reason) {
-    if (!authState.isAdmin) return Promise.reject(new Error("Admin ØªÛ•Ù†ÛŒØ§ Ø¯Û•ØªÙˆØ§Ù†ÛŽØª Ø¯Û†Ø® Ø¨Ú¯Û†Ú•ÛŽØª."));
+    if (!authState.isAdmin) return Promise.reject(new Error("Admin تەنیا دەتوانێت دۆخ بگۆڕێت."));
     var patch = {
       status: status,
       rejection_reason: status === "rejected" ? (reason || "") : null
@@ -6009,7 +6009,7 @@
     if (!authState.isAdmin) return;
     var track = music.find(function (item) { return item.id === String(id); });
     if (!track) return;
-    if (!window.confirm("Ø¯ÚµÙ†ÛŒØ§ÛŒØª Ù„Û• Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ Â«" + track.name + "Â»ØŸ")) return;
+    if (!window.confirm("دڵنیایت لە سڕینەوەی «" + track.name + "»؟")) return;
     var path = storagePathFromPublicUrl(track.audio_url, MUSIC_BUCKET);
     supabaseClient.from("music").delete().eq("id", Number(track.remoteId != null ? track.remoteId : track.id))
       .then(function (result) {
@@ -6021,16 +6021,16 @@
         renderTracks();
         renderOwnerPanel();
         renderProfile();
-        toast("Ù…ÙˆØ²ÛŒÚ©Û•Ú©Û• Ø³Ú•Ø§ÛŒÛ•ÙˆÛ•");
+        toast("موزیکەکە سڕایەوە");
       })
       .catch(function (error) {
         console.error("deleteMusicByAdmin:", error);
-        toast("Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ Ù…ÙˆØ²ÛŒÚ© Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+        toast("سڕینەوەی موزیک سەرکەوتوو نەبوو");
       });
   }
 
   function updateMusicStatus(id, status, reason) {
-    if (!authState.isAdmin) return Promise.reject(new Error("Admin ØªÛ•Ù†ÛŒØ§ Ø¯Û•ØªÙˆØ§Ù†ÛŽØª Ø¯Û†Ø® Ø¨Ú¯Û†Ú•ÛŽØª."));
+    if (!authState.isAdmin) return Promise.reject(new Error("Admin تەنیا دەتوانێت دۆخ بگۆڕێت."));
     return supabaseClient.from("music").update({
       status: status,
       rejection_reason: status === "rejected" ? (reason || "") : null
@@ -6051,17 +6051,17 @@
 
     var rows = music.filter(function (track) { return track.status === "pending" || track.status === "rejected"; }).slice(0, 30);
     box.innerHTML =
-      '<strong style="font-size:12px;color:#fff">Ù…ÙˆØ²ÛŒÚ©ÛŒ Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†Û•Ú©Ø§Ù†</strong>' +
+      '<strong style="font-size:12px;color:#fff">موزیکی چاوەڕوانەکان</strong>' +
       (rows.length ? rows.map(function (track) {
-        var statusText = track.status === "rejected" ? "Ú•Û•ØªÚ©Ø±Ø§ÙˆÛ•" : "Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†";
+        var statusText = track.status === "rejected" ? "ڕەتکراوە" : "چاوەڕوان";
         var actions = '';
         if (track.status === "pending") {
-          actions += '<button class="icon-btn" type="button" data-admin-music-approve="' + esc(track.id) + '" title="Ù¾Û•Ø³Û•Ù†Ø¯Ú©Ø±Ø¯Ù†"><i class="fa-solid fa-check"></i></button>';
-          actions += '<button class="icon-btn" type="button" data-admin-music-reject="' + esc(track.id) + '" title="Ú•Û•ØªÚ©Ø±Ø¯Ù†Û•ÙˆÛ•"><i class="fa-solid fa-xmark"></i></button>';
+          actions += '<button class="icon-btn" type="button" data-admin-music-approve="' + esc(track.id) + '" title="پەسەندکردن"><i class="fa-solid fa-check"></i></button>';
+          actions += '<button class="icon-btn" type="button" data-admin-music-reject="' + esc(track.id) + '" title="ڕەتکردنەوە"><i class="fa-solid fa-xmark"></i></button>';
         }
-        actions += '<button class="icon-btn" type="button" data-admin-music-delete="' + esc(track.id) + '" title="Ø³Ú•ÛŒÙ†Û•ÙˆÛ•"><i class="fa-regular fa-trash-can"></i></button>';
-        return '<div class="owner-book-row"><div class="owner-book-main"><strong>' + esc(track.name || "Ù…ÙˆØ²ÛŒÚ©") + '</strong><small>' + esc(track.artist || "") + ' Â· ' + statusText + '</small></div><div class="owner-book-actions">' + actions + '</div></div>';
-      }).join("") : '<div class="empty" style="padding:14px">Ù‡ÛŒÚ† Ù…ÙˆØ²ÛŒÚ©ÛŽÚ©ÛŒ Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù† Ù†ÛŒÛŒÛ•.</div>');
+        actions += '<button class="icon-btn" type="button" data-admin-music-delete="' + esc(track.id) + '" title="سڕینەوە"><i class="fa-regular fa-trash-can"></i></button>';
+        return '<div class="owner-book-row"><div class="owner-book-main"><strong>' + esc(track.name || "موزیک") + '</strong><small>' + esc(track.artist || "") + ' · ' + statusText + '</small></div><div class="owner-book-actions">' + actions + '</div></div>';
+      }).join("") : '<div class="empty" style="padding:14px">هیچ موزیکێکی چاوەڕوان نییە.</div>');
   }
 
   function loadAdminUsers() {
@@ -6075,19 +6075,19 @@
         if (!box) return;
         var rows = result.data || [];
         box.innerHTML =
-          '<strong style="font-size:12px;color:#fff">Ø¨Û•Ú©Ø§Ø±Ù‡ÛŽÙ†Û•Ø±Ø§Ù†</strong>' +
-          '<small style="color:#7f91a6;font-size:7px">Ø¦ÛŒÙ…Û•ÛŒÚµÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±Û•Ú©Ø§Ù†ÛŒ ØªØ± Ù„Û•Ù„Ø§ÛŒÛ•Ù† Auth Ø¨Û• Ø´ÛŽÙˆÛ•ÛŒ Ù¾Ø§Ø±ÛŽØ²Ø±Ø§Ùˆ Ù‡Û•ÚµÚ¯ÛŒØ±Ø§ÙˆÛ•Ø› Ù„ÛŽØ±Û• UUID Ù†ÛŒØ´Ø§Ù† Ø¯Û•Ø¯Ø±ÛŽØª Ø¨Û† Ù†Ø§Ø³ÛŒÙ†Û•ÙˆÛ•.</small>' +
+          '<strong style="font-size:12px;color:#fff">بەکارهێنەران</strong>' +
+          '<small style="color:#7f91a6;font-size:7px">ئیمەیڵی هەژمارەکانی تر لەلایەن Auth بە شێوەی پارێزراو هەڵگیراوە؛ لێرە UUID نیشان دەدرێت بۆ ناسینەوە.</small>' +
           (rows.length ? rows.slice(0, 50).map(function (row) {
             var isSelf = row.id === authState.user.id;
             var label = row.role === "admin" ? "ADMIN" : row.role === "premium" ? "PREMIUM" : "USER";
             var next = row.role === "premium" ? "user" : "premium";
             var disabled = row.is_disabled;
             return '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:rgba(255,255,255,.02)">' +
-              '<div><strong style="display:block;color:#fff;font-size:8px;word-break:break-all">' + esc(row.id) + '</strong><small style="color:' + (disabled ? '#ff8b9d' : '#8295aa') + ';font-size:7px">' + label + (disabled ? ' Â· Ù†Ø§Ú†Ø§Ù„Ø§Ú©' : '') + '</small></div>' +
+              '<div><strong style="display:block;color:#fff;font-size:8px;word-break:break-all">' + esc(row.id) + '</strong><small style="color:' + (disabled ? '#ff8b9d' : '#8295aa') + ';font-size:7px">' + label + (disabled ? ' · ناچالاک' : '') + '</small></div>' +
               '<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">' +
-              (!isSelf ? '<button class="small" type="button" data-admin-role-id="' + esc(row.id) + '" data-admin-next-role="' + next + '">' + (row.role === 'premium' ? 'Ù„Ø§Ø¨Ø±Ø¯Ù† Premium' : 'Ú©Ø±Ø¯Ù† Premium') + '</button><button class="small" type="button" data-admin-disable-id="' + esc(row.id) + '" data-admin-disable-value="' + (disabled ? 'false' : 'true') + '">' + (disabled ? 'Ú†Ø§Ù„Ø§Ú©Ú©Ø±Ø¯Ù†' : 'Ù†Ø§Ú†Ø§Ù„Ø§Ú©Ú©Ø±Ø¯Ù†') + '</button>' : '<span style="color:#f5cd68;font-size:8px">Ø¦Û†Ù†Û•Ø±</span>') +
+              (!isSelf ? '<button class="small" type="button" data-admin-role-id="' + esc(row.id) + '" data-admin-next-role="' + next + '">' + (row.role === 'premium' ? 'لابردن Premium' : 'کردن Premium') + '</button><button class="small" type="button" data-admin-disable-id="' + esc(row.id) + '" data-admin-disable-value="' + (disabled ? 'false' : 'true') + '">' + (disabled ? 'چالاککردن' : 'ناچالاککردن') + '</button>' : '<span style="color:#f5cd68;font-size:8px">ئۆنەر</span>') +
               '</div></div>';
-          }).join("") : '<div class="empty" style="padding:14px">Ù‡ÛŽØ´ØªØ§ Ø¨Û•Ú©Ø§Ø±Ù‡ÛŽÙ†Û•Ø± Ù†ÛŒÛŒÛ•.</div>');
+          }).join("") : '<div class="empty" style="padding:14px">هێشتا بەکارهێنەر نییە.</div>');
       });
   }
 
@@ -6100,7 +6100,7 @@
       })
       .catch(function (error) {
         console.error("updateUserDisabled:", error);
-        toast("Ú¯Û†Ú•ÛŒÙ†ÛŒ Ø¯Û†Ø®ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø± Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+        toast("گۆڕینی دۆخی هەژمار سەرکەوتوو نەبوو");
       });
   }
 
@@ -6116,7 +6116,7 @@
       return loadAdminUsers();
     }).catch(function (error) {
       console.error("updateUserRole:", error);
-      toast("Ú¯Û†Ú•ÛŒÙ†ÛŒ Ú•Û†Úµ Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+      toast("گۆڕینی ڕۆڵ سەرکەوتوو نەبوو");
     });
   }
 
@@ -6258,7 +6258,7 @@
             );
 
           toast(
-            "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ù†Ø§ÙˆÛ•Ú•Û†Ú©ÛŒ Supabase Ø¨Ø§Ø±Ø¨Ú©Ø±ÛŽØª"
+            "نەتوانرا ناوەڕۆکی Supabase باربکرێت"
           );
         }
       );
