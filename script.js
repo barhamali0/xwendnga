@@ -5210,8 +5210,13 @@
     musicInput.addEventListener(
       "change",
       function () {
+        var selectedFiles =
+          Array.prototype.slice.call(
+            this.files || []
+          );
+
         addMusicFiles(
-          this.files
+          selectedFiles
         );
 
         this.value =
