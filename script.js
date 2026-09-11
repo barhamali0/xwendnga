@@ -86,7 +86,7 @@
     if (!supabaseReady()) {
       return Promise.reject(
         new Error(
-          "Supabase بەردەست نییە"
+          "Supabase Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•"
         )
       );
     }
@@ -167,228 +167,94 @@
     var lang =
       language;
 
-    if (
-      language ===
-      "کوردی"
-    ) {
-      lang =
-        "ku";
-    } else if (
-      language ===
-      "عەرەبی"
-    ) {
-      lang =
-        "ar";
-    } else if (
-      language ===
-      "فارسی"
-    ) {
-      lang =
-        "fa";
-    } else if (
-      language ===
-      "ئینگلیزی"
-    ) {
-      lang =
-        "en";
-    }
+    if (language === "Ú©ÙˆØ±Ø¯ÛŒ") lang = "ku";
+    else if (language === "Ø¹Û•Ø±Û•Ø¨ÛŒ") lang = "ar";
+    else if (language === "ÙØ§Ø±Ø³ÛŒ") lang = "fa";
+    else if (language === "Ø¦ÛŒÙ†Ú¯Ù„ÛŒØ²ÛŒ") lang = "en";
 
     return {
-      id:
-        String(
-          row.id
-        ),
-
-      remoteId:
-        row.id,
-
-      title:
-        row.title ||
-        "",
-
-      author:
-        row.author ||
-        "",
-
-      language:
-        row.language ||
-        "",
-
-      category:
-        row.category ||
-        "گشتی",
-
-      description:
-        row.description ||
-        "",
-
-      keywords:
-        row.keywords ||
-        "",
-
-      cover_url:
-        row.cover_url ||
-        "",
-
-      pdf_url:
-        row.pdf_url ||
-        "",
-
-      pages:
-        [],
-
-      pdfData:
-        null,
-
-      lang:
-        lang,
-
-      pageCount:
-        Number(
-          row.pages
-        ) ||
-        0,
-
-      currentPage:
-        0,
-
-      progress:
-        0,
-
-      favorite:
-        false,
-
-      bookmarked:
-        false,
-
-      isPublished:
-        true,
-
-      addedAt:
-        row.created_at
-          ? new Date(
-              row.created_at
-            ).getTime()
-          : Date.now(),
-
-      updatedAt:
-        row.created_at
-          ? new Date(
-              row.created_at
-            ).getTime()
-          : Date.now(),
-
-      isRemote:
-        true
+      id: String(row.id),
+      remoteId: row.id,
+      ownerId: row.owner_id || null,
+      status: row.status || "approved",
+      rejectionReason: row.rejection_reason || "",
+      reviewedBy: row.reviewed_by || null,
+      reviewedAt: row.reviewed_at || null,
+      title: row.title || "",
+      author: row.author || "",
+      language: row.language || "",
+      category: row.category || "Ú¯Ø´ØªÛŒ",
+      description: row.description || "",
+      keywords: row.keywords || "",
+      cover_url: row.cover_url || "",
+      pdf_url: row.pdf_url || "",
+      pages: [],
+      pdfData: null,
+      lang: lang,
+      pageCount: Number(row.pages) || 0,
+      currentPage: 0,
+      progress: 0,
+      favorite: false,
+      bookmarked: false,
+      isPublished: (row.status || "approved") === "approved",
+      addedAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+      updatedAt: row.created_at ? new Date(row.created_at).getTime() : Date.now(),
+      isRemote: true
     };
   }
 
   function loadRemoteBooks() {
     if (!supabaseReady()) {
-      return Promise.resolve(
-        []
-      );
+      return Promise.resolve([]);
     }
 
     return supabaseClient
       .from("books")
       .select(
-        "id,created_at,title,author,language,category,description,pages,cover_url,pdf_url,keywords"
+        "id,created_at,title,author,language,category,description,pages,cover_url,pdf_url,keywords,owner_id,status,rejection_reason,reviewed_by,reviewed_at"
       )
-      .order(
-        "created_at",
-        {
-          ascending:
-            false
+      .order("created_at", { ascending: false })
+      .then(function (result) {
+        if (result.error) {
+          throw result.error;
         }
-      )
-      .then(
-        function (result) {
-          if (result.error) {
-            throw result.error;
-          }
 
-          return (
-            result.data ||
-            []
-          )
-            .map(
-              mapRemoteBook
-            )
-            .filter(
-              Boolean
-            );
-        }
-      );
+        return (result.data || [])
+          .map(mapRemoteBook)
+          .filter(Boolean);
+      });
   }
 
   function insertRemoteBook(
     book
   ) {
     if (!supabaseReady()) {
-      return Promise.reject(
-        new Error(
-          "Supabase بەردەست نییە"
-        )
-      );
+      return Promise.reject(new Error("Supabase Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•"));
     }
 
     return supabaseClient
       .from("books")
       .insert({
-        title:
-          book.title ||
-          "",
-
-        author:
-          book.author ||
-          "",
-
-        language:
-          book.lang ||
-          "en",
-
-        category:
-          book.category ||
-          "گشتی",
-
-        description:
-          book.description ||
-          "",
-
-        pages:
-          Number(
-            book.pageCount
-          ) ||
-          0,
-
-        cover_url:
-          book.cover_url ||
-          "",
-
-        pdf_url:
-          book.pdf_url ||
-          "",
-
-        keywords:
-          book.keywords ||
-          ""
+        title: book.title || "",
+        author: book.author || "",
+        language: book.language || book.lang || "en",
+        category: book.category || "Ú¯Ø´ØªÛŒ",
+        description: book.description || "",
+        pages: Number(book.pageCount) || 0,
+        cover_url: book.cover_url || "",
+        pdf_url: book.pdf_url || "",
+        keywords: book.keywords || ""
       })
       .select(
-        "id,created_at,title,author,language,category,description,pages,cover_url,pdf_url,keywords"
+        "id,created_at,title,author,language,category,description,pages,cover_url,pdf_url,keywords,owner_id,status,rejection_reason,reviewed_by,reviewed_at"
       )
       .single()
-      .then(
-        function (result) {
-          if (result.error) {
-            throw result.error;
-          }
-
-          return mapRemoteBook(
-            result.data
-          );
+      .then(function (result) {
+        if (result.error) {
+          throw result.error;
         }
-      );
+        return mapRemoteBook(result.data);
+      });
   }
 
   function deleteRemoteBook(
@@ -435,179 +301,87 @@
 
   function loadRemoteMusic() {
     if (!supabaseReady()) {
-      return Promise.resolve(
-        []
-      );
+      return Promise.resolve([]);
     }
 
     return supabaseClient
       .from("music")
       .select(
-        "id,created_at,title,artist,category,cover_url,audio_url,duration"
+        "id,created_at,title,artist,category,cover_url,audio_url,duration,owner_id,status,rejection_reason,reviewed_by,reviewed_at"
       )
-      .order(
-        "created_at",
-        {
-          ascending:
-            false
+      .order("created_at", { ascending: false })
+      .then(function (result) {
+        if (result.error) {
+          throw result.error;
         }
-      )
-      .then(
-        function (result) {
-          if (result.error) {
-            throw result.error;
-          }
 
-          return (
-            result.data ||
-            []
-          ).map(
-            function (row) {
-              return {
-                id:
-                  String(
-                    row.id
-                  ),
-
-                remoteId:
-                  row.id,
-
-                name:
-                  row.title ||
-                  "",
-
-                artist:
-                  row.artist ||
-                  "",
-
-                category:
-                  row.category ||
-                  "",
-
-                cover_url:
-                  row.cover_url ||
-                  "",
-
-                audio_url:
-                  row.audio_url ||
-                  "",
-
-                duration:
-                  Number(
-                    row.duration
-                  ) ||
-                  0,
-
-                url:
-                  row.audio_url ||
-                  "",
-
-                isRemote:
-                  true
-              };
-            }
-          );
-        }
-      );
+        return (result.data || []).map(function (row) {
+          return {
+            id: String(row.id),
+            remoteId: row.id,
+            ownerId: row.owner_id || null,
+            status: row.status || "approved",
+            rejectionReason: row.rejection_reason || "",
+            reviewedBy: row.reviewed_by || null,
+            reviewedAt: row.reviewed_at || null,
+            name: row.title || "",
+            artist: row.artist || "",
+            category: row.category || "",
+            cover_url: row.cover_url || "",
+            audio_url: row.audio_url || "",
+            duration: Number(row.duration) || 0,
+            url: row.audio_url || "",
+            isRemote: true
+          };
+        });
+      });
   }
 
   function insertRemoteMusic(
     track
   ) {
     if (!supabaseReady()) {
-      return Promise.reject(
-        new Error(
-          "Supabase بەردەست نییە"
-        )
-      );
+      return Promise.reject(new Error("Supabase Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•"));
     }
 
     return supabaseClient
       .from("music")
       .insert({
-        title:
-          track.name ||
-          "",
-
-        artist:
-          track.artist ||
-          "",
-
-        category:
-          track.category ||
-          "",
-
-        cover_url:
-          track.cover_url ||
-          "",
-
-        audio_url:
-          track.audio_url ||
-          "",
-
-        duration:
-          Number(
-            track.duration
-          ) ||
-          0
+        title: track.name || "",
+        artist: track.artist || "",
+        category: track.category || "",
+        cover_url: track.cover_url || "",
+        audio_url: track.audio_url || "",
+        duration: Number(track.duration) || 0
       })
       .select(
-        "id,created_at,title,artist,category,cover_url,audio_url,duration"
+        "id,created_at,title,artist,category,cover_url,audio_url,duration,owner_id,status,rejection_reason,reviewed_by,reviewed_at"
       )
       .single()
-      .then(
-        function (result) {
-          if (result.error) {
-            throw result.error;
-          }
-
-          var row =
-            result.data;
-
-          return {
-            id:
-              String(
-                row.id
-              ),
-
-            remoteId:
-              row.id,
-
-            name:
-              row.title ||
-              "",
-
-            artist:
-              row.artist ||
-              "",
-
-            category:
-              row.category ||
-              "",
-
-            cover_url:
-              row.cover_url ||
-              "",
-
-            audio_url:
-              row.audio_url ||
-              "",
-
-            duration:
-              Number(
-                row.duration
-              ) ||
-              0,
-
-            url:
-              row.audio_url ||
-              "",
-
-            isRemote:
-              true
-          };
+      .then(function (result) {
+        if (result.error) {
+          throw result.error;
         }
-      );
+
+        var row = result.data || {};
+        return {
+          id: String(row.id),
+          remoteId: row.id,
+          ownerId: row.owner_id || null,
+          status: row.status || "pending",
+          rejectionReason: row.rejection_reason || "",
+          reviewedBy: row.reviewed_by || null,
+          reviewedAt: row.reviewed_at || null,
+          name: row.title || "",
+          artist: row.artist || "",
+          category: row.category || "",
+          cover_url: row.cover_url || "",
+          audio_url: row.audio_url || "",
+          duration: Number(row.duration) || 0,
+          url: row.audio_url || "",
+          isRemote: true
+        };
+      });
   }
 
   function deleteRemoteMusic(
@@ -662,6 +436,33 @@
   var music = [];
   var musicIndex = -1;
 
+  /* =======================================================
+     AUTH / ROLES / CLOUD USER DATA
+     ======================================================= */
+
+  var authState = {
+    user: null,
+    profile: null,
+    isAdmin: false,
+    role: "anonymous",
+    loading: true,
+    favorites: {},
+    savedWords: []
+  };
+
+  function favoriteKey(itemType, itemId) {
+    return String(itemType || "book") + ":" + String(itemId);
+  }
+
+  var AUTH_RECOVERY_NOTICE =
+    "Ù‡Û•Ú˜Ù…Ø§Ø±Û•Ú©Û•Øª Ø¯Ø±ÙˆØ³Øª Ø¨ÙˆÙˆ. Ø¦Û•Ú¯Û•Ø± Ù¾Ø´ØªÚ•Ø§Ø³ØªÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦ÛŒÙ…Û•ÛŒÚµ Ú†Ø§Ù„Ø§Ú© Ø¨ÛŽØªØŒ ØªÚ©Ø§ÛŒÛ• Ø¦ÛŒÙ…Û•ÛŒÚµÛ•Ú©Û•Øª Ù¾Ø´ØªÚ•Ø§Ø³Øª Ø¨Ú©Û•ÙˆÛ• Ùˆ Ù¾Ø§Ø´Ø§Ù† Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.";
+
+  var PREMIUM_PAYMENT_INFO = {
+    fastpay: "Ú˜Ù…Ø§Ø±Û•ÛŒ FastPay Ù€Û•Ú©Û•Øª Ù„ÛŽØ±Û• Ø¯Ø§Ø¨Ù†ÛŽ",
+    fib: "Ú˜Ù…Ø§Ø±Û•ÛŒ FIB Ù€Û•Ú©Û•Øª Ù„ÛŽØ±Û• Ø¯Ø§Ø¨Ù†ÛŽ",
+    telegram: "@about_Barham"
+  };
+
   var filter = "all";
   var query = "";
 
@@ -691,14 +492,14 @@
      ======================================================= */
 
   var CATEGORIES = [
-    "گشتی",
-    "زمان",
-    "ئەدەب",
-    "مێژوو",
-    "زانست",
-    "فەلسەفە",
-    "ئایین",
-    "ئینگلیزی"
+    "Ú¯Ø´ØªÛŒ",
+    "Ø²Ù…Ø§Ù†",
+    "Ø¦Û•Ø¯Û•Ø¨",
+    "Ù…ÛŽÚ˜ÙˆÙˆ",
+    "Ø²Ø§Ù†Ø³Øª",
+    "ÙÛ•Ù„Ø³Û•ÙÛ•",
+    "Ø¦Ø§ÛŒÛŒÙ†",
+    "Ø¦ÛŒÙ†Ú¯Ù„ÛŒØ²ÛŒ"
   ];
 
 
@@ -710,7 +511,7 @@
 
     cyan: {
       name:
-        "شینی ئاسمانی",
+        "Ø´ÛŒÙ†ÛŒ Ø¦Ø§Ø³Ù…Ø§Ù†ÛŒ",
       a:
         "#35bbff",
       b:
@@ -729,7 +530,7 @@
 
     violet: {
       name:
-        "مۆری",
+        "Ù…Û†Ø±ÛŒ",
       a:
         "#8b6cff",
       b:
@@ -748,7 +549,7 @@
 
     emerald: {
       name:
-        "سەوزی",
+        "Ø³Û•ÙˆØ²ÛŒ",
       a:
         "#22c98b",
       b:
@@ -767,7 +568,7 @@
 
     sunset: {
       name:
-        "خۆرئاوابوون",
+        "Ø®Û†Ø±Ø¦Ø§ÙˆØ§Ø¨ÙˆÙˆÙ†",
       a:
         "#ff8a4c",
       b:
@@ -786,7 +587,7 @@
 
     ruby: {
       name:
-        "سووری",
+        "Ø³ÙˆÙˆØ±ÛŒ",
       a:
         "#ff536d",
       b:
@@ -805,7 +606,7 @@
 
     royal: {
       name:
-        "شینی قووڵ",
+        "Ø´ÛŒÙ†ÛŒ Ù‚ÙˆÙˆÚµ",
       a:
         "#4c7dff",
       b:
@@ -824,7 +625,7 @@
 
     gold: {
       name:
-        "زێڕی",
+        "Ø²ÛŽÚ•ÛŒ",
       a:
         "#f2bf4a",
       b:
@@ -843,7 +644,7 @@
 
     rose: {
       name:
-        "پەمەیی",
+        "Ù¾Û•Ù…Û•ÛŒÛŒ",
       a:
         "#f05bd5",
       b:
@@ -862,7 +663,7 @@
 
     ocean: {
       name:
-        "دەریایی",
+        "Ø¯Û•Ø±ÛŒØ§ÛŒÛŒ",
       a:
         "#20d6d6",
       b:
@@ -881,7 +682,7 @@
 
     graphite: {
       name:
-        "گرافایت",
+        "Ú¯Ø±Ø§ÙØ§ÛŒØª",
       a:
         "#aab7c8",
       b:
@@ -900,7 +701,7 @@
 
     lime: {
       name:
-        "لایمی",
+        "Ù„Ø§ÛŒÙ…ÛŒ",
       a:
         "#a7df45",
       b:
@@ -919,7 +720,7 @@
 
     midnight: {
       name:
-        "میدناو",
+        "Ù…ÛŒØ¯Ù†Ø§Ùˆ",
       a:
         "#607dff",
       b:
@@ -946,7 +747,7 @@
 
     paper: {
       name:
-        "سپی",
+        "Ø³Ù¾ÛŒ",
       bg:
         "#f4f6f9",
       paper:
@@ -957,7 +758,7 @@
 
     cream: {
       name:
-        "کرێمی",
+        "Ú©Ø±ÛŽÙ…ÛŒ",
       bg:
         "#eee5d1",
       paper:
@@ -968,7 +769,7 @@
 
     mint: {
       name:
-        "سەوزی کاڵ",
+        "Ø³Û•ÙˆØ²ÛŒ Ú©Ø§Úµ",
       bg:
         "#dfece5",
       paper:
@@ -979,7 +780,7 @@
 
     sky: {
       name:
-        "ئاسمانی",
+        "Ø¦Ø§Ø³Ù…Ø§Ù†ÛŒ",
       bg:
         "#dceef4",
       paper:
@@ -990,7 +791,7 @@
 
     rose: {
       name:
-        "پەمەیی",
+        "Ù¾Û•Ù…Û•ÛŒÛŒ",
       bg:
         "#f0dfe2",
       paper:
@@ -1001,7 +802,7 @@
 
     lavender: {
       name:
-        "مۆری",
+        "Ù…Û†Ø±ÛŒ",
       bg:
         "#e6def4",
       paper:
@@ -1012,7 +813,7 @@
 
     sand: {
       name:
-        "خۆڵەمێشی",
+        "Ø®Û†ÚµÛ•Ù…ÛŽØ´ÛŒ",
       bg:
         "#e7ded2",
       paper:
@@ -1023,7 +824,7 @@
 
     forest: {
       name:
-        "دارستان",
+        "Ø¯Ø§Ø±Ø³ØªØ§Ù†",
       bg:
         "#dee8de",
       paper:
@@ -1034,7 +835,7 @@
 
     sepia: {
       name:
-        "کەتیبی کۆن",
+        "Ú©Û•ØªÛŒØ¨ÛŒ Ú©Û†Ù†",
       bg:
         "#e6dbc6",
       paper:
@@ -1045,7 +846,7 @@
 
     slate: {
       name:
-        "سڵەیت",
+        "Ø³ÚµÛ•ÛŒØª",
       bg:
         "#dce1e7",
       paper:
@@ -1056,7 +857,7 @@
 
     night: {
       name:
-        "شەو",
+        "Ø´Û•Ùˆ",
       bg:
         "#0b1420",
       paper:
@@ -1067,7 +868,7 @@
 
     black: {
       name:
-        "ڕەش",
+        "Ú•Û•Ø´",
       bg:
         "#050505",
       paper:
@@ -1310,7 +1111,7 @@
         if (!window.indexedDB) {
           reject(
             new Error(
-              "IndexedDB بەردەست نییە"
+              "IndexedDB Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•"
             )
           );
 
@@ -1355,7 +1156,7 @@
             reject(
               request.error ||
                 new Error(
-                  "نەتوانرا IndexedDB بکرێتەوە"
+                  "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ IndexedDB Ø¨Ú©Ø±ÛŽØªÛ•ÙˆÛ•"
                 )
             );
           };
@@ -1456,7 +1257,7 @@
                   reject(
                     tx.error ||
                       new Error(
-                        "نەتوانرا کتێب پاشەکەوت بکرێت"
+                        "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ú©ØªÛŽØ¨ Ù¾Ø§Ø´Û•Ú©Û•ÙˆØª Ø¨Ú©Ø±ÛŽØª"
                       )
                   );
                 };
@@ -1466,7 +1267,7 @@
                   reject(
                     tx.error ||
                       new Error(
-                        "پاشەکەوتکردن هەڵوەشایەوە"
+                        "Ù¾Ø§Ø´Û•Ú©Û•ÙˆØªÚ©Ø±Ø¯Ù† Ù‡Û•ÚµÙˆÛ•Ø´Ø§ÛŒÛ•ÙˆÛ•"
                       )
                   );
                 };
@@ -1973,7 +1774,7 @@
         if (!file) {
           reject(
             new Error(
-              "PDF file نەدۆزرایەوە"
+              "PDF file Ù†Û•Ø¯Û†Ø²Ø±Ø§ÛŒÛ•ÙˆÛ•"
             )
           );
 
@@ -1983,7 +1784,7 @@
         if (!window.pdfjsLib) {
           reject(
             new Error(
-              "PDF.js بەردەست نییە"
+              "PDF.js Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•"
             )
           );
 
@@ -2005,7 +1806,7 @@
               ) {
                 reject(
                   new Error(
-                    "PDF buffer بەتاڵە"
+                    "PDF buffer Ø¨Û•ØªØ§ÚµÛ•"
                   )
                 );
 
@@ -2130,7 +1931,7 @@
             reject(
               reader.error ||
                 new Error(
-                  "PDF خوێندرایەوە نەبوو"
+                  "PDF Ø®ÙˆÛŽÙ†Ø¯Ø±Ø§ÛŒÛ•ÙˆÛ• Ù†Û•Ø¨ÙˆÙˆ"
                 )
             );
           };
@@ -2144,217 +1945,93 @@
 
 
   /* =======================================================
-     ADD PDF → SUPABASE
+     ADD PDF â†’ SUPABASE
      ======================================================= */
 
   function addPDF(
     file
   ) {
-    if (!file) {
-      return;
-    }
-
+    if (!file) return;
     if (!supabaseReady()) {
-      toast(
-        "Supabase پەیوەست نییە"
-      );
-
+      toast("Supabase Ù¾Û•ÛŒÙˆÛ•Ø³Øª Ù†ÛŒÛŒÛ•");
       return;
     }
 
-    toast(
-      "PDF خەریکی بارکردنە..."
-    );
+    ensureAuthenticated("Ø¨Û† Ø²ÛŒØ§Ø¯Ú©Ø±Ø¯Ù†ÛŒ Ú©ØªÛŽØ¨ Ø³Û•Ø±Û•ØªØ§ Ø¯Û•Ø¨ÛŽØª Ø¨Ú†ÛŒØªÛ• Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.")
+      .then(function (ok) {
+        if (!ok) return;
+        return getFreshProfile().then(function (profile) {
+          if (!profile) return;
 
-    var safeName =
-      file.name
-        .replace(
-          /[^a-zA-Z0-9._-]+/g,
-          "-"
-        )
-        .replace(
-          /-+/g,
-          "-"
-        )
-        .replace(
-          /^[-.]+|[-.]+$/g,
-          ""
-        ) ||
-      "book.pdf";
+          toast("PDF Ø®Û•Ø±ÛŒÚ©ÛŒ Ø¨Ø§Ø±Ú©Ø±Ø¯Ù†Û•...");
 
-    var path =
-      Date.now() +
-      "-" +
-      Math.floor(
-        Math.random() *
-          1000000
-      ) +
-      "-" +
-      safeName;
+          var uid = authState.user.id;
+          var safeName = file.name
+            .replace(/[^a-zA-Z0-9._-]+/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^[-.]+|[-.]+$/g, "") || "book.pdf";
 
-    var uploadedPdfPath =
-      path;
+          var path = (profile.role === "admin" ? "admin" : uid) +
+            "/" + Date.now() + "-" + Math.floor(Math.random() * 1000000) + "-" + safeName;
 
-    uploadToStorage(
-      BOOKS_BUCKET,
-      path,
-      file
-    )
-      .then(
-        function (
-          uploaded
-        ) {
-          return extractPDF(
-            file
-          ).then(
-            function (
-              data
-            ) {
-              var book = {
-                title:
-                  file.name.replace(
-                    /\.pdf$/i,
-                    ""
-                  ),
+          var uploadedPdfPath = path;
 
-                author:
-                  "",
+          return uploadToStorage(BOOKS_BUCKET, path, file)
+            .then(function (uploaded) {
+              return extractPDF(file).then(function (data) {
+                var book = {
+                  title: file.name.replace(/\.pdf$/i, ""),
+                  author: "",
+                  category: "Ú¯Ø´ØªÛŒ",
+                  description: "",
+                  keywords: "",
+                  lang: data.lang || "en",
+                  pageCount: data.pageCount || 0,
+                  cover_url: "",
+                  pdf_url: uploaded.url
+                };
 
-                category:
-                  "گشتی",
-
-                description:
-                  "",
-
-                keywords:
-                  "",
-
-                lang:
-                  data.lang ||
-                  "en",
-
-                pageCount:
-                  data.pageCount ||
-                  0,
-
-                cover_url:
-                  "",
-
-                pdf_url:
-                  uploaded.url
-              };
-
-              return insertRemoteBook(
-                book
-              ).then(
-                function (
-                  remoteBook
-                ) {
-                  remoteBook.pdfData =
-                    data.pdfData;
-
-                  remoteBook.pages =
-                    data.pages ||
-                    [];
-
-                  remoteBook.lang =
-                    data.lang ||
-                    "en";
-
-                  remoteBook.pageCount =
-                    data.pageCount ||
-                    0;
-
-                  remoteBook.currentPage =
-                    0;
-
-                  remoteBook.progress =
-                    0;
-
-                  remoteBook.favorite =
-                    false;
-
-                  remoteBook.bookmarked =
-                    false;
-
-                  remoteBook.isPublished =
-                    true;
-
-                  remoteBook.isRemote =
-                    true;
-
+                return insertRemoteBook(book).then(function (remoteBook) {
+                  remoteBook.pdfData = data.pdfData;
+                  remoteBook.pages = data.pages || [];
+                  remoteBook.lang = data.lang || "en";
+                  remoteBook.pageCount = data.pageCount || 0;
+                  remoteBook.currentPage = 0;
+                  remoteBook.progress = 0;
+                  remoteBook.favorite = !!authState.favorites[favoriteKey("book", remoteBook.remoteId)];
+                  remoteBook.bookmarked = false;
+                  remoteBook.isPublished = remoteBook.status === "approved";
+                  remoteBook.isRemote = true;
                   return remoteBook;
-                }
-              );
-            }
-          );
-        }
-      )
-      .then(
-        function (
-          savedBook
-        ) {
-          books.unshift(
-            savedBook
-          );
-
-          renderBooks();
-          renderOwnerPanel();
-
-          toast(
-            "کتێبەکە بە سەرکەوتوویی زیادکرا"
-          );
-        }
-      )
-      .catch(
-        function (
-          error
-        ) {
-          console.error(
-            "Supabase addPDF:",
-            error
-          );
-
-          deleteFromStorage(
-            BOOKS_BUCKET,
-            uploadedPdfPath
-          )
-            .catch(
-              function (
-                cleanupError
-              ) {
-                console.error(
-                  "Supabase PDF cleanup:",
-                  cleanupError
-                );
-              }
-            )
-            .finally(
-              function () {
-                toast(
-                  "نەتوانرا PDF زیاد بکرێت: " +
-                  String(
-                    error &&
-                    error.message
-                      ? error.message
-                      : "هەڵە"
-                  ).slice(
-                    0,
-                    100
-                  )
-                );
-              }
-            );
-        }
-      );
-
-    var input =
-      $("pdfInput");
-
-    if (input) {
-      input.value =
-        "";
-    }
+                });
+              });
+            })
+            .then(function (savedBook) {
+              books.unshift(savedBook);
+              renderBooks();
+              renderOwnerPanel();
+              loadUserCloudData().catch(function (error) {
+                console.error("reload user data after book upload", error);
+              });
+              toast(savedBook.status === "approved"
+                ? "Ú©ØªÛŽØ¨Û•Ú©Û• Ú•Ø§Ø³ØªÛ•ÙˆØ®Û† Ø¨ÚµØ§ÙˆÚ©Ø±Ø§ÛŒÛ•ÙˆÛ•"
+                : "Ú©ØªÛŽØ¨Û•Ú©Û• Ù†ÛŽØ±Ø¯Ø±Ø§ Ø¨Û† Ù¾Ø´Ú©Ù†ÛŒÙ†");
+            })
+            .catch(function (error) {
+              console.error("Supabase addPDF:", error);
+              return deleteFromStorage(BOOKS_BUCKET, uploadedPdfPath)
+                .catch(function (cleanupError) {
+                  console.error("Supabase PDF cleanup:", cleanupError);
+                })
+                .finally(function () {
+                  toast(
+                    "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ PDF Ø²ÛŒØ§Ø¯ Ø¨Ú©Ø±ÛŽØª: " +
+                    String(error && error.message ? error.message : "Ù‡Û•ÚµÛ•").slice(0, 120)
+                  );
+                });
+            });
+        });
+      });
   }
 
 
@@ -2369,24 +2046,24 @@
       lang ===
       "ku"
     ) {
-      return "کوردی";
+      return "Ú©ÙˆØ±Ø¯ÛŒ";
     }
 
     if (
       lang ===
       "ar"
     ) {
-      return "عەرەبی";
+      return "Ø¹Û•Ø±Û•Ø¨ÛŒ";
     }
 
     if (
       lang ===
       "fa"
     ) {
-      return "فارسی";
+      return "ÙØ§Ø±Ø³ÛŒ";
     }
 
-    return "ئینگلیزی";
+    return "Ø¦ÛŒÙ†Ú¯Ù„ÛŒØ²ÛŒ";
   }
 
   function getLatestBook() {
@@ -2462,99 +2139,37 @@
      ======================================================= */
 
   function filteredBooks() {
-    var list =
-      books
-        .slice()
-        .sort(
-          function (
-            a,
-            b
-          ) {
-            return (
-              Number(
-                b.addedAt ||
-                0
-              ) -
-              Number(
-                a.addedAt ||
-                0
-              )
-            );
-          }
-        );
+    var list = books.slice().sort(function (a, b) {
+      return Number(b.addedAt || 0) - Number(a.addedAt || 0);
+    });
 
-    if (
-      filter ===
-      "favorites"
-    ) {
-      list =
-        list.filter(
-          function (
-            book
-          ) {
-            return !!book.favorite;
-          }
-        );
-
-    } else if (
-      filter ===
-      "recent"
-    ) {
-      list =
-        list.slice(
-          0,
-          8
-        );
-
-    } else if (
-      filter !==
-      "all"
-    ) {
-      list =
-        list.filter(
-          function (
-            book
-          ) {
-            return (
-              book.category ||
-              "گشتی"
-            ) ===
-              filter;
-          }
-        );
+    if (!authState.isAdmin) {
+      list = list.filter(function (book) {
+        return (book.status || "approved") === "approved";
+      });
     }
 
-    if (
-      query
-    ) {
-      var q =
-        query.toLowerCase();
+    if (filter === "favorites") {
+      list = list.filter(function (book) {
+        return !!book.favorite;
+      });
+    } else if (filter === "recent") {
+      list = list.slice(0, 8);
+    } else if (filter !== "all") {
+      list = list.filter(function (book) {
+        return (book.category || "Ú¯Ø´ØªÛŒ") === filter;
+      });
+    }
 
-      list =
-        list.filter(
-          function (
-            book
-          ) {
-            var text =
-              [
-                book.title,
-                book.author,
-                book.category
-              ]
-                .filter(
-                  Boolean
-                )
-                .join(" ")
-                .toLowerCase();
-
-            return (
-              text.indexOf(
-                q
-              ) >=
-              0
-            );
-          }
-        );
+    if (query) {
+      var q = query.toLowerCase();
+      list = list.filter(function (book) {
+        var text = [book.title, book.author, book.category]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase();
+        return text.indexOf(q) >= 0;
+      });
     }
 
     return list;
@@ -2711,7 +2326,7 @@
       continueTitle.textContent =
         latest
           ? title
-          : "کتێبەکەت لەوێیە";
+          : "Ú©ØªÛŽØ¨Û•Ú©Û•Øª Ù„Û•ÙˆÛŽÛŒÛ•";
     }
   }
 
@@ -2766,7 +2381,7 @@
     ) {
       hint.textContent =
         list.length +
-        " کتێب";
+        " Ú©ØªÛŽØ¨";
     }
 
     updateHomeStats();
@@ -2786,20 +2401,20 @@
         "<h3>" +
         (
           query
-            ? "هیچ ئەنجامێک نەدۆزرایەوە"
-            : "هێشتا کتێب نییە"
+            ? "Ù‡ÛŒÚ† Ø¦Û•Ù†Ø¬Ø§Ù…ÛŽÚ© Ù†Û•Ø¯Û†Ø²Ø±Ø§ÛŒÛ•ÙˆÛ•"
+            : "Ù‡ÛŽØ´ØªØ§ Ú©ØªÛŽØ¨ Ù†ÛŒÛŒÛ•"
         ) +
         "</h3>" +
         "<p>" +
         (
           query
-            ? "وشە یان ناوی نووسەرێکی تر تاقی بکەوە."
-            : "PDF ـێک زیاد بکە بۆ دەستپێکردنی خوێندنەوە."
+            ? "ÙˆØ´Û• ÛŒØ§Ù† Ù†Ø§ÙˆÛŒ Ù†ÙˆÙˆØ³Û•Ø±ÛŽÚ©ÛŒ ØªØ± ØªØ§Ù‚ÛŒ Ø¨Ú©Û•ÙˆÛ•."
+            : "PDF Ù€ÛŽÚ© Ø²ÛŒØ§Ø¯ Ø¨Ú©Û• Ø¨Û† Ø¯Û•Ø³ØªÙ¾ÛŽÚ©Ø±Ø¯Ù†ÛŒ Ø®ÙˆÛŽÙ†Ø¯Ù†Û•ÙˆÛ•."
         ) +
         "</p>" +
         '<button class="primary empty-button" type="button" data-action="add-pdf">' +
         '<i class="fa-solid fa-file-circle-plus"></i>' +
-        " زیادکردنی PDF" +
+        " Ø²ÛŒØ§Ø¯Ú©Ø±Ø¯Ù†ÛŒ PDF" +
         "</button>" +
         "</div>";
 
@@ -2871,7 +2486,7 @@
               ) +
               '">' +
 
-              '<button class="fav" data-action="fav" title="دڵخواز" type="button">' +
+              '<button class="fav" data-action="fav" title="Ø¯ÚµØ®ÙˆØ§Ø²" type="button">' +
 
               '<i class="' +
               (
@@ -2898,7 +2513,7 @@
               '<div class="book-author">' +
               esc(
                 book.author ||
-                "نووسەری دیارینەکراو"
+                "Ù†ÙˆÙˆØ³Û•Ø±ÛŒ Ø¯ÛŒØ§Ø±ÛŒÙ†Û•Ú©Ø±Ø§Ùˆ"
               ) +
               "</div>" +
 
@@ -2910,7 +2525,7 @@
                 book.pageCount ||
                 0
               ) +
-              " لاپەڕە</span>" +
+              " Ù„Ø§Ù¾Û•Ú•Û•</span>" +
 
               "<span>" +
               '<i class="fa-solid fa-language"></i> ' +
@@ -2924,7 +2539,7 @@
               '<span class="tag-badge">' +
               esc(
                 book.category ||
-                "گشتی"
+                "Ú¯Ø´ØªÛŒ"
               ) +
               "</span>" +
 
@@ -2940,12 +2555,12 @@
 
               '<button class="small primary" data-action="open-book" type="button">' +
               '<i class="fa-solid fa-book-open"></i>' +
-              " خوێندنەوە" +
+              " Ø®ÙˆÛŽÙ†Ø¯Ù†Û•ÙˆÛ•" +
               "</button>" +
 
-              '<button class="small" data-action="del-book" title="سڕینەوە" type="button">' +
-              '<i class="fa-regular fa-trash-can"></i>' +
-              "</button>" +
+              (authState.isAdmin
+                ? '<button class="small" data-action="del-book" title="Ø³Ú•ÛŒÙ†Û•ÙˆÛ•" type="button"><i class="fa-regular fa-trash-can"></i></button>'
+                : '') +
 
               "</div>" +
               "</div>" +
@@ -2978,7 +2593,7 @@
 
     if (!book) {
       toast(
-        "کتێبەکە نەدۆزرایەوە"
+        "Ú©ØªÛŽØ¨Û•Ú©Û• Ù†Û•Ø¯Û†Ø²Ø±Ø§ÛŒÛ•ÙˆÛ•"
       );
 
       return;
@@ -2990,7 +2605,7 @@
       book.pdf_url
     ) {
       toast(
-        "PDF خەریکی دابەزاندنە..."
+        "PDF Ø®Û•Ø±ÛŒÚ©ÛŒ Ø¯Ø§Ø¨Û•Ø²Ø§Ù†Ø¯Ù†Û•..."
       );
 
       fetch(
@@ -3031,7 +2646,7 @@
               );
             } else {
               toast(
-                "Reader هێشتا بارنەکراوە"
+                "Reader Ù‡ÛŽØ´ØªØ§ Ø¨Ø§Ø±Ù†Û•Ú©Ø±Ø§ÙˆÛ•"
               );
             }
           }
@@ -3046,10 +2661,10 @@
             );
 
             toast(
-              "PDF نەکرایەوە: " +
+              "PDF Ù†Û•Ú©Ø±Ø§ÛŒÛ•ÙˆÛ•: " +
               String(
                 error.message ||
-                "هەڵە"
+                "Ù‡Û•ÚµÛ•"
               ).slice(
                 0,
                 100
@@ -3071,7 +2686,7 @@
       );
     } else {
       toast(
-        "Reader هێشتا بارنەکراوە"
+        "Reader Ù‡ÛŽØ´ØªØ§ Ø¨Ø§Ø±Ù†Û•Ú©Ø±Ø§ÙˆÛ•"
       );
     }
   }
@@ -3084,70 +2699,44 @@
   function toggleFavorite(
     id
   ) {
-    var book =
-      books.find(
-        function (
-          item
-        ) {
-          return (
-            item.id ===
-            id
-          );
-        }
-      );
-
-    if (!book) {
+    if (!authState.user) {
+      openAuthModal("login", "Ø¨Û† Ø¨Û•Ú©Ø§Ø±Ù‡ÛŽÙ†Ø§Ù†ÛŒ Ø¯ÚµØ®ÙˆØ§Ø²Û•Ú©Ø§Ù† Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.");
       return;
     }
 
-    book.favorite =
-      !book.favorite;
+    var book = books.find(function (item) {
+      return item.id === id;
+    });
+    if (!book || !book.isRemote) return;
 
-    book.updatedAt =
-      Date.now();
+    var remoteId = book.remoteId != null ? book.remoteId : Number(book.id);
+    var nextState = !book.favorite;
 
-    if (
-      book.isRemote
-    ) {
+    var request = nextState
+      ? supabaseClient.from("favorites").insert({
+          user_id: authState.user.id,
+          item_type: "book",
+          item_id: remoteId
+        })
+      : supabaseClient.from("favorites")
+          .delete()
+          .eq("user_id", authState.user.id)
+          .eq("item_type", "book")
+          .eq("item_id", remoteId);
+
+    request.then(function (result) {
+      if (result.error) throw result.error;
+      book.favorite = nextState;
+      if (nextState) authState.favorites[favoriteKey("book", remoteId)] = true;
+      else delete authState.favorites[favoriteKey("book", remoteId)];
       renderBooks();
-      toast(
-        book.favorite
-          ? "کتێبەکە خرایە ناو دڵخوازەکان"
-          : "کتێبەکە لە دڵخوازەکان لابرا"
-      );
-
-      return;
-    }
-
-    dbPut(
-      book
-    )
-      .then(
-        function () {
-          renderBooks();
-          renderOwnerPanel();
-
-          toast(
-            book.favorite
-              ? "کتێبەکە خرایە ناو دڵخوازەکان"
-              : "کتێبەکە لە دڵخوازەکان لابرا"
-          );
-        }
-      )
-      .catch(
-        function (
-          error
-        ) {
-          console.error(
-            "favorite:",
-            error
-          );
-
-          toast(
-            "نوێکردنەوەی دڵخواز سەرکەوتوو نەبوو"
-          );
-        }
-      );
+      toast(nextState
+        ? "Ú©ØªÛŽØ¨Û•Ú©Û• Ø®Ø±Ø§ÛŒÛ• Ù†Ø§Ùˆ Ø¯ÚµØ®ÙˆØ§Ø²Û•Ú©Ø§Ù†"
+        : "Ú©ØªÛŽØ¨Û•Ú©Û• Ù„Û• Ø¯ÚµØ®ÙˆØ§Ø²Û•Ú©Ø§Ù† Ù„Ø§Ø¨Ø±Ø§");
+    }).catch(function (error) {
+      console.error("favorite:", error);
+      toast("Ù†ÙˆÛŽÚ©Ø±Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¯ÚµØ®ÙˆØ§Ø² Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+    });
   }
 
 
@@ -3158,6 +2747,11 @@
   function deleteBook(
     id
   ) {
+    if (!authState.isAdmin) {
+      toast("ØªÛ•Ù†ÛŒØ§ Ø¦Û•Ø¯Ù…ÛŒÙ† Ø¯Û•ØªÙˆØ§Ù†ÛŽØª Ú©ØªÛŽØ¨ Ø¨Ø³Ú•ÛŽØªÛ•ÙˆÛ•.");
+      return;
+    }
+
     var book =
       books.find(
         function (
@@ -3176,9 +2770,9 @@
 
     if (
       !window.confirm(
-        "دڵنیایت لە سڕینەوەی «" +
+        "Ø¯ÚµÙ†ÛŒØ§ÛŒØª Ù„Û• Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ Â«" +
         book.title +
-        "»؟"
+        "Â»ØŸ"
       )
     ) {
       return;
@@ -3189,7 +2783,7 @@
       supabaseReady()
     ) {
       toast(
-        "خەریکی سڕینەوەی کتێبەکەیە..."
+        "Ø®Û•Ø±ÛŒÚ©ÛŒ Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ Ú©ØªÛŽØ¨Û•Ú©Û•ÛŒÛ•..."
       );
 
       deleteRemoteBook(
@@ -3213,7 +2807,7 @@
             renderOwnerPanel();
 
             toast(
-              "کتێبەکە لە داتابەیس و Storage سڕایەوە"
+              "Ú©ØªÛŽØ¨Û•Ú©Û• Ù„Û• Ø¯Ø§ØªØ§Ø¨Û•ÛŒØ³ Ùˆ Storage Ø³Ú•Ø§ÛŒÛ•ÙˆÛ•"
             );
           }
         )
@@ -3227,12 +2821,12 @@
             );
 
             toast(
-              "سڕینەوە تەواو نەبوو: " +
+              "Ø³Ú•ÛŒÙ†Û•ÙˆÛ• ØªÛ•ÙˆØ§Ùˆ Ù†Û•Ø¨ÙˆÙˆ: " +
               String(
                 error &&
                 error.message
                   ? error.message
-                  : "هەڵە"
+                  : "Ù‡Û•ÚµÛ•"
               ).slice(
                 0,
                 110
@@ -3265,7 +2859,7 @@
           renderOwnerPanel();
 
           toast(
-            "کتێبەکە سڕایەوە"
+            "Ú©ØªÛŽØ¨Û•Ú©Û• Ø³Ú•Ø§ÛŒÛ•ÙˆÛ•"
           );
         }
       )
@@ -3279,7 +2873,7 @@
           );
 
           toast(
-            "سڕینەوە سەرکەوتوو نەبوو"
+            "Ø³Ú•ÛŒÙ†Û•ÙˆÛ• Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ"
           );
         }
       );
@@ -3764,11 +3358,11 @@
         word || ""
       )
         .replace(
-          /^[\s"'“”‘’.,!?;:()[\]{}،؛؟…—-]+/g,
+          /^[\s"'â€œâ€â€˜â€™.,!?;:()[\]{}ØŒØ›ØŸâ€¦â€”-]+/g,
           ""
         )
         .replace(
-          /[\s"'“”‘’.,!?;:()[\]{}،؛؟…—-]+$/g,
+          /[\s"'â€œâ€â€˜â€™.,!?;:()[\]{}ØŒØ›ØŸâ€¦â€”-]+$/g,
           ""
         )
         .trim();
@@ -3787,8 +3381,8 @@
 
     var target =
       isSorani
-        ? "کوردی سۆرانیی ستاندارد"
-        : "عەرەبیی فەصیح و ستاندارد";
+        ? "Ú©ÙˆØ±Ø¯ÛŒ Ø³Û†Ø±Ø§Ù†ÛŒÛŒ Ø³ØªØ§Ù†Ø¯Ø§Ø±Ø¯"
+        : "Ø¹Û•Ø±Û•Ø¨ÛŒÛŒ ÙÛ•ØµÛŒØ­ Ùˆ Ø³ØªØ§Ù†Ø¯Ø§Ø±Ø¯";
 
     var prompt =
       "You are the dictionary engine of a Kurdish learning app.\n\n" +
@@ -3954,7 +3548,7 @@
 
           if (!text) {
             throw new Error(
-              "Gemini هیچ وەڵامێکی نەدا"
+              "Gemini Ù‡ÛŒÚ† ÙˆÛ•ÚµØ§Ù…ÛŽÚ©ÛŒ Ù†Û•Ø¯Ø§"
             );
           }
 
@@ -3991,7 +3585,7 @@
               );
           } catch (error) {
             throw new Error(
-              "Gemini JSON نەدروستە"
+              "Gemini JSON Ù†Û•Ø¯Ø±ÙˆØ³ØªÛ•"
             );
           }
 
@@ -4005,7 +3599,7 @@
             !meanings.length
           ) {
             throw new Error(
-              "Gemini مانای وشە نەهێنا"
+              "Gemini Ù…Ø§Ù†Ø§ÛŒ ÙˆØ´Û• Ù†Û•Ù‡ÛŽÙ†Ø§"
             );
           }
 
@@ -4028,7 +3622,7 @@
         window)
     ) {
       toast(
-        "خوێندنەوەی دەنگی بەردەست نییە"
+        "Ø®ÙˆÛŽÙ†Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¯Û•Ù†Ú¯ÛŒ Ø¨Û•Ø±Ø¯Û•Ø³Øª Ù†ÛŒÛŒÛ•"
       );
 
       return;
@@ -4123,14 +3717,14 @@
       modalKu
     ) {
       modalKu.textContent =
-        "چاوەڕوانی...";
+        "Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†ÛŒ...";
     }
 
     if (
       modalAr
     ) {
       modalAr.textContent =
-        "چاوەڕوانی...";
+        "Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†ÛŒ...";
     }
 
     var back =
@@ -4250,14 +3844,14 @@
             modalKu
           ) {
             modalKu.textContent =
-              "نەتوانرا مانا بهێنرێت";
+              "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ù…Ø§Ù†Ø§ Ø¨Ù‡ÛŽÙ†Ø±ÛŽØª";
           }
 
           if (
             modalAr
           ) {
             modalAr.textContent =
-              "نەتوانرا مانا بهێنرێت";
+              "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ù…Ø§Ù†Ø§ Ø¨Ù‡ÛŽÙ†Ø±ÛŽØª";
           }
 
           if (
@@ -4266,7 +3860,7 @@
               "NO_GEMINI_KEY"
           ) {
             toast(
-              "تکایە کلیلی Gemini لە ڕێکخستنەکان دابنێ"
+              "ØªÚ©Ø§ÛŒÛ• Ú©Ù„ÛŒÙ„ÛŒ Gemini Ù„Û• Ú•ÛŽÚ©Ø®Ø³ØªÙ†Û•Ú©Ø§Ù† Ø¯Ø§Ø¨Ù†ÛŽ"
             );
           }
         }
@@ -4279,87 +3873,33 @@
      ======================================================= */
 
   function renderVocab() {
-    var box =
-      $("vocabList");
+    var box = $("vocabList");
+    if (!box) return;
 
-    if (!box) {
-      return;
-    }
-
-    if (
-      !vocab.length
-    ) {
+    if (!vocab.length) {
       box.innerHTML =
         '<div class="empty" style="grid-column:1/-1">' +
-        '<div class="empty-icon">' +
-        '<i class="fa-solid fa-language"></i>' +
-        "</div>" +
-        "<h3>هێشتا وشەیەک خەزن نەکراوە</h3>" +
-        "<p>وشەیەک لە Reader هەڵبژێرە و خەزنی بکە.</p>" +
-        "</div>";
-
+        '<div class="empty-icon"><i class="fa-solid fa-language"></i></div>' +
+        '<h3>Ù‡ÛŽØ´ØªØ§ ÙˆØ´Û•ÛŒÛ•Ú© Ø®Û•Ø²Ù† Ù†Û•Ú©Ø±Ø§ÙˆÛ•</h3>' +
+        '<p>ÙˆØ´Û•ÛŒÛ•Ú© Ù„Û• Reader Ù‡Û•ÚµØ¨Ú˜ÛŽØ±Û• Ùˆ Ø®Û•Ø²Ù†ÛŒ Ø¨Ú©Û•.</p>' +
+        '</div>';
       return;
     }
 
-    box.innerHTML =
-      vocab
-        .map(
-          function (
-            item
-          ) {
-            return (
-              '<article class="book">' +
-              '<div class="book-main">' +
-
-              '<div class="book-title">' +
-              esc(
-                item.word
-              ) +
-              "</div>" +
-
-              '<div class="book-author">' +
-              esc(
-                item.meaning ||
-                ""
-              ) +
-              "</div>" +
-
-              '<div class="actions">' +
-
-              '<button class="small primary" data-vspeak="' +
-              esc(
-                item.word
-              ) +
-              '" data-vlang="' +
-              esc(
-                item.lang ||
-                "en"
-              ) +
-              '" type="button">' +
-
-              '<i class="fa-solid fa-volume-high"></i>' +
-              " دەنگ" +
-
-              "</button>" +
-
-              '<button class="small" data-vdel="' +
-              esc(
-                item.id
-              ) +
-              '" type="button">' +
-
-              '<i class="fa-regular fa-trash-can"></i>' +
-              " سڕینەوە" +
-
-              "</button>" +
-
-              "</div>" +
-              "</div>" +
-              "</article>"
-            );
-          }
-        )
-        .join("");
+    box.innerHTML = vocab.map(function (item) {
+      return (
+        '<article class="book">' +
+        '<div class="book-main">' +
+        '<div class="book-title">' + esc(item.word) + '</div>' +
+        '<div class="book-author">' + esc(item.meaning || "") + '</div>' +
+        '<div class="actions">' +
+        '<button class="small primary" data-vspeak="' + esc(item.word) + '" data-vlang="' + esc(item.lang || "en") + '" type="button">' +
+        '<i class="fa-solid fa-volume-high"></i> Ø¯Û•Ù†Ú¯</button>' +
+        '<button class="small" data-vdel="' + esc(item.id) + '" type="button">' +
+        '<i class="fa-regular fa-trash-can"></i> Ø³Ú•ÛŒÙ†Û•ÙˆÛ•</button>' +
+        '</div></div></article>'
+      );
+    }).join("");
   }
 
 
@@ -4368,132 +3908,61 @@
      ======================================================= */
 
   function renderOwnerPanel() {
-    var total =
-      $("ownerTotalBooks");
+    var shell = $("ownerSheet");
+    if (!shell) return;
 
-    var pub =
-      $("ownerPublicBooks");
-
-    var pending =
-      $("ownerPendingBooks");
-
-    var audios =
-      $("ownerTotalAudios");
-
-    if (
-      total
-    ) {
-      total.textContent =
-        books.length;
-    }
-
-    if (
-      pub
-    ) {
-      pub.textContent =
-        books.filter(
-          function (
-            item
-          ) {
-            return (
-              item.isPublished !==
-              false
-            );
-          }
-        ).length;
-    }
-
-    if (
-      pending
-    ) {
-      pending.textContent =
-        books.filter(
-          function (
-            item
-          ) {
-            return (
-              item.isPublished ===
-              false
-            );
-          }
-        ).length;
-    }
-
-    if (
-      audios
-    ) {
-      audios.textContent =
-        music.length;
-    }
-
-    var list =
-      $("ownerBooksList");
-
-    if (
-      !list
-    ) {
+    if (!authState.isAdmin) {
+      shell.setAttribute("aria-hidden", "true");
+      closeSheet($("ownerBack"), shell);
       return;
     }
 
-    if (
-      !books.length
-    ) {
-      list.innerHTML =
-        '<div class="empty" style="padding:20px">' +
-        "هێشتا کتێبێک نییە." +
-        "</div>";
+    shell.setAttribute("aria-hidden", "false");
 
-      return;
+    var total = $("ownerTotalBooks");
+    var pub = $("ownerPublicBooks");
+    var pending = $("ownerPendingBooks");
+    var audios = $("ownerTotalAudios");
+
+    if (total) total.textContent = books.length;
+    if (pub) pub.textContent = books.filter(function (item) { return (item.status || "approved") === "approved"; }).length;
+    if (pending) pending.textContent = books.filter(function (item) { return item.status === "pending"; }).length;
+    if (audios) audios.textContent = music.length;
+
+    var list = $("ownerBooksList");
+    if (list) {
+      var recent = books.slice(0, 20);
+      list.innerHTML = recent.length
+        ? recent.map(function (book) {
+            var statusText = book.status === "pending" ? "Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†" : book.status === "rejected" ? "Ú•Û•ØªÚ©Ø±Ø§ÙˆÛ•" : "Ø¨ÚµØ§ÙˆÚ©Ø±Ø§ÙˆÛ•";
+            var actions = '<button class="icon-btn" type="button" data-admin-book-open="' + esc(book.id) + '" title="Ú©Ø±Ø¯Ù†Û•ÙˆÛ•"><i class="fa-solid fa-book-open"></i></button>';
+            if (book.status === "pending") {
+              actions += '<button class="icon-btn" type="button" data-admin-book-approve="' + esc(book.id) + '" title="Ù¾Û•Ø³Û•Ù†Ø¯Ú©Ø±Ø¯Ù†"><i class="fa-solid fa-check"></i></button>';
+              actions += '<button class="icon-btn" type="button" data-admin-book-reject="' + esc(book.id) + '" title="Ú•Û•ØªÚ©Ø±Ø¯Ù†Û•ÙˆÛ•"><i class="fa-solid fa-xmark"></i></button>';
+            }
+            actions += '<button class="icon-btn" type="button" data-admin-book-delete="' + esc(book.id) + '" title="Ø³Ú•ÛŒÙ†Û•ÙˆÛ•"><i class="fa-regular fa-trash-can"></i></button>';
+            return '<div class="owner-book-row"><div class="owner-book-main"><strong>' + esc(book.title || "Ú©ØªÛŽØ¨") + '</strong><small>' + esc(book.author || "Ø¨ÛŽ Ù†ÙˆÙˆØ³Û•Ø±") + ' Â· ' + statusText + '</small></div><div class="owner-book-actions">' + actions + '</div></div>';
+          }).join("")
+        : '<div class="empty" style="padding:20px">Ù‡ÛŽØ´ØªØ§ Ù†Ø§ÙˆÛ•Ú•Û†Ú© Ù†ÛŒÛŒÛ•.</div>';
+
+      if (!$("adminExtraPanel")) {
+        var extra = document.createElement("div");
+        extra.id = "adminExtraPanel";
+        extra.style.cssText = "margin-top:14px;display:grid;gap:12px";
+        shell.appendChild(extra);
+      }
     }
 
-    list.innerHTML =
-      books
-        .map(
-          function (
-            book
-          ) {
-            return (
-              '<div class="owner-book-row" data-owner-book="' +
-              esc(
-                book.id
-              ) +
-              '">' +
+    var extraPanel = $("adminExtraPanel");
+    if (extraPanel) {
+      extraPanel.innerHTML =
+        '<div style="display:grid;gap:8px"><strong style="font-size:12px;color:#fff">Ù…Û†ÚµÛ•Øª Ùˆ Ù†Ø§ÙˆÛ•Ú•Û†Ú©</strong><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="primary" type="button" data-action="add-pdf"><i class="fa-solid fa-file-circle-plus"></i> PDF</button><button class="primary" type="button" data-action="add-music"><i class="fa-solid fa-music"></i> Ù…ÙˆØ²ÛŒÚ©</button></div></div>' +
+        '<div id="adminUsersList" style="display:grid;gap:8px"></div>' +
+        '<div id="adminMusicPending" style="display:grid;gap:8px"></div>';
+    }
 
-              '<div class="owner-book-main">' +
-
-              '<strong>' +
-              esc(
-                book.title ||
-                "کتێب"
-              ) +
-              "</strong>" +
-
-              "<small>" +
-              esc(
-                book.author ||
-                "بێ نووسەر"
-              ) +
-              "</small>" +
-
-              "</div>" +
-
-              '<div class="owner-book-actions">' +
-
-              '<button class="icon-btn" type="button" data-action="open-book" title="کردنەوە">' +
-              '<i class="fa-solid fa-book-open"></i>' +
-              "</button>" +
-
-              '<button class="icon-btn" type="button" data-action="del-book" title="سڕینەوە">' +
-              '<i class="fa-regular fa-trash-can"></i>' +
-              "</button>" +
-
-              "</div>" +
-
-              "</div>"
-            );
-          }
-        )
-        .join("");
+    loadAdminUsers().catch(function (error) { console.error("loadAdminUsers:", error); });
+    loadAdminMusic().catch(function (error) { console.error("loadAdminMusic:", error); });
   }
 
 
@@ -4501,426 +3970,164 @@
      MUSIC
      ======================================================= */
 
+  function getPlayableMusic() {
+    if (authState.isAdmin) return music.slice();
+    return music.filter(function (track) {
+      return (track.status || "approved") === "approved";
+    });
+  }
+
   function renderTracks() {
-    var box =
-      $("tracks");
+    var box = $("tracks");
+    if (!box) return;
 
-    if (!box) {
+    var visibleMusic = getPlayableMusic();
+    if (!visibleMusic.length) {
+      box.innerHTML = '<div style="padding:15px;text-align:center;color:var(--muted);font-size:8px">Ù‡ÛŽØ´ØªØ§ Ù…ÙˆØ²ÛŒÚ©ÛŽÚ© Ù†ÛŒÛŒÛ•</div>';
       return;
     }
 
-    if (
-      !music.length
-    ) {
-      box.innerHTML =
-        '<div style="padding:15px;text-align:center;color:var(--muted);font-size:8px">هێشتا موزیکێک نییە</div>';
-
-      return;
-    }
-
-    box.innerHTML =
-      music
-        .map(
-          function (
-            track,
-            index
-          ) {
-            return (
-              '<div class="track" data-track="' +
-              index +
-              '">' +
-
-              '<button type="button" data-track-play="' +
-              index +
-              '">' +
-
-              '<i class="fa-solid fa-play"></i>' +
-
-              "</button>" +
-
-              "<span>" +
-              esc(
-                track.name ||
-                "موزیک"
-              ) +
-              "</span>" +
-
-              "</div>"
-            );
-          }
-        )
-        .join("");
+    box.innerHTML = visibleMusic.map(function (track, index) {
+      return (
+        '<div class="track" data-track="' + index + '">' +
+        '<button type="button" data-track-play="' + index + '">' +
+        '<i class="fa-solid fa-play"></i>' +
+        '</button>' +
+        '<span>' + esc(track.name || "Ù…ÙˆØ²ÛŒÚ©") + '</span>' +
+        '</div>'
+      );
+    }).join("");
   }
 
   function addMusicFiles(
     files
   ) {
-    if (
-      !files ||
-      !files.length
-    ) {
-      return;
-    }
-
+    if (!files || !files.length) return;
     if (!supabaseReady()) {
-      toast(
-        "Supabase پەیوەست نییە"
-      );
-
+      toast("Supabase Ù¾Û•ÛŒÙˆÛ•Ø³Øª Ù†ÛŒÛŒÛ•");
       return;
     }
 
-    var tasks =
-      [];
+    ensureAuthenticated("Ø¨Û† Ø²ÛŒØ§Ø¯Ú©Ø±Ø¯Ù†ÛŒ Ù…ÙˆØ²ÛŒÚ© Ø³Û•Ø±Û•ØªØ§ Ø¯Û•Ø¨ÛŽØª Ø¨Ú†ÛŒØªÛ• Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.")
+      .then(function (ok) {
+        if (!ok) return;
+        return getFreshProfile().then(function (profile) {
+          if (!profile) return;
 
-    for (
-      var i = 0;
-      i <
-      files.length;
-      i++
-    ) {
-      (function (
-        file
-      ) {
-        if (
-          !file ||
-          !file.type ||
-          file.type.indexOf(
-            "audio/"
-          ) !==
-            0
-        ) {
-          return;
-        }
+          var tasks = [];
+          var uid = authState.user.id;
 
-        var safeName =
-          file.name
-            .replace(
-              /[^a-zA-Z0-9._-]+/g,
-              "-"
-            )
-            .replace(
-              /-+/g,
-              "-"
-            )
-            .replace(
-              /^[-.]+|[-.]+$/g,
-              ""
-            ) ||
-          "audio";
+          for (var i = 0; i < files.length; i++) {
+            (function (file) {
+              if (!file || !file.type || file.type.indexOf("audio/") !== 0) return;
 
-        var path =
-          Date.now() +
-          "-" +
-          Math.floor(
-            Math.random() *
-              1000000
-          ) +
-          "-" +
-          safeName;
+              var safeName = file.name
+                .replace(/[^a-zA-Z0-9._-]+/g, "-")
+                .replace(/-+/g, "-")
+                .replace(/^[-.]+|[-.]+$/g, "") || "audio";
 
-        tasks.push(
-          uploadToStorage(
-            MUSIC_BUCKET,
-            path,
-            file
-          )
-            .then(
-              function (
-                uploaded
-              ) {
-                var probe =
-                  document.createElement(
-                    "audio"
-                  );
+              var path = (profile.role === "admin" ? "admin" : uid) +
+                "/" + Date.now() + "-" + Math.floor(Math.random() * 1000000) + "-" + safeName;
 
-                probe.preload =
-                  "metadata";
+              tasks.push(
+                uploadToStorage(MUSIC_BUCKET, path, file)
+                  .then(function (uploaded) {
+                    var probe = document.createElement("audio");
+                    probe.preload = "metadata";
 
-                return new Promise(
-                  function (
-                    resolve
-                  ) {
-                    var done =
-                      false;
-
-                    function finish(
-                      duration
-                    ) {
-                      if (
-                        done
-                      ) {
-                        return;
+                    return new Promise(function (resolve) {
+                      var done = false;
+                      function finish(duration) {
+                        if (done) return;
+                        done = true;
+                        insertRemoteMusic({
+                          name: file.name.replace(/\.[^.]+$/i, ""),
+                          artist: "",
+                          category: "",
+                          cover_url: "",
+                          audio_url: uploaded.url,
+                          duration: Number(duration) || 0
+                        }).then(resolve).catch(function (error) {
+                          deleteFromStorage(MUSIC_BUCKET, path).catch(function () {});
+                          resolve(Promise.reject(error));
+                        });
                       }
-
-                      done =
-                        true;
-
-                      insertRemoteMusic(
-                        {
-                          name:
-                            file.name.replace(
-                              /\.[^.]+$/i,
-                              ""
-                            ),
-
-                          artist:
-                            "",
-
-                          category:
-                            "",
-
-                          cover_url:
-                            "",
-
-                          audio_url:
-                            uploaded.url,
-
-                          duration:
-                            Number(
-                              duration
-                            ) ||
-                            0
-                        }
-                      )
-                        .then(
-                          resolve
-                        )
-                        .catch(
-                          function (
-                            error
-                          ) {
-                            resolve(
-                              Promise.reject(
-                                error
-                              )
-                            );
-                          }
-                        );
-                    }
-
-                    probe.onloadedmetadata =
-                      function () {
-                        finish(
-                          probe.duration
-                        );
-                      };
-
-                    probe.onerror =
-                      function () {
-                        finish(
-                          0
-                        );
-                      };
-
-                    probe.src =
-                      uploaded.url;
-                  }
-                );
-              }
-            )
-        );
-      })(
-        files[i]
-      );
-    }
-
-    if (
-      !tasks.length
-    ) {
-      return;
-    }
-
-    toast(
-      "موزیکەکان خەریکی بارکردنن..."
-    );
-
-    Promise.all(
-      tasks
-    )
-      .then(
-        function (
-          remoteTracks
-        ) {
-          remoteTracks.forEach(
-            function (
-              track
-            ) {
-              music.push(
-                track
+                      probe.onloadedmetadata = function () { finish(probe.duration); };
+                      probe.onerror = function () { finish(0); };
+                      probe.src = uploaded.url;
+                    });
+                  })
               );
-            }
-          );
-
-          if (
-            musicIndex <
-              0 &&
-            music.length
-          ) {
-            loadTrack(
-              0,
-              false
-            );
+            })(files[i]);
           }
 
-          renderTracks();
+          if (!tasks.length) return;
 
-          toast(
-            "موزیکەکان بە سەرکەوتوویی زیادکران"
-          );
-        }
-      )
-      .catch(
-        function (
-          error
-        ) {
-          console.error(
-            "Supabase addMusicFiles:",
-            error
-          );
+          toast("Ù…ÙˆØ²ÛŒÚ©Û•Ú©Ø§Ù† Ø®Û•Ø±ÛŒÚ©ÛŒ Ø¨Ø§Ø±Ú©Ø±Ø¯Ù†Ù†...");
 
-          toast(
-            "نەتوانرا موزیک زیاد بکرێت: " +
-            String(
-              error &&
-              error.message
-                ? error.message
-                : "هەڵە"
-            ).slice(
-              0,
-              100
-            )
-          );
-        }
-      );
+          return Promise.all(tasks)
+            .then(function (remoteTracks) {
+              remoteTracks.forEach(function (track) {
+                music.push(track);
+              });
+
+              if (musicIndex < 0 && getPlayableMusic().length) {
+                loadTrack(0, false);
+              }
+
+              renderTracks();
+              toast(remoteTracks.every(function (track) {
+                return track.status === "approved";
+              })
+                ? "Ù…ÙˆØ²ÛŒÚ©Û•Ú©Ø§Ù† Ú•Ø§Ø³ØªÛ•ÙˆØ®Û† Ø¨ÚµØ§ÙˆÚ©Ø±Ø§Ù†Û•ÙˆÛ•"
+                : "Ù…ÙˆØ²ÛŒÚ©Û•Ú©Ø§Ù† Ù†ÛŽØ±Ø¯Ø±Ø§Ù† Ø¨Û† Ù¾Ø´Ú©Ù†ÛŒÙ†");
+            })
+            .catch(function (error) {
+              console.error("Supabase addMusicFiles:", error);
+              toast(
+                "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ù…ÙˆØ²ÛŒÚ© Ø²ÛŒØ§Ø¯ Ø¨Ú©Ø±ÛŽØª: " +
+                String(error && error.message ? error.message : "Ù‡Û•ÚµÛ•").slice(0, 120)
+              );
+            });
+        });
+      });
   }
 
   function loadTrack(
     index,
     autoplay
   ) {
-    if (
-      !music[index]
-    ) {
-      return;
+    var playable = getPlayableMusic();
+    if (!playable[index]) return;
+
+    var track = playable[index];
+    var fullIndex = music.indexOf(track);
+    musicIndex = fullIndex;
+
+    var audio = $("audio");
+    if (audio) {
+      audio.src = track.url;
+      audio.volume = musicVolume;
+
+      var nowName = $("nowName");
+      var nowSub = $("nowSub");
+      if (nowName) nowName.textContent = track.name || "Ù…ÙˆØ²ÛŒÚ©";
+      if (nowSub) nowSub.textContent = track.artist || "Ù…ÙˆØ²ÛŒÚ©";
+
+      if (autoplay) {
+        audio.play().catch(function () {});
+      }
     }
-
-    musicIndex =
-      index;
-
-    var audio =
-      $("audio");
-
-    if (
-      audio
-    ) {
-      audio.src =
-        music[index].url;
-
-      audio.volume =
-        musicVolume;
-    }
-
-    var name =
-      $("nowName");
-
-    var sub =
-      $("nowSub");
-
-    if (
-      name
-    ) {
-      name.textContent =
-        music[index].name;
-    }
-
-    if (
-      sub
-    ) {
-      sub.textContent =
-        music[index].artist ||
-        "دەنگی هەڵبژێردراو";
-    }
-
-    renderTracks();
     updatePlayButton();
-
-    if (
-      autoplay &&
-      audio
-    ) {
-      audio
-        .play()
-        .then(
-          updatePlayButton
-        )
-        .catch(
-          function () {}
-        );
-    }
   }
 
   function updatePlayButton() {
-    var audio =
-      $("audio");
-
-    var button =
-      document.querySelector(
-        ".music-btn.big[data-action='play-pause']"
-      );
-
-    var playing =
-      !!(
-        audio &&
-        !audio.paused &&
-        musicIndex >=
-          0
-      );
-
-    if (
-      button
-    ) {
-      button.innerHTML =
-        playing
-          ? '<i class="fa-solid fa-pause"></i>'
-          : '<i class="fa-solid fa-play"></i>';
-    }
-
-    document
-      .querySelectorAll(
-        "[data-track]"
-      )
-      .forEach(
-        function (
-          item
-        ) {
-          var index =
-            Number(
-              item.getAttribute(
-                "data-track"
-              )
-            );
-
-          var icon =
-            item.querySelector(
-              "i"
-            );
-
-          if (!icon) {
-            return;
-          }
-
-          icon.className =
-            "fa-solid " +
-            (
-              index ===
-                musicIndex &&
-              playing
-                ? "fa-pause"
-                : "fa-play"
-            );
-        }
-      );
+    var button = document.querySelector("[data-action='play-pause'] i");
+    var audio = $("audio");
+    if (!button || !audio) return;
+    button.className = audio.paused
+      ? "fa-solid fa-play"
+      : "fa-solid fa-pause";
   }
 
 
@@ -4990,10 +4197,43 @@
           "data-action"
         );
 
+      if (name === "auth-login") {
+        openAuthModal("login");
+        return;
+      }
+
+      if (name === "auth-signup") {
+        openAuthModal("signup");
+        return;
+      }
+
+      if (name === "auth-signout") {
+        signOut();
+        return;
+      }
+
+      if (name === "auth-close") {
+        closeAuthModal();
+        return;
+      }
+
+      if (name === "premium-info") {
+        if (!authState.user) {
+          openAuthModal("login", "Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ• Ø¨Û† Ø²Ø§Ù†ÛŒØ§Ø±ÛŒ Premium.");
+          return;
+        }
+        showPremiumInfo();
+        return;
+      }
+
       if (
         name ===
         "add-pdf"
       ) {
+        if (!authState.user) {
+          openAuthModal("login", "Ø¨Û† Ø²ÛŒØ§Ø¯Ú©Ø±Ø¯Ù†ÛŒ PDF Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.");
+          return;
+        }
         var pdfInput =
           $("pdfInput");
 
@@ -5010,6 +4250,10 @@
         name ===
         "add-music"
       ) {
+        if (!authState.user) {
+          openAuthModal("login", "Ø¨Û† Ø²ÛŒØ§Ø¯Ú©Ø±Ø¯Ù†ÛŒ Ù…ÙˆØ²ÛŒÚ© Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.");
+          return;
+        }
         var musicInput =
           $("musicInput");
 
@@ -5103,7 +4347,7 @@
           );
         } else {
           toast(
-            "هێشتا کتێبێک نییە"
+            "Ù‡ÛŽØ´ØªØ§ Ú©ØªÛŽØ¨ÛŽÚ© Ù†ÛŒÛŒÛ•"
           );
         }
 
@@ -5142,6 +4386,10 @@
         name ===
         "owner-panel"
       ) {
+        if (!authState.isAdmin) {
+          openAuthModal("login", "ØªÛ•Ù†ÛŒØ§ Ø¦Û†Ù†Û•Ø± Ø¯Û•ØªÙˆØ§Ù†ÛŽØª Ù¾Ø§Ù†ÛŽÚµÛŒ Ø¨Û•Ú•ÛŽÙˆÛ•Ø¨Û•Ø± Ø¨Ú©Ø§ØªÛ•ÙˆÛ•.");
+          return;
+        }
         openSheet(
           $("ownerBack"),
           $("ownerSheet")
@@ -5192,57 +4440,7 @@
         name ===
         "save-word"
       ) {
-        if (
-          !currentWord
-        ) {
-          return;
-        }
-
-        var item = {
-          id:
-            String(
-              Date.now()
-            ) +
-            "_" +
-            Math.floor(
-              Math.random() *
-                100000
-            ),
-
-          word:
-            currentWord,
-
-          lang:
-            currentWordLang ||
-            "en",
-
-          meaning:
-            (
-              currentWordMeanings.ku[0] ||
-              currentWordMeanings.ar[0] ||
-              ""
-            ),
-
-          createdAt:
-            Date.now()
-        };
-
-        vocab.push(
-          item
-        );
-
-        saveJSON(
-          "kh_vocab",
-          vocab
-        );
-
-        renderVocab();
-        renderBooks();
-
-        toast(
-          "وشەکە خەزن کرا"
-        );
-
+        saveCurrentWordToCloud();
         return;
       }
 
@@ -5267,24 +4465,12 @@
         name ===
         "prev-track"
       ) {
-        if (
-          !music.length
-        ) {
-          return;
-        }
-
-        var prev =
-          musicIndex <=
-            0
-            ? music.length -
-              1
-            : musicIndex -
-              1;
-
-        loadTrack(
-          prev,
-          true
-        );
+        var playable = getPlayableMusic();
+        if (!playable.length) return;
+        var current = music[musicIndex];
+        var pIndex = playable.indexOf(current);
+        var prev = pIndex <= 0 ? playable.length - 1 : pIndex - 1;
+        loadTrack(prev, true);
 
         return;
       }
@@ -5293,24 +4479,12 @@
         name ===
         "next-track"
       ) {
-        if (
-          !music.length
-        ) {
-          return;
-        }
-
-        var next =
-          musicIndex >=
-            music.length -
-              1
-            ? 0
-            : musicIndex +
-              1;
-
-        loadTrack(
-          next,
-          true
-        );
+        var playable = getPlayableMusic();
+        if (!playable.length) return;
+        var current = music[musicIndex];
+        var pIndex = playable.indexOf(current);
+        var next = pIndex >= playable.length - 1 ? 0 : pIndex + 1;
+        loadTrack(next, true);
 
         return;
       }
@@ -5324,7 +4498,7 @@
 
         if (
           !audio ||
-          !music.length
+          !getPlayableMusic().length
         ) {
           return;
         }
@@ -5364,21 +4538,23 @@
         name ===
         "clear-vocab"
       ) {
-        vocab =
-          [];
-
-        saveJSON(
-          "kh_vocab",
-          vocab
-        );
-
-        renderVocab();
-        renderBooks();
-
-        toast(
-          "وشەکان سڕانەوە"
-        );
-
+        if (!authState.user) {
+          openAuthModal("login", "Ø¨Û† Ø®Û•Ø²Ù†Ú©Ø±Ø¯Ù†ÛŒ ÙˆØ´Û•Ú©Ø§Ù† Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.");
+          return;
+        }
+        supabaseClient.from("saved_words").delete().eq("user_id", authState.user.id)
+          .then(function (result) {
+            if (result.error) throw result.error;
+            return loadSavedWords();
+          })
+          .then(function () {
+            renderProfile();
+            toast("ÙˆØ´Û•Ú©Ø§Ù† Ø³Ú•Ø§Ù†Û•ÙˆÛ•");
+          })
+          .catch(function (error) {
+            console.error("clear vocab:", error);
+            toast("Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ ÙˆØ´Û•Ú©Ø§Ù† Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+          });
         return;
       }
 
@@ -5427,7 +4603,7 @@
           );
         } else {
           toast(
-            "هێشتا موزیکێک نییە"
+            "Ù‡ÛŽØ´ØªØ§ Ù…ÙˆØ²ÛŒÚ©ÛŽÚ© Ù†ÛŒÛŒÛ•"
           );
         }
 
@@ -5575,6 +4751,91 @@
     }
   );
 
+
+  /* =======================================================
+     AUTH / ADMIN DELEGATED ACTIONS
+     ======================================================= */
+
+  document.addEventListener("click", function (event) {
+    var delVocab = event.target.closest("[data-vdel]");
+    if (delVocab) {
+      deleteSavedWord(delVocab.getAttribute("data-vdel"));
+      return;
+    }
+
+    var approve = event.target.closest("[data-admin-book-approve]");
+    if (approve) {
+      updateBookStatus(approve.getAttribute("data-admin-book-approve"), "approved")
+        .then(function () { toast("Ú©ØªÛŽØ¨Û•Ú©Û• Ù¾Û•Ø³Û•Ù†Ø¯ Ú©Ø±Ø§"); })
+        .catch(function (error) { toast(String(error.message || "Ù‡Û•ÚµÛ•").slice(0, 120)); });
+      return;
+    }
+
+    var reject = event.target.closest("[data-admin-book-reject]");
+    if (reject) {
+      var reason = window.prompt("Ù‡Û†Ú©Ø§Ø±ÛŒ Ú•Û•ØªÚ©Ø±Ø¯Ù†Û•ÙˆÛ• Ø¨Ù†ÙˆÙˆØ³Û•:", "");
+      if (reason === null) return;
+      updateBookStatus(reject.getAttribute("data-admin-book-reject"), "rejected", reason)
+        .then(function () { toast("Ú©ØªÛŽØ¨Û•Ú©Û• Ú•Û•ØªÚ©Ø±Ø§ÛŒÛ•ÙˆÛ•"); })
+        .catch(function (error) { toast(String(error.message || "Ù‡Û•ÚµÛ•").slice(0, 120)); });
+      return;
+    }
+
+    var delBook = event.target.closest("[data-admin-book-delete]");
+    if (delBook) {
+      deleteBook(delBook.getAttribute("data-admin-book-delete"));
+      return;
+    }
+
+    var openAdminBook = event.target.closest("[data-admin-book-open]");
+    if (openAdminBook) {
+      openBook(openAdminBook.getAttribute("data-admin-book-open"));
+      return;
+    }
+
+    var roleButton = event.target.closest("[data-admin-role-id]");
+    if (roleButton) {
+      updateUserRole(
+        roleButton.getAttribute("data-admin-role-id"),
+        roleButton.getAttribute("data-admin-next-role") || "premium"
+      );
+      return;
+    }
+  });
+
+
+  document.addEventListener("click", function (event) {
+    var approveMusic = event.target.closest("[data-admin-music-approve]");
+    if (approveMusic) {
+      updateMusicStatus(approveMusic.getAttribute("data-admin-music-approve"), "approved")
+        .then(function () { toast("Ù…ÙˆØ²ÛŒÚ©Û•Ú©Û• Ù¾Û•Ø³Û•Ù†Ø¯ Ú©Ø±Ø§"); });
+      return;
+    }
+
+    var rejectMusic = event.target.closest("[data-admin-music-reject]");
+    if (rejectMusic) {
+      var reason = window.prompt("Ù‡Û†Ú©Ø§Ø±ÛŒ Ú•Û•ØªÚ©Ø±Ø¯Ù†Û•ÙˆÛ• Ø¨Ù†ÙˆÙˆØ³Û•:", "");
+      if (reason === null) return;
+      updateMusicStatus(rejectMusic.getAttribute("data-admin-music-reject"), "rejected", reason)
+        .then(function () { toast("Ù…ÙˆØ²ÛŒÚ©Û•Ú©Û• Ú•Û•ØªÚ©Ø±Ø§ÛŒÛ•ÙˆÛ•"); });
+      return;
+    }
+
+    var delMusic = event.target.closest("[data-admin-music-delete]");
+    if (delMusic) {
+      deleteMusicByAdmin(delMusic.getAttribute("data-admin-music-delete"));
+      return;
+    }
+
+    var disableButton = event.target.closest("[data-admin-disable-id]");
+    if (disableButton) {
+      updateUserDisabled(
+        disableButton.getAttribute("data-admin-disable-id"),
+        disableButton.getAttribute("data-admin-disable-value") === "true"
+      );
+      return;
+    }
+  });
 
   /* =======================================================
      FILTERS
@@ -5899,22 +5160,13 @@
     audio.addEventListener(
       "ended",
       function () {
-        if (
-          music.length
-        ) {
-          var next =
-            musicIndex >=
-              music.length -
-                1
-              ? 0
-              : musicIndex +
-                1;
-
-          loadTrack(
-            next,
-            true
-          );
-        }
+        var playable = getPlayableMusic();
+      if (playable.length) {
+        var current = music[musicIndex];
+        var pIndex = playable.indexOf(current);
+        var next = pIndex >= playable.length - 1 ? 0 : pIndex + 1;
+        loadTrack(next, true);
+      }
       }
     );
   }
@@ -6222,6 +5474,13 @@
     supabaseReady:
       supabaseReady,
 
+    renderProfile:
+      renderProfile,
+
+
+    authState:
+      authState,
+
     reloadFromSupabase:
       function () {
         return Promise.all([
@@ -6235,6 +5494,8 @@
               books =
                 results[0] ||
                 [];
+
+              applyFavoritesToBooks();
 
               music =
                 results[1] ||
@@ -6257,6 +5518,609 @@
       }
   };
 
+
+
+  /* =======================================================
+     AUTHENTICATION / USER PROFILE / CLOUD DATA
+     ======================================================= */
+
+  function injectAuthUI() {
+    if ($("xwAuthModal")) return;
+
+    var modal = document.createElement("div");
+    modal.id = "xwAuthModal";
+    modal.innerHTML =
+      '<div id="xwAuthBackdrop" style="position:fixed;inset:0;background:rgba(0,0,0,.66);backdrop-filter:blur(10px);z-index:9998;display:none"></div>' +
+      '<section id="xwAuthPanel" role="dialog" aria-modal="true" aria-label="Ù‡Û•Ú˜Ù…Ø§Ø±" style="position:fixed;inset:auto 14px 18px;max-width:520px;margin:auto;z-index:9999;background:linear-gradient(145deg,#182943,#101f34);border:1px solid rgba(255,255,255,.10);border-radius:24px;padding:18px;display:none;box-shadow:0 30px 70px rgba(0,0,0,.4)">' +
+      '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px">' +
+      '<div><div style="font-size:8px;color:#8ea1b7;letter-spacing:1px">XWENDNGA ACCOUNT</div><h3 id="xwAuthTitle" style="margin:5px 0 0;color:#fff;font-size:20px">Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ•</h3></div>' +
+      '<button class="icon-btn" type="button" data-action="auth-close"><i class="fa-solid fa-xmark"></i></button></div>' +
+      '<div id="xwAuthMessage" style="min-height:20px;color:#9fb1c5;font-size:9px;line-height:1.8;margin-bottom:8px"></div>' +
+      '<div id="xwAuthFields"></div>' +
+      '</section>';
+    document.body.appendChild(modal);
+
+    $("xwAuthBackdrop").addEventListener("click", closeAuthModal);
+  }
+
+  function openAuthModal(mode, message) {
+    injectAuthUI();
+    var title = $("xwAuthTitle");
+    var fields = $("xwAuthFields");
+    var msg = $("xwAuthMessage");
+
+    mode = mode === "signup" ? "signup" : "login";
+    title.textContent = mode === "signup" ? "Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±" : "Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ•";
+    msg.textContent = message || "";
+
+    fields.innerHTML =
+      '<form id="xwAuthForm" style="display:grid;gap:10px">' +
+      '<label style="display:grid;gap:5px;color:#9fb1c5;font-size:9px">Ø¦ÛŒÙ…Û•ÛŒÚµ<input id="xwAuthEmail" type="email" autocomplete="email" required style="min-height:46px;border:1px solid rgba(255,255,255,.10);border-radius:13px;background:#0b1727;color:#fff;padding:0 12px"></label>' +
+      '<label style="display:grid;gap:5px;color:#9fb1c5;font-size:9px">ÙˆØ´Û•ÛŒ Ù†Ù‡ÛŽÙ†ÛŒ<input id="xwAuthPassword" type="password" autocomplete="current-password" minlength="6" required style="min-height:46px;border:1px solid rgba(255,255,255,.10);border-radius:13px;background:#0b1727;color:#fff;padding:0 12px"></label>' +
+      '<button class="primary" type="submit" style="min-height:48px">' + (mode === "signup" ? "Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±" : "Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ•") + '</button>' +
+      '<button class="ghost" type="button" data-auth-mode="' + (mode === "signup" ? "login" : "signup") + '">' + (mode === "signup" ? "Ù‡Û•Ú˜Ù…Ø§Ø±Ù… Ù‡Û•ÛŒÛ•" : "Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±") + '</button>' +
+      '</form>';
+
+    $("xwAuthBackdrop").style.display = "block";
+    $("xwAuthPanel").style.display = "block";
+
+    $("xwAuthForm").addEventListener("submit", function (event) {
+      event.preventDefault();
+      var email = $("xwAuthEmail").value.trim();
+      var password = $("xwAuthPassword").value;
+      if (mode === "signup") signUp(email, password);
+      else signIn(email, password);
+    });
+
+    var modeButton = fields.querySelector("[data-auth-mode]");
+    if (modeButton) {
+      modeButton.addEventListener("click", function () {
+        openAuthModal(modeButton.getAttribute("data-auth-mode"));
+      });
+    }
+  }
+
+  function closeAuthModal() {
+    if ($("xwAuthBackdrop")) $("xwAuthBackdrop").style.display = "none";
+    if ($("xwAuthPanel")) $("xwAuthPanel").style.display = "none";
+  }
+
+  function authMessage(text) {
+    injectAuthUI();
+    var msg = $("xwAuthMessage");
+    if (msg) msg.textContent = text || "";
+  }
+
+  function signIn(email, password) {
+    if (!supabaseReady()) {
+      authMessage("Supabase Ù¾Û•ÛŒÙˆÛ•Ø³Øª Ù†ÛŒÛŒÛ•.");
+      return;
+    }
+    authMessage("Ø®Û•Ø±ÛŒÚ©ÛŒ Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ•ÛŒØª...");
+    supabaseClient.auth.signInWithPassword({ email: email, password: password })
+      .then(function (result) {
+        if (result.error) throw result.error;
+        closeAuthModal();
+        return refreshAuthState();
+      })
+      .catch(function (error) {
+        console.error("signIn:", error);
+        authMessage("Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ• Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ: " + String(error.message || "Ù‡Û•ÚµÛ•").slice(0, 140));
+      });
+  }
+
+  function signUp(email, password) {
+    if (!supabaseReady()) {
+      authMessage("Supabase Ù¾Û•ÛŒÙˆÛ•Ø³Øª Ù†ÛŒÛŒÛ•.");
+      return;
+    }
+    authMessage("Ø®Û•Ø±ÛŒÚ©ÛŒ Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±Û•...");
+    supabaseClient.auth.signUp({
+      email: email,
+      password: password
+    }).then(function (result) {
+      if (result.error) throw result.error;
+      if (result.data && result.data.session) {
+        closeAuthModal();
+        return refreshAuthState();
+      }
+      authMessage(AUTH_RECOVERY_NOTICE);
+    }).catch(function (error) {
+      console.error("signUp:", error);
+      authMessage("Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø± Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ: " + String(error.message || "Ù‡Û•ÚµÛ•").slice(0, 140));
+    });
+  }
+
+  function signOut() {
+    if (!supabaseReady()) return;
+    supabaseClient.auth.signOut().then(function (result) {
+      if (result.error) throw result.error;
+      closeAuthModal();
+    }).catch(function (error) {
+      console.error("signOut:", error);
+      toast("Ø¯Û•Ø±Ú†ÙˆÙˆÙ† Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+    });
+  }
+
+  function getFreshProfile() {
+    if (!authState.user) return Promise.resolve(null);
+    return supabaseClient
+      .from("profiles")
+      .select("id,role,premium_until,book_limit,music_limit,is_disabled,created_at,updated_at")
+      .eq("id", authState.user.id)
+      .single()
+      .then(function (result) {
+        if (result.error) throw result.error;
+        authState.profile = result.data;
+
+        var profileRole = result.data.role || "user";
+        var premiumActive =
+          profileRole === "premium" &&
+          (
+            !result.data.premium_until ||
+            new Date(result.data.premium_until).getTime() > Date.now()
+          );
+
+        authState.role =
+          profileRole === "admin"
+            ? "admin"
+            : premiumActive
+              ? "premium"
+              : "user";
+
+        authState.isAdmin = authState.role === "admin";
+        updateAuthUI();
+        return result.data;
+      });
+  }
+
+  function loadFavorites() {
+    if (!authState.user) {
+      authState.favorites = {};
+      return Promise.resolve();
+    }
+    return supabaseClient
+      .from("favorites")
+      .select("item_id,item_type")
+      .eq("user_id", authState.user.id)
+      .then(function (result) {
+        if (result.error) throw result.error;
+        authState.favorites = {};
+        (result.data || []).forEach(function (row) {
+          authState.favorites[favoriteKey(row.item_type, row.item_id)] = true;
+        });
+      });
+  }
+
+  function loadSavedWords() {
+    if (!authState.user) {
+      vocab = [];
+      authState.savedWords = [];
+      return Promise.resolve();
+    }
+    return supabaseClient
+      .from("saved_words")
+      .select("id,user_id,word,lang,meaning,created_at")
+      .eq("user_id", authState.user.id)
+      .order("created_at", { ascending: false })
+      .then(function (result) {
+        if (result.error) throw result.error;
+        authState.savedWords = result.data || [];
+        vocab = authState.savedWords.map(function (row) {
+          return {
+            id: String(row.id),
+            word: row.word || "",
+            lang: row.lang || "en",
+            meaning: row.meaning || "",
+            createdAt: row.created_at ? new Date(row.created_at).getTime() : Date.now()
+          };
+        });
+        renderVocab();
+      });
+  }
+
+  function applyFavoritesToBooks() {
+    books.forEach(function (book) {
+      if (book && book.remoteId != null) {
+        book.favorite = !!authState.favorites[favoriteKey("book", book.remoteId)];
+      }
+    });
+  }
+
+  function userBookUsage() {
+    if (!authState.user) return 0;
+    return books.filter(function (book) {
+      return book.ownerId === authState.user.id &&
+        (book.status === "pending" || book.status === "approved");
+    }).length;
+  }
+
+  function userMusicUsage() {
+    if (!authState.user) return 0;
+    return music.filter(function (track) {
+      return track.ownerId === authState.user.id &&
+        (track.status === "pending" || track.status === "approved");
+    }).length;
+  }
+
+  function loadUserCloudData() {
+    if (!authState.user) {
+      authState.favorites = {};
+      authState.savedWords = [];
+      vocab = [];
+      renderVocab();
+      renderBooks();
+      return Promise.resolve();
+    }
+
+    return Promise.all([
+      loadFavorites(),
+      loadSavedWords()
+    ]).then(function () {
+      applyFavoritesToBooks();
+      renderBooks();
+      renderVocab();
+      renderProfile();
+    });
+  }
+
+  function ensureAuthenticated(message) {
+    if (authState.user) return Promise.resolve(true);
+    openAuthModal("login", message || "Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.");
+    return Promise.resolve(false);
+  }
+
+  function renderProfile() {
+    var page = document.querySelector("[data-app-view='profile'] .profile-page");
+    if (!page) return;
+
+    if (!authState.user) {
+      page.innerHTML =
+        '<div class="profile-hero"><div class="profile-avatar-wrap"><div class="profile-avatar"><i class="fa-solid fa-user-lock"></i></div></div><div class="profile-intro"><div class="section-kicker">ACCOUNT</div><h2 class="section-title">Ù‡Û•Ú˜Ù…Ø§Ø±ÛŽÚ©Øª Ø¯Ø±ÙˆØ³Øª Ø¨Ú©Û•</h2><p class="profile-welcome">Ø¨Û• Login Ù€Ú©Ø±Ø¯Ù† Ø¯ÚµØ®ÙˆØ§Ø²Û•Ú©Ø§Ù† Ùˆ ÙˆØ´Û• Ø®Û•Ø²Ù†Ú©Ø±Ø§ÙˆÛ•Ú©Ø§Ù†Øª Ù„Û•Ú¯Û•ÚµØª Ù„Û• Ù‡Û•Ù…ÙˆÙˆ Ø¦Ø§Ù…ÛŽØ±ÛŽÚ© Ø¯Û•Ù…ÛŽÙ†Ù†Û•ÙˆÛ•.</p></div></div>' +
+        '<div class="profile-menu"><button class="profile-menu-item" type="button" data-action="auth-login"><span class="profile-menu-icon"><i class="fa-solid fa-right-to-bracket"></i></span><span class="profile-menu-copy"><strong>Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ•</strong><small>Ø¨Ú†Û† Ù†Ø§Ùˆ Ù‡Û•Ú˜Ù…Ø§Ø±Û•Ú©Û•Øª</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
+        '<button class="profile-menu-item" type="button" data-action="auth-signup"><span class="profile-menu-icon"><i class="fa-solid fa-user-plus"></i></span><span class="profile-menu-copy"><strong>Ø¯Ø±ÙˆØ³ØªÚ©Ø±Ø¯Ù†ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±</strong><small>Ø¦Û•Ú©Ø§ÙˆÙ†ØªÛŽÚ©ÛŒ Ù†ÙˆÛŽ Ø¯Ø±ÙˆØ³Øª Ø¨Ú©Û•</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button></div>';
+      return;
+    }
+
+    var roleLabel = authState.isAdmin ? "OWNER / ADMIN ðŸ‘‘" : (authState.role === "premium" ? "PREMIUM" : "USER");
+    var profileEmail = esc(authState.user.email || "");
+    var planText = authState.isAdmin
+      ? "Ø¯Û•Ø³Û•ÚµØ§ØªÛŒ ØªÛ•ÙˆØ§ÙˆÛŒ Ù¾Ù„Ø§ØªÙÛ†Ø±Ù…"
+      : authState.role === "premium"
+        ? (authState.profile && authState.profile.premium_until
+            ? "Premium Ù€ÛŒ Ú†Ø§Ù„Ø§Ú© ØªØ§ " + new Date(authState.profile.premium_until).toLocaleDateString("ku-IQ")
+            : "Premium Ù€ÛŒ Ú†Ø§Ù„Ø§Ú©")
+        : "Ø³Ù†ÙˆÙˆØ±ÛŒ Ù†ÛŽØ±Ø¯Ø§Ù†: 3 Ú©ØªÛŽØ¨ + 5 Ù…ÙˆØ²ÛŒÚ©";
+
+    var bookLimit = authState.isAdmin ? "âˆž" : (authState.profile && authState.profile.book_limit != null ? authState.profile.book_limit : "3");
+    var musicLimit = authState.isAdmin ? "âˆž" : (authState.profile && authState.profile.music_limit != null ? authState.profile.music_limit : "5");
+    var bookUsage = userBookUsage();
+    var musicUsage = userMusicUsage();
+
+    var myBooks = books.filter(function (book) {
+      return authState.user && book.ownerId === authState.user.id;
+    });
+    var myMusic = music.filter(function (track) {
+      return authState.user && track.ownerId === authState.user.id;
+    });
+
+    page.innerHTML =
+      '<div class="profile-hero"><div class="profile-avatar-wrap"><div class="profile-avatar"><i class="fa-solid ' + (authState.isAdmin ? 'fa-crown' : 'fa-user') + '"></i></div><span class="profile-status" aria-hidden="true"></span></div><div class="profile-intro"><div class="section-kicker">' + roleLabel + '</div><h2 class="section-title">' + profileEmail + '</h2><p class="profile-welcome">' + planText + '</p></div></div>' +
+      '<div style="display:grid;gap:9px;margin-top:12px">' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">' +
+      '<div style="padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:16px;background:rgba(255,255,255,.025)"><small style="color:#8ea1b7;font-size:7px">Ú©ØªÛŽØ¨</small><strong style="display:block;color:#fff;font-size:18px;margin-top:4px">' + bookUsage + ' / ' + bookLimit + '</strong></div>' +
+      '<div style="padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:16px;background:rgba(255,255,255,.025)"><small style="color:#8ea1b7;font-size:7px">Ù…ÙˆØ²ÛŒÚ©</small><strong style="display:block;color:#fff;font-size:18px;margin-top:4px">' + musicUsage + ' / ' + musicLimit + '</strong></div>' +
+      '</div>' +
+      '<div class="profile-menu">' +
+      '<button class="profile-menu-item" type="button" data-nav="favorites"><span class="profile-menu-icon"><i class="fa-solid fa-heart"></i></span><span class="profile-menu-copy"><strong>Ø¯ÚµØ®ÙˆØ§Ø²Û•Ú©Ø§Ù†Ù…</strong><small>' + Object.keys(authState.favorites).length + ' Ø¯Ø§Ù†Û•</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
+      '<button class="profile-menu-item" type="button" data-nav="vocab"><span class="profile-menu-icon"><i class="fa-solid fa-language"></i></span><span class="profile-menu-copy"><strong>ÙˆØ´Û•Ú©Ø§Ù†Ù…</strong><small>' + vocab.length + ' ÙˆØ´Û•</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
+      '<button class="profile-menu-item" type="button" data-action="premium-info"><span class="profile-menu-icon"><i class="fa-solid fa-crown"></i></span><span class="profile-menu-copy"><strong>' + (authState.role === "premium" || authState.isAdmin ? 'Ù¾Ù„Ø§Ù†ÛŒ Ø¦ÛŽØ³ØªØ§' : 'Upgrade to Premium') + '</strong><small>' + (authState.isAdmin ? 'Owner' : authState.role === 'premium' ? 'Premium' : 'Ù¾Ø§Ø±Û•Ø¯Ø§Ù† Ø¨Û• Ø¯Û•Ø³ØªÛŒ Ù„Û• Telegram') + '</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
+      (authState.isAdmin ? '<button class="profile-menu-item" type="button" data-action="owner-panel"><span class="profile-menu-icon"><i class="fa-solid fa-crown"></i></span><span class="profile-menu-copy"><strong>Ù¾Ø§Ù†ÛŽÚµÛŒ Ø¨Û•Ú•ÛŽÙˆÛ•Ø¨Û•Ø±</strong><small>Ú©Û†Ù†ØªØ±Û†ÚµÛŒ Ù‡Û•Ù…ÙˆÙˆ Ù¾Ù„Ø§ØªÙÛ†Ø±Ù…</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' : '') +
+      '<button class="profile-menu-item" type="button" data-action="auth-signout"><span class="profile-menu-icon"><i class="fa-solid fa-right-from-bracket"></i></span><span class="profile-menu-copy"><strong>Ø¯Û•Ø±Ú†ÙˆÙˆÙ†</strong><small>Ù„Û• Ù‡Û•Ú˜Ù…Ø§Ø±Û•Ú©Û•Øª Ø¯Û•Ø±Ú†Û†</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
+      '</div>' +
+      '<div style="margin-top:2px;padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:18px;background:rgba(255,255,255,.02)">' +
+      '<strong style="color:#fff;font-size:11px">Ù†Ø§ÙˆÛ•Ú•Û†Ú©ÛŒ Ù…Ù†</strong>' +
+      '<div id="mySubmissionsList" style="display:grid;gap:7px;margin-top:9px"></div>' +
+      '</div></div>';
+
+    var subBox = $("mySubmissionsList");
+    if (subBox) {
+      var rows = [];
+      myBooks.forEach(function (book) {
+        rows.push('<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px;border-radius:12px;background:rgba(255,255,255,.025)"><span style="min-width:0;color:#dbe7f3;font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(book.title) + '</span><small style="color:' + (book.status === 'approved' ? '#7ee2ad' : book.status === 'rejected' ? '#ff8b9d' : '#f5cd68') + ';font-size:7px">' + (book.status === 'approved' ? 'Ù¾Û•Ø³Û•Ù†Ø¯Ú©Ø±Ø§Ùˆ' : book.status === 'rejected' ? 'Ú•Û•ØªÚ©Ø±Ø§ÙˆÛ•' : 'Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†') + '</small></div>');
+      });
+      myMusic.forEach(function (track) {
+        rows.push('<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px;border-radius:12px;background:rgba(255,255,255,.025)"><span style="min-width:0;color:#dbe7f3;font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(track.name) + '</span><small style="color:' + (track.status === 'approved' ? '#7ee2ad' : track.status === 'rejected' ? '#ff8b9d' : '#f5cd68') + ';font-size:7px">' + (track.status === 'approved' ? 'Ù¾Û•Ø³Û•Ù†Ø¯Ú©Ø±Ø§Ùˆ' : track.status === 'rejected' ? 'Ú•Û•ØªÚ©Ø±Ø§ÙˆÛ•' : 'Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†') + '</small></div>');
+      });
+      subBox.innerHTML = rows.length ? rows.join('') : '<small style="color:#7f91a6;font-size:8px">Ù‡ÛŽØ´ØªØ§ Ù‡ÛŒÚ† Ù†Ø§ÙˆÛ•Ú•Û†Ú©ÛŽÚ©Øª Ù†Û•Ù†Ø§Ø±Ø¯ÙˆÙˆÛ•.</small>';
+    }
+  }
+
+  function updateAuthUI() {
+    var ownerButtons = document.querySelectorAll("[data-action='owner-panel']");
+    ownerButtons.forEach(function (button) {
+      button.hidden = !authState.isAdmin;
+    });
+
+    renderProfile();
+
+    var profileButton = document.querySelector(".profile-action");
+    if (profileButton) {
+      profileButton.title = authState.user ? (authState.user.email || "Ù¾Ú•Û†ÙØ§ÛŒÙ„") : "Ú†ÙˆÙˆÙ†Û•Ú˜ÙˆÙˆØ±Û•ÙˆÛ• / Ù¾Ú•Û†ÙØ§ÛŒÙ„";
+      profileButton.setAttribute("aria-label", profileButton.title);
+    }
+  }
+
+  function refreshAuthState() {
+    if (!supabaseReady()) return Promise.resolve();
+
+    authState.loading = true;
+
+    return supabaseClient.auth.getSession()
+      .then(function (result) {
+        if (result.error) throw result.error;
+        authState.user = result.data && result.data.session ? result.data.session.user : null;
+        return authState.user ? getFreshProfile() : null;
+      })
+      .then(function () {
+        if (authState.user && authState.profile) {
+          return loadUserCloudData();
+        }
+        authState.role = "anonymous";
+        authState.isAdmin = false;
+        authState.profile = null;
+        authState.favorites = {};
+        authState.savedWords = [];
+        vocab = [];
+        return null;
+      })
+      .then(function () {
+        authState.loading = false;
+        updateAuthUI();
+        renderBooks();
+        renderTracks();
+        renderOwnerPanel();
+        if (authState.isAdmin) {
+          loadAdminUsers().catch(function (adminError) { console.error("loadAdminUsers:", adminError); });
+        }
+      })
+      .catch(function (error) {
+        authState.loading = false;
+        console.error("refreshAuthState:", error);
+        updateAuthUI();
+      });
+  }
+
+  function initAuth() {
+    injectAuthUI();
+
+    if (!supabaseReady()) {
+      authState.loading = false;
+      updateAuthUI();
+      return;
+    }
+
+    supabaseClient.auth.onAuthStateChange(function () {
+      window.setTimeout(function () {
+        refreshAuthState();
+      }, 0);
+    });
+
+    refreshAuthState();
+  }
+
+  function updateTelegramBtnForPremium() {
+    var btn = $("telegramBtn");
+    if (!btn) return;
+    btn.href = "https://t.me/" + PREMIUM_PAYMENT_INFO.telegram.replace(/^@/, "");
+  }
+
+  function showPremiumInfo() {
+    injectAuthUI();
+    var message = authState.role === "premium" || authState.isAdmin
+      ? "Ù¾Ù„Ø§Ù†ÛŒ Ø¦ÛŽØ³ØªØ§Øª Ú†Ø§Ù„Ø§Ú©Û•."
+      : "Ø¨Û† PremiumØŒ Ù¾Ø§Ø±Û•Ú©Û• Ø¨Û• FastPay ÛŒØ§Ù† FIB Ø¨Ù†ÛŽØ±Û• Ùˆ Ù„Û• Telegram Ù¾Û•ÛŒÙˆÛ•Ù†Ø¯ÛŒÙ… Ù¾ÛŽÙˆÛ• Ø¨Ú©Û•.";
+
+    openAuthModal("login", message);
+
+    var fields = $("xwAuthFields");
+    fields.innerHTML =
+      '<div style="display:grid;gap:10px">' +
+      '<div style="padding:13px;border-radius:15px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:#d9e5f1;font-size:10px;line-height:2"><strong>FastPay</strong><br>' + esc(PREMIUM_PAYMENT_INFO.fastpay) + '<br><br><strong>FIB</strong><br>' + esc(PREMIUM_PAYMENT_INFO.fib) + '<br><br>Ø¯ÙˆØ§ÛŒ Ù†Ø§Ø±Ø¯Ù†ÛŒ Ù¾Ø§Ø±Û•ØŒ Ø¦ÛŒÙ…Û•ÛŒÚµÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±Û•Ú©Û•Øª Ù„Û• Telegram Ø¨Ù†ÛŽØ±Û•.</div>' +
+      '<a href="https://t.me/' + PREMIUM_PAYMENT_INFO.telegram.replace(/^@/, "") + '" target="_blank" rel="noopener noreferrer" class="primary" style="min-height:48px;display:grid;place-items:center">Ù¾Û•ÛŒÙˆÛ•Ù†Ø¯ÛŒ Ø¨Û• Telegram</a>' +
+      '</div>';
+  }
+
+  function saveCurrentWordToCloud() {
+    if (!currentWord) return;
+    if (!authState.user) {
+      openAuthModal("login", "Ø¨Û† Ø®Û•Ø²Ù†Ú©Ø±Ø¯Ù†ÛŒ ÙˆØ´Û• Ø³Û•Ø±Û•ØªØ§ Ø¨Ú†Û† Ú˜ÙˆÙˆØ±Û•ÙˆÛ•.");
+      return;
+    }
+
+    var payload = {
+      user_id: authState.user.id,
+      word: currentWord,
+      lang: currentWordLang || "en",
+      meaning: currentWordMeanings.ku[0] || currentWordMeanings.ar[0] || ""
+    };
+
+    supabaseClient.from("saved_words").insert(payload)
+      .select("id,user_id,word,lang,meaning,created_at")
+      .single()
+      .then(function (result) {
+        if (result.error) throw result.error;
+        return loadSavedWords();
+      })
+      .then(function () {
+        toast("ÙˆØ´Û•Ú©Û• Ø®Û•Ø²Ù† Ú©Ø±Ø§");
+        renderProfile();
+      })
+      .catch(function (error) {
+        console.error("save word:", error);
+        if (String(error && error.message || "").toLowerCase().indexOf("duplicate") >= 0) {
+          toast("Ø¦Û•Ù… ÙˆØ´Û•ÛŒÛ• Ù¾ÛŽØ´ØªØ± Ø®Û•Ø²Ù† Ú©Ø±Ø§ÙˆÛ•");
+        } else {
+          toast("Ø®Û•Ø²Ù†Ú©Ø±Ø¯Ù†ÛŒ ÙˆØ´Û• Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+        }
+      });
+  }
+
+  function deleteSavedWord(id) {
+    if (!authState.user) return;
+    supabaseClient.from("saved_words")
+      .delete()
+      .eq("id", Number(id))
+      .eq("user_id", authState.user.id)
+      .then(function (result) {
+        if (result.error) throw result.error;
+        return loadSavedWords();
+      })
+      .then(function () {
+        renderProfile();
+        toast("ÙˆØ´Û•Ú©Û• Ø³Ú•Ø§ÛŒÛ•ÙˆÛ•");
+      })
+      .catch(function (error) {
+        console.error("delete saved word:", error);
+        toast("Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ ÙˆØ´Û• Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+      });
+  }
+
+  function updateBookStatus(id, status, reason) {
+    if (!authState.isAdmin) return Promise.reject(new Error("Admin ØªÛ•Ù†ÛŒØ§ Ø¯Û•ØªÙˆØ§Ù†ÛŽØª Ø¯Û†Ø® Ø¨Ú¯Û†Ú•ÛŽØª."));
+    var patch = {
+      status: status,
+      rejection_reason: status === "rejected" ? (reason || "") : null
+    };
+    return supabaseClient.from("books").update(patch).eq("id", Number(id)).then(function (result) {
+      if (result.error) throw result.error;
+      return Promise.all([loadRemoteBooks(), loadRemoteMusic()]);
+    }).then(function (result) {
+      books = result[0] || [];
+      music = result[1] || [];
+      return loadUserCloudData().catch(function () {});
+    }).then(function () {
+      renderBooks();
+      renderOwnerPanel();
+    });
+  }
+
+  function deleteMusicByAdmin(id) {
+    if (!authState.isAdmin) return;
+    var track = music.find(function (item) { return item.id === String(id); });
+    if (!track) return;
+    if (!window.confirm("Ø¯ÚµÙ†ÛŒØ§ÛŒØª Ù„Û• Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ Â«" + track.name + "Â»ØŸ")) return;
+    var path = storagePathFromPublicUrl(track.audio_url, MUSIC_BUCKET);
+    supabaseClient.from("music").delete().eq("id", Number(track.remoteId != null ? track.remoteId : track.id))
+      .then(function (result) {
+        if (result.error) throw result.error;
+        return deleteFromStorage(MUSIC_BUCKET, path);
+      })
+      .then(function () {
+        music = music.filter(function (item) { return item.id !== String(id); });
+        renderTracks();
+        renderOwnerPanel();
+        renderProfile();
+        toast("Ù…ÙˆØ²ÛŒÚ©Û•Ú©Û• Ø³Ú•Ø§ÛŒÛ•ÙˆÛ•");
+      })
+      .catch(function (error) {
+        console.error("deleteMusicByAdmin:", error);
+        toast("Ø³Ú•ÛŒÙ†Û•ÙˆÛ•ÛŒ Ù…ÙˆØ²ÛŒÚ© Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+      });
+  }
+
+  function updateMusicStatus(id, status, reason) {
+    if (!authState.isAdmin) return Promise.reject(new Error("Admin ØªÛ•Ù†ÛŒØ§ Ø¯Û•ØªÙˆØ§Ù†ÛŽØª Ø¯Û†Ø® Ø¨Ú¯Û†Ú•ÛŽØª."));
+    return supabaseClient.from("music").update({
+      status: status,
+      rejection_reason: status === "rejected" ? (reason || "") : null
+    }).eq("id", Number(id)).then(function (result) {
+      if (result.error) throw result.error;
+      return loadRemoteMusic();
+    }).then(function (items) {
+      music = items || [];
+      renderTracks();
+      renderOwnerPanel();
+    });
+  }
+
+  function loadAdminMusic() {
+    if (!authState.isAdmin) return Promise.resolve();
+    var box = $("adminMusicPending");
+    if (!box) return Promise.resolve();
+
+    var rows = music.filter(function (track) { return track.status === "pending" || track.status === "rejected"; }).slice(0, 30);
+    box.innerHTML =
+      '<strong style="font-size:12px;color:#fff">Ù…ÙˆØ²ÛŒÚ©ÛŒ Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†Û•Ú©Ø§Ù†</strong>' +
+      (rows.length ? rows.map(function (track) {
+        var statusText = track.status === "rejected" ? "Ú•Û•ØªÚ©Ø±Ø§ÙˆÛ•" : "Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù†";
+        var actions = '';
+        if (track.status === "pending") {
+          actions += '<button class="icon-btn" type="button" data-admin-music-approve="' + esc(track.id) + '" title="Ù¾Û•Ø³Û•Ù†Ø¯Ú©Ø±Ø¯Ù†"><i class="fa-solid fa-check"></i></button>';
+          actions += '<button class="icon-btn" type="button" data-admin-music-reject="' + esc(track.id) + '" title="Ú•Û•ØªÚ©Ø±Ø¯Ù†Û•ÙˆÛ•"><i class="fa-solid fa-xmark"></i></button>';
+        }
+        actions += '<button class="icon-btn" type="button" data-admin-music-delete="' + esc(track.id) + '" title="Ø³Ú•ÛŒÙ†Û•ÙˆÛ•"><i class="fa-regular fa-trash-can"></i></button>';
+        return '<div class="owner-book-row"><div class="owner-book-main"><strong>' + esc(track.name || "Ù…ÙˆØ²ÛŒÚ©") + '</strong><small>' + esc(track.artist || "") + ' Â· ' + statusText + '</small></div><div class="owner-book-actions">' + actions + '</div></div>';
+      }).join("") : '<div class="empty" style="padding:14px">Ù‡ÛŒÚ† Ù…ÙˆØ²ÛŒÚ©ÛŽÚ©ÛŒ Ú†Ø§ÙˆÛ•Ú•ÙˆØ§Ù† Ù†ÛŒÛŒÛ•.</div>');
+  }
+
+  function loadAdminUsers() {
+    if (!authState.isAdmin) return Promise.resolve();
+    return supabaseClient.from("profiles")
+      .select("id,role,premium_until,book_limit,music_limit,is_disabled,created_at")
+      .order("created_at", { ascending: false })
+      .then(function (result) {
+        if (result.error) throw result.error;
+        var box = $("adminUsersList");
+        if (!box) return;
+        var rows = result.data || [];
+        box.innerHTML =
+          '<strong style="font-size:12px;color:#fff">Ø¨Û•Ú©Ø§Ø±Ù‡ÛŽÙ†Û•Ø±Ø§Ù†</strong>' +
+          '<small style="color:#7f91a6;font-size:7px">Ø¦ÛŒÙ…Û•ÛŒÚµÛŒ Ù‡Û•Ú˜Ù…Ø§Ø±Û•Ú©Ø§Ù†ÛŒ ØªØ± Ù„Û•Ù„Ø§ÛŒÛ•Ù† Auth Ø¨Û• Ø´ÛŽÙˆÛ•ÛŒ Ù¾Ø§Ø±ÛŽØ²Ø±Ø§Ùˆ Ù‡Û•ÚµÚ¯ÛŒØ±Ø§ÙˆÛ•Ø› Ù„ÛŽØ±Û• UUID Ù†ÛŒØ´Ø§Ù† Ø¯Û•Ø¯Ø±ÛŽØª Ø¨Û† Ù†Ø§Ø³ÛŒÙ†Û•ÙˆÛ•.</small>' +
+          (rows.length ? rows.slice(0, 50).map(function (row) {
+            var isSelf = row.id === authState.user.id;
+            var label = row.role === "admin" ? "ADMIN" : row.role === "premium" ? "PREMIUM" : "USER";
+            var next = row.role === "premium" ? "user" : "premium";
+            var disabled = row.is_disabled;
+            return '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:rgba(255,255,255,.02)">' +
+              '<div><strong style="display:block;color:#fff;font-size:8px;word-break:break-all">' + esc(row.id) + '</strong><small style="color:' + (disabled ? '#ff8b9d' : '#8295aa') + ';font-size:7px">' + label + (disabled ? ' Â· Ù†Ø§Ú†Ø§Ù„Ø§Ú©' : '') + '</small></div>' +
+              '<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">' +
+              (!isSelf ? '<button class="small" type="button" data-admin-role-id="' + esc(row.id) + '" data-admin-next-role="' + next + '">' + (row.role === 'premium' ? 'Ù„Ø§Ø¨Ø±Ø¯Ù† Premium' : 'Ú©Ø±Ø¯Ù† Premium') + '</button><button class="small" type="button" data-admin-disable-id="' + esc(row.id) + '" data-admin-disable-value="' + (disabled ? 'false' : 'true') + '">' + (disabled ? 'Ú†Ø§Ù„Ø§Ú©Ú©Ø±Ø¯Ù†' : 'Ù†Ø§Ú†Ø§Ù„Ø§Ú©Ú©Ø±Ø¯Ù†') + '</button>' : '<span style="color:#f5cd68;font-size:8px">Ø¦Û†Ù†Û•Ø±</span>') +
+              '</div></div>';
+          }).join("") : '<div class="empty" style="padding:14px">Ù‡ÛŽØ´ØªØ§ Ø¨Û•Ú©Ø§Ø±Ù‡ÛŽÙ†Û•Ø± Ù†ÛŒÛŒÛ•.</div>');
+      });
+  }
+
+  function updateUserDisabled(userId, disabled) {
+    if (!authState.isAdmin) return;
+    return supabaseClient.from("profiles").update({ is_disabled: !!disabled }).eq("id", userId)
+      .then(function (result) {
+        if (result.error) throw result.error;
+        return loadAdminUsers();
+      })
+      .catch(function (error) {
+        console.error("updateUserDisabled:", error);
+        toast("Ú¯Û†Ú•ÛŒÙ†ÛŒ Ø¯Û†Ø®ÛŒ Ù‡Û•Ú˜Ù…Ø§Ø± Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+      });
+  }
+
+  function updateUserRole(userId, role) {
+    if (!authState.isAdmin) return;
+    return supabaseClient.from("profiles").update({
+      role: role,
+      premium_until: role === "premium" ? null : null,
+      book_limit: role === "premium" ? null : 3,
+      music_limit: role === "premium" ? null : 5
+    }).eq("id", userId).then(function (result) {
+      if (result.error) throw result.error;
+      return loadAdminUsers();
+    }).catch(function (error) {
+      console.error("updateUserRole:", error);
+      toast("Ú¯Û†Ú•ÛŒÙ†ÛŒ Ú•Û†Úµ Ø³Û•Ø±Ú©Û•ÙˆØªÙˆÙˆ Ù†Û•Ø¨ÙˆÙˆ");
+    });
+  }
+
+  window.renderProfile = renderProfile;
 
   /* =======================================================
      INIT
@@ -6313,6 +6177,9 @@
     renderVocab();
     renderTracks();
     updatePlayButton();
+    injectAuthUI();
+    updateTelegramBtnForPremium();
+    initAuth();
 
     /*
      * Shared public data comes from Supabase.
@@ -6328,6 +6195,8 @@
           books =
             results[0] ||
             [];
+
+          applyFavoritesToBooks();
 
           music =
             results[1] ||
@@ -6389,7 +6258,7 @@
             );
 
           toast(
-            "نەتوانرا ناوەڕۆکی Supabase باربکرێت"
+            "Ù†Û•ØªÙˆØ§Ù†Ø±Ø§ Ù†Ø§ÙˆÛ•Ú•Û†Ú©ÛŒ Supabase Ø¨Ø§Ø±Ø¨Ú©Ø±ÛŽØª"
           );
         }
       );
