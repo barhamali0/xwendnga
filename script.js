@@ -3903,6 +3903,43 @@
   }
 
 
+
+  function renderFavorites() {
+    var box = $("favoritesList");
+    if (!box) return;
+
+    if (!authState.user) {
+      box.innerHTML =
+        '<div class="empty" style="grid-column:1/-1">' +
+        '<div class="empty-icon"><i class="fa-solid fa-lock"></i></div>' +
+        '<h3>دڵخوازەکانت پاش Login</h3>' +
+        '<p>بۆ بینینی دڵخوازەکانت سەرەتا بچۆ ژوورەوە.</p>' +
+        '<button class="primary empty-button" type="button" data-action="auth-login">' +
+        '<i class="fa-solid fa-right-to-bracket"></i> چوونەژوورەوە' +
+        '</button>' +
+        '</div>';
+      return;
+    }
+
+    var source = $("bookList");
+    if (!source) return;
+
+    var oldFilter = filter;
+    var oldQuery = query;
+
+    filter = "favorites";
+    query = "";
+
+    renderBooks();
+    box.innerHTML = source.innerHTML;
+
+    filter = oldFilter;
+    query = oldQuery;
+    renderBooks();
+  }
+
+
+
   /* =======================================================
      OWNER PANEL
      ======================================================= */
@@ -5379,12 +5416,35 @@
 
   document.addEventListener(
     "xwendnga:routechange",
-    function () {
+    function (event) {
       renderBooks();
       renderVocab();
       renderOwnerPanel();
       renderTracks();
       updateTelegramBtn();
+
+      var route =
+        event &&
+        event.detail
+          ? event.detail.route
+          : "";
+
+      if (route === "favorites") {
+        renderFavorites();
+      }
+
+      if (route === "search") {
+        var searchTarget = $("globalSearchResults");
+        var searchSource = $("bookList");
+
+        if (
+          searchTarget &&
+          searchSource
+        ) {
+          searchTarget.innerHTML =
+            searchSource.innerHTML;
+        }
+      }
     }
   );
 
@@ -5923,6 +5983,16 @@
 
     openAuthModal("login", message);
 
+    var premiumTitle = $("xwAuthTitle");
+    if (premiumTitle) {
+      premiumTitle.textContent =
+        authState.isAdmin
+          ? "پلانی ئەدمین"
+          : authState.role === "premium"
+            ? "پلانی Premium"
+            : "Upgrade to Premium";
+    }
+
     var fields = $("xwAuthFields");
     fields.innerHTML =
       '<div style="display:grid;gap:10px">' +
@@ -6127,11 +6197,8 @@
      ======================================================= */
 
   function init() {
-    vocab =
-      loadJSON(
-        "kh_vocab",
-        []
-      );
+    /* Saved words require login and are loaded from Supabase. */
+    vocab = [];
 
     siteTheme =
       localStorage.getItem(
