@@ -465,6 +465,7 @@
 
   var filter = "all";
   var query = "";
+  var libraryMode = "public";
 
   var siteTheme = "cyan";
   var readerTheme = "paper";
@@ -2143,7 +2144,22 @@
       return Number(b.addedAt || 0) - Number(a.addedAt || 0);
     });
 
-    if (!authState.isAdmin) {
+    var libraryIsActive = !!document.querySelector(
+      "[data-app-view='library'].active"
+    );
+
+    if (
+      libraryIsActive &&
+      libraryMode === "mine"
+    ) {
+      if (!authState.user) {
+        return [];
+      }
+
+      list = list.filter(function (book) {
+        return book.ownerId === authState.user.id;
+      });
+    } else {
       list = list.filter(function (book) {
         return (book.status || "approved") === "approved";
       });
@@ -2173,6 +2189,56 @@
     }
 
     return list;
+  }
+
+  function renderLibraryModeControls() {
+    var section = $("librarySection");
+    if (!section) return;
+
+    var head = section.querySelector(".section-head");
+    if (!head) return;
+
+    var existing = $("libraryModeControls");
+    if (!existing) {
+      existing = document.createElement("div");
+      existing.id = "libraryModeControls";
+      existing.style.cssText =
+        "display:flex;gap:7px;flex-wrap:wrap;margin-top:10px";
+      head.insertAdjacentElement("afterend", existing);
+    }
+
+    var disabled = !authState.user;
+
+    existing.innerHTML =
+      '<button type="button" class="chip ' +
+      (libraryMode === "public" ? "active" : "") +
+      '" data-library-mode="public">کتێبخانەی گشتی</button>' +
+      '<button type="button" class="chip ' +
+      (libraryMode === "mine" ? "active" : "") +
+      '" data-library-mode="mine"' +
+      (disabled ? ' aria-disabled="true"' : '') +
+      '>کتێبەکانی من</button>';
+  }
+
+  function setLibraryMode(mode) {
+    if (mode !== "mine") {
+      libraryMode = "public";
+    } else {
+      if (!authState.user) {
+        libraryMode = "public";
+        renderLibraryModeControls();
+        openAuthModal(
+          "login",
+          "بۆ بینینی کتێبەکانی خۆت سەرەتا بچۆ ژوورەوە."
+        );
+        return;
+      }
+
+      libraryMode = "mine";
+    }
+
+    renderLibraryModeControls();
+    renderBooks();
   }
 
   function updateHomeStats() {
@@ -2402,6 +2468,8 @@
         (
           query
             ? "هیچ ئەنجامێک نەدۆزرایەوە"
+            : libraryMode === "mine"
+            ? "هێشتا هیچ کتێبێکت نییە"
             : "هێشتا کتێب نییە"
         ) +
         "</h3>" +
@@ -2409,6 +2477,8 @@
         (
           query
             ? "وشە یان ناوی نووسەرێکی تر تاقی بکەوە."
+            : libraryMode === "mine"
+            ? "PDF ـێک زیاد بکە بۆ ئەوەی لێرە بیبینیت."
             : "PDF ـێک زیاد بکە بۆ دەستپێکردنی خوێندنەوە."
         ) +
         "</p>" +
@@ -4875,6 +4945,29 @@
   });
 
   /* =======================================================
+     LIBRARY MODE
+     ======================================================= */
+
+  document.addEventListener(
+    "click",
+    function (event) {
+      var modeButton = event.target.closest(
+        "[data-library-mode]"
+      );
+
+      if (!modeButton) {
+        return;
+      }
+
+      event.preventDefault();
+      setLibraryMode(
+        modeButton.getAttribute("data-library-mode")
+      );
+    }
+  );
+
+
+  /* =======================================================
      FILTERS
      ======================================================= */
 
@@ -5422,6 +5515,7 @@
       renderOwnerPanel();
       renderTracks();
       updateTelegramBtn();
+      renderLibraryModeControls();
 
       var route =
         event &&
@@ -5540,44 +5634,63 @@
     dbPut:
       dbPut,
 
-
     authState:
       authState,
 
     reloadFromSupabase:
       function () {
-        return Promise.all([
-          loadRemoteBooks(),
-          loadRemoteMusic()
-        ])
-          .then(
-            function (
-              results
-            ) {
-              books =
-                results[0] ||
-                [];
-
+        var booksPromise =
+          loadRemoteBooks()
+            .then(function (items) {
+              books = items || [];
               applyFavoritesToBooks();
-
-              music =
-                results[1] ||
-                [];
-
               renderBooks();
+              renderLibraryModeControls();
               renderOwnerPanel();
+              return books;
+            })
+            .catch(function (error) {
+              console.error(
+                "Reload books:",
+                error
+              );
+              books = [];
+              renderBooks();
+              renderLibraryModeControls();
+              renderOwnerPanel();
+              return books;
+            });
+
+        var musicPromise =
+          loadRemoteMusic()
+            .then(function (items) {
+              music = items || [];
               renderTracks();
               updatePlayButton();
+              renderOwnerPanel();
+              return music;
+            })
+            .catch(function (error) {
+              console.error(
+                "Reload music:",
+                error
+              );
+              music = [];
+              renderTracks();
+              updatePlayButton();
+              renderOwnerPanel();
+              return music;
+            });
 
-              return {
-                books:
-                  books,
-
-                music:
-                  music
-              };
-            }
-          );
+        return Promise.all([
+          booksPromise,
+          musicPromise
+        ]).then(function () {
+          return {
+            books: books,
+            music: music
+          };
+        });
       }
   };
 
@@ -6254,84 +6367,77 @@
     /*
      * Shared public data comes from Supabase.
      */
-    Promise.all([
-      loadRemoteBooks(),
-      loadRemoteMusic()
-    ])
-      .then(
-        function (
-          results
-        ) {
-          books =
-            results[0] ||
-            [];
-
-          applyFavoritesToBooks();
-
-          music =
-            results[1] ||
-            [];
-
-          renderBooks();
-          renderOwnerPanel();
-          renderTracks();
-          updatePlayButton();
-          updateTelegramBtn();
-        }
-      )
-      .catch(
-        function (
+    loadRemoteBooks()
+      .then(function (items) {
+        books = items || [];
+        applyFavoritesToBooks();
+        renderBooks();
+        renderLibraryModeControls();
+        renderOwnerPanel();
+        updateTelegramBtn();
+      })
+      .catch(function (error) {
+        console.error(
+          "Initial Supabase books load:",
           error
-        ) {
-          console.error(
-            "Initial Supabase load:",
-            error
-          );
+        );
 
-          /*
-           * Keep the existing local IndexedDB fallback
-           * so old books are not silently lost on this device.
-           */
-          dbAll()
-            .then(
-              function (
-                storedBooks
-              ) {
-                books =
-                  Array.isArray(
-                    storedBooks
-                  )
-                    ? storedBooks
-                    : [];
+        /*
+         * Keep the existing local IndexedDB fallback
+         * so old books are not silently lost on this device.
+         */
+        dbAll()
+          .then(function (storedBooks) {
+            books =
+              Array.isArray(storedBooks)
+                ? storedBooks
+                : [];
 
-                renderBooks();
-                renderOwnerPanel();
-                updateTelegramBtn();
-              }
-            )
-            .catch(
-              function (
-                dbError
-              ) {
-                console.error(
-                  "Fallback local DB load:",
-                  dbError
-                );
-
-                books =
-                  [];
-
-                renderBooks();
-                renderOwnerPanel();
-                updateTelegramBtn();
-              }
+            renderBooks();
+            renderLibraryModeControls();
+            renderOwnerPanel();
+            updateTelegramBtn();
+          })
+          .catch(function (dbError) {
+            console.error(
+              "Fallback local DB load:",
+              dbError
             );
 
-          toast(
-            "نەتوانرا ناوەڕۆکی Supabase باربکرێت"
-          );
-        }
-      );
+            books = [];
+            renderBooks();
+            renderLibraryModeControls();
+            renderOwnerPanel();
+            updateTelegramBtn();
+          });
+
+        toast(
+          "نەتوانرا کتێبەکانی Supabase باربکرێن"
+        );
+      });
+
+    loadRemoteMusic()
+      .then(function (items) {
+        music = items || [];
+        renderTracks();
+        updatePlayButton();
+        renderOwnerPanel();
+      })
+      .catch(function (error) {
+        console.error(
+          "Initial Supabase music load:",
+          error
+        );
+
+        music = [];
+        renderTracks();
+        updatePlayButton();
+        renderOwnerPanel();
+
+        toast(
+          "نەتوانرا موزیکی Supabase باربکرێت"
+        );
+      });
   }
 
 
