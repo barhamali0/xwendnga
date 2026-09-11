@@ -4126,9 +4126,41 @@
 
           for (var i = 0; i < files.length; i++) {
             (function (file) {
-              if (!file || !file.type || file.type.indexOf("audio/") !== 0) return;
+              if (!file) return;
 
-              var safeName = file.name
+              var fileName = String(
+                file.name ||
+                ""
+              );
+
+              var extension =
+                fileName
+                  .split(".")
+                  .pop()
+                  .toLowerCase();
+
+              var allowedExtensions = {
+                mp3: true,
+                wav: true,
+                m4a: true,
+                ogg: true,
+                aac: true
+              };
+
+              var hasAudioType =
+                !!(
+                  file.type &&
+                  file.type.indexOf("audio/") === 0
+                );
+
+              if (
+                !hasAudioType &&
+                !allowedExtensions[extension]
+              ) {
+                return;
+              }
+
+              var safeName = fileName
                 .replace(/[^a-zA-Z0-9._-]+/g, "-")
                 .replace(/-+/g, "-")
                 .replace(/^[-.]+|[-.]+$/g, "") || "audio";
@@ -6040,7 +6072,40 @@
       })
       .then(function () {
         if (authState.user && authState.profile) {
-          return loadUserCloudData();
+          var booksPromise =
+            loadRemoteBooks()
+              .then(function (items) {
+                books = items || [];
+                applyFavoritesToBooks();
+                return books;
+              })
+              .catch(function (error) {
+                console.error(
+                  "Refresh auth books:",
+                  error
+                );
+                return books;
+              });
+
+          var musicPromise =
+            loadRemoteMusic()
+              .then(function (items) {
+                music = items || [];
+                return music;
+              })
+              .catch(function (error) {
+                console.error(
+                  "Refresh auth music:",
+                  error
+                );
+                return music;
+              });
+
+          return Promise.all([
+            booksPromise,
+            musicPromise,
+            loadUserCloudData()
+          ]);
         }
         authState.role = "anonymous";
         authState.isAdmin = false;
