@@ -13,35 +13,35 @@
 
   var ROUTES = {
     home: {
-      title: "سەرەکی"
+      title: "Ø³Û•Ø±Û•Ú©ÛŒ"
     },
 
     library: {
-      title: "کتێبخانە"
+      title: "Ú©ØªÛŽØ¨Ø®Ø§Ù†Û•"
     },
 
     search: {
-      title: "گەڕان"
+      title: "Ú¯Û•Ú•Ø§Ù†"
     },
 
     cartoons: {
-      title: "کارتۆن"
+      title: "Ú©Ø§Ø±ØªÛ†Ù†"
     },
 
     profile: {
-      title: "پڕۆفایل"
+      title: "Ù¾Ú•Û†ÙØ§ÛŒÙ„"
     },
 
     settings: {
-      title: "ڕێکخستنەکان"
+      title: "Ú•ÛŽÚ©Ø®Ø³ØªÙ†Û•Ú©Ø§Ù†"
     },
 
     favorites: {
-      title: "دڵخواز"
+      title: "Ø¯ÚµØ®ÙˆØ§Ø²"
     },
 
     vocab: {
-      title: "وشەکانم"
+      title: "ÙˆØ´Û•Ú©Ø§Ù†Ù…"
     }
   };
 
@@ -206,7 +206,7 @@
 
     document.title =
       title +
-      " — خوێندنگە";
+      " â€” Ø®ÙˆÛŽÙ†Ø¯Ù†Ú¯Û•";
   }
 
 
@@ -506,13 +506,13 @@
         id: "welcome",
 
         title:
-          "بەخێربێیت بۆ خوێندنگە",
+          "Ø¨Û•Ø®ÛŽØ±Ø¨ÛŽÛŒØª Ø¨Û† Ø®ÙˆÛŽÙ†Ø¯Ù†Ú¯Û•",
 
         text:
-          "کاتێک ناوەڕۆکی نوێ زیاد بکرێت، ئاگاداریت دەکەینەوە.",
+          "Ú©Ø§ØªÛŽÚ© Ù†Ø§ÙˆÛ•Ú•Û†Ú©ÛŒ Ù†ÙˆÛŽ Ø²ÛŒØ§Ø¯ Ø¨Ú©Ø±ÛŽØªØŒ Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒØª Ø¯Û•Ú©Û•ÛŒÙ†Û•ÙˆÛ•.",
 
         time:
-          "ئێستا",
+          "Ø¦ÛŽØ³ØªØ§",
 
         read:
           true
@@ -700,7 +700,7 @@
 
     panel.setAttribute(
       "aria-label",
-      "ئاگادارییەکان"
+      "Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒÛŒÛ•Ú©Ø§Ù†"
     );
 
 
@@ -732,7 +732,7 @@
 
                   escapeHtml(
                     item.title ||
-                      "ئاگاداری"
+                      "Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒ"
                   ) +
 
                   "</strong>" +
@@ -762,7 +762,7 @@
               }
             )
             .join("")
-        : '<div class="notification-empty">هیچ ئاگادارییەک نییە</div>';
+        : '<div class="notification-empty">Ù‡ÛŒÚ† Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒÛŒÛ•Ú© Ù†ÛŒÛŒÛ•</div>';
 
 
     panel.innerHTML =
@@ -772,11 +772,11 @@
 
       '<span class="section-kicker">NOTIFICATIONS</span>' +
 
-      "<h3>ئاگادارییەکان</h3>" +
+      "<h3>Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒÛŒÛ•Ú©Ø§Ù†</h3>" +
 
       "</div>" +
 
-      '<button type="button" class="icon-btn" data-notification-close aria-label="داخستن">' +
+      '<button type="button" class="icon-btn" data-notification-close aria-label="Ø¯Ø§Ø®Ø³ØªÙ†">' +
 
       '<i class="fa-solid fa-xmark"></i>' +
 
@@ -794,13 +794,13 @@
 
       '<button type="button" class="ghost" data-notification-disable>' +
 
-      "کوژاندنەوەی ئاگادارییەکان" +
+      "Ú©ÙˆÚ˜Ø§Ù†Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒÛŒÛ•Ú©Ø§Ù†" +
 
       "</button>" +
 
       '<button type="button" class="primary" data-notification-read>' +
 
-      "هەمووی بخوێنەوە" +
+      "Ù‡Û•Ù…ÙˆÙˆÛŒ Ø¨Ø®ÙˆÛŽÙ†Û•ÙˆÛ•" +
 
       "</button>" +
 
