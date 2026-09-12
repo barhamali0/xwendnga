@@ -6227,6 +6227,272 @@ body:has(.reader.show)
 
 
 /* =========================================================
+   XWENDNGA — ADD BOOK + PUBLIC BOOK ATTRIBUTION
+   ========================================================= */
+
+.add-book-sheet{
+  max-height:88vh;
+  overflow:auto;
+  overscroll-behavior:contain;
+  padding-bottom:calc(24px + env(safe-area-inset-bottom));
+}
+
+.add-book-description{
+  margin-top:4px;
+  line-height:1.9;
+}
+
+.add-book-form{
+  display:grid;
+  gap:10px;
+}
+
+.add-book-file-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+
+.add-book-file-card,
+.add-book-cover-card{
+  position:relative;
+  min-width:0;
+  min-height:72px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:10px;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:16px;
+  background:rgba(255,255,255,.025);
+  cursor:pointer;
+  overflow:hidden;
+}
+
+.add-book-file-card input,
+.add-book-cover-card input{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  opacity:0;
+  cursor:pointer;
+}
+
+.add-book-file-icon{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  display:grid;
+  place-items:center;
+  border-radius:13px;
+  color:var(--a);
+  background:color-mix(in srgb,var(--a) 10%,transparent);
+  font-size:17px;
+}
+
+.add-book-cover-preview{
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border-radius:11px;
+  color:var(--a);
+  background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.08);
+}
+
+.add-book-cover-preview img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.add-book-file-copy{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+
+.add-book-file-copy strong{
+  color:#fff;
+  font-size:9px;
+}
+
+.add-book-file-copy small{
+  overflow:hidden;
+  color:var(--muted);
+  font-size:7px;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+.add-book-field{
+  display:grid;
+  gap:5px;
+}
+
+.add-book-field > span{
+  color:#dbe8f2;
+  font-size:8px;
+  font-weight:800;
+}
+
+.add-book-field input,
+.add-book-field select,
+.add-book-field textarea{
+  width:100%;
+  border:1px solid rgba(255,255,255,.08);
+  border-radius:13px;
+  background:rgba(255,255,255,.035);
+  color:#fff;
+  outline:none;
+  padding:0 11px;
+  min-height:44px;
+  font:inherit;
+  font-size:9px;
+  transition:border-color .16s ease,box-shadow .16s ease;
+}
+
+.add-book-field textarea{
+  min-height:92px;
+  padding:10px 11px;
+  resize:vertical;
+  line-height:1.8;
+}
+
+.add-book-field select{
+  appearance:auto;
+}
+
+.add-book-field input:focus,
+.add-book-field select:focus,
+.add-book-field textarea:focus{
+  border-color:color-mix(in srgb,var(--a) 55%,rgba(255,255,255,.08));
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--a) 10%,transparent);
+}
+
+.add-book-two-col{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:9px;
+}
+
+.add-book-form-message{
+  min-height:18px;
+  color:#f5cd68;
+  font-size:8px;
+  line-height:1.7;
+}
+
+.add-book-form-message.error{
+  color:#ff9ba8;
+}
+
+.add-book-form-message.success{
+  color:#7ee2ad;
+}
+
+.add-book-actions{
+  display:grid;
+  grid-template-columns:1.35fr .65fr;
+  gap:8px;
+  margin-top:2px;
+}
+
+.add-book-actions button{
+  min-height:45px;
+}
+
+.book-cover-image{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  z-index:1;
+}
+
+.book-cover-image + i{
+  z-index:2;
+}
+
+.book-attribution{
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  margin-top:9px;
+  padding:7px 8px;
+  border:1px solid rgba(255,255,255,.055);
+  border-radius:12px;
+  background:rgba(255,255,255,.025);
+}
+
+.book-owner-avatar{
+  width:28px;
+  height:28px;
+  flex:0 0 28px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border-radius:9px;
+  color:#fff;
+  background:linear-gradient(135deg,var(--a),var(--b));
+}
+
+.book-owner-avatar img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.book-owner-copy{
+  min-width:0;
+  display:grid;
+  gap:1px;
+}
+
+.book-owner-copy small{
+  color:var(--muted);
+  font-size:6px;
+}
+
+.book-owner-name{
+  overflow:hidden;
+  color:#eaf4ff;
+  font-size:7px;
+  font-weight:800;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+.book-owner-username{
+  direction:ltr;
+  text-align:right;
+  overflow:hidden;
+  color:var(--a);
+  font-size:7px;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+.book-owner-username.muted{
+  color:var(--muted);
+}
+
+@media (max-width:380px){
+  .add-book-file-grid,
+  .add-book-two-col,
+  .add-book-actions{
+    grid-template-columns:1fr;
+  }
+}
+
+
+/* =========================================================
    43 — REDUCED MOTION
    ========================================================= */
 
