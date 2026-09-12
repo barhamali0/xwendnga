@@ -466,7 +466,8 @@
         category: track.category || "",
         cover_url: track.cover_url || "",
         audio_url: track.audio_url || "",
-        duration: Math.round(Number(track.duration)) || 0
+        duration: Math.round(Number(track.duration)) || 0,
+        owner_id: authState.user ? authState.user.id : null
       })
       .select(
         "id,created_at,title,artist,category,cover_url,audio_url,duration,owner_id,status,rejection_reason,reviewed_by,reviewed_at"
