@@ -140,18 +140,25 @@
       return Promise.resolve();
     }
 
-    return supabaseClient.storage
-      .from(bucket)
-      .remove([
-        path
-      ])
-      .then(
+    try {
+      return Promise.resolve(
+        supabaseClient.storage
+          .from(bucket)
+          .remove([
+            path
+          ])
+      ).then(
         function (result) {
-          if (result.error) {
+          if (result && result.error) {
             throw result.error;
           }
+
+          return result || null;
         }
       );
+    } catch (error) {
+      return Promise.reject(error);
+    }
   }
 
   function mapRemoteBook(
@@ -2071,6 +2078,9 @@
   }
 
 
+  /* XWENDNGA V2.8 — PROMISE CLEANUP FIX */
+
+
   /* =======================================================
      ADD BOOK FORM
      ======================================================= */
@@ -2270,8 +2280,43 @@
       .catch(function (error) {
         console.error("submitAddBookForm:", error);
         var cleanupTasks = [];
-        if (uploadedPdfPath) cleanupTasks.push(deleteFromStorage(BOOKS_BUCKET, uploadedPdfPath).catch(function (cleanupError) { console.error("PDF cleanup:", cleanupError); }));
-        if (uploadedCoverPath) cleanupTasks.push(deleteFromStorage(BOOK_COVERS_BUCKET, uploadedCoverPath).catch(function (cleanupError) { console.error("Cover cleanup:", cleanupError); }));
+
+        if (uploadedPdfPath) {
+          cleanupTasks.push(
+            Promise.resolve(
+              deleteFromStorage(
+                BOOKS_BUCKET,
+                uploadedPdfPath
+              )
+            ).catch(
+              function (cleanupError) {
+                console.error(
+                  "PDF cleanup:",
+                  cleanupError
+                );
+              }
+            )
+          );
+        }
+
+        if (uploadedCoverPath) {
+          cleanupTasks.push(
+            Promise.resolve(
+              deleteFromStorage(
+                BOOK_COVERS_BUCKET,
+                uploadedCoverPath
+              )
+            ).catch(
+              function (cleanupError) {
+                console.error(
+                  "Cover cleanup:",
+                  cleanupError
+                );
+              }
+            )
+          );
+        }
+
         return Promise.all(cleanupTasks).finally(function () {
           setAddBookMessage("نەتوانرا کتێب زیاد بکرێت: " + String(error && error.message || "هەڵە").slice(0, 140), "error");
           if (submitButton) {
@@ -2384,9 +2429,17 @@
             })
             .catch(function (error) {
               console.error("Supabase addPDF:", error);
-              return deleteFromStorage(BOOKS_BUCKET, uploadedPdfPath)
+              return Promise.resolve(
+                deleteFromStorage(
+                  BOOKS_BUCKET,
+                  uploadedPdfPath
+                )
+              )
                 .catch(function (cleanupError) {
-                  console.error("Supabase PDF cleanup:", cleanupError);
+                  console.error(
+                    "Supabase PDF cleanup:",
+                    cleanupError
+                  );
                 })
                 .finally(function () {
                   toast(
