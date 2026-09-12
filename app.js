@@ -13,35 +13,35 @@
 
   var ROUTES = {
     home: {
-      title: "Ø³Û•Ø±Û•Ú©ÛŒ"
+      title: "سەرەکی"
     },
 
     library: {
-      title: "Ú©ØªÛŽØ¨Ø®Ø§Ù†Û•"
+      title: "کتێبخانە"
     },
 
     search: {
-      title: "Ú¯Û•Ú•Ø§Ù†"
+      title: "گەڕان"
     },
 
     cartoons: {
-      title: "Ú©Ø§Ø±ØªÛ†Ù†"
+      title: "کارتۆن"
     },
 
     profile: {
-      title: "Ù¾Ú•Û†ÙØ§ÛŒÙ„"
+      title: "پڕۆفایل"
     },
 
     settings: {
-      title: "Ú•ÛŽÚ©Ø®Ø³ØªÙ†Û•Ú©Ø§Ù†"
+      title: "ڕێکخستنەکان"
     },
 
     favorites: {
-      title: "Ø¯ÚµØ®ÙˆØ§Ø²"
+      title: "دڵخواز"
     },
 
     vocab: {
-      title: "ÙˆØ´Û•Ú©Ø§Ù†Ù…"
+      title: "وشەکانم"
     }
   };
 
@@ -206,7 +206,7 @@
 
     document.title =
       title +
-      " â€” Ø®ÙˆÛŽÙ†Ø¯Ù†Ú¯Û•";
+      " — خوێندنگە";
   }
 
 
@@ -511,13 +511,13 @@
         id: "welcome",
 
         title:
-          "Ø¨Û•Ø®ÛŽØ±Ø¨ÛŽÛŒØª Ø¨Û† Ø®ÙˆÛŽÙ†Ø¯Ù†Ú¯Û•",
+          "بەخێربێیت بۆ خوێندنگە",
 
         text:
-          "Ú©Ø§ØªÛŽÚ© Ù†Ø§ÙˆÛ•Ú•Û†Ú©ÛŒ Ù†ÙˆÛŽ Ø²ÛŒØ§Ø¯ Ø¨Ú©Ø±ÛŽØªØŒ Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒØª Ø¯Û•Ú©Û•ÛŒÙ†Û•ÙˆÛ•.",
+          "کاتێک ناوەڕۆکێکی نوێ زیاد بکرێت، ئاگاداریت دەکەینەوە.",
 
         time:
-          "Ø¦ÛŽØ³ØªØ§",
+          "ئێستا",
 
         read:
           true
@@ -551,7 +551,7 @@
       }
 
       var mojibakePattern =
-        /[ÃƒÃ‚ÃÃ‘Ã˜Ã™Ã›ÃšÃÃž]|Ã¢â‚¬|Ã°Å¸/i;
+        /(?:[ØÙÚÛ]|[ÃÂÐÑ])(?:[\u0080-\u00ff\u2022\u0160-\u0178])/i;
 
       var hasMojibake =
         parsed.some(
@@ -736,7 +736,7 @@
 
     panel.setAttribute(
       "aria-label",
-      "Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒÛŒÛ•Ú©Ø§Ù†"
+      "ئاگادارییەکان"
     );
 
 
@@ -768,7 +768,7 @@
 
                   escapeHtml(
                     item.title ||
-                      "Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒ"
+                      "ئاگاداری"
                   ) +
 
                   "</strong>" +
@@ -798,7 +798,7 @@
               }
             )
             .join("")
-        : '<div class="notification-empty">Ù‡ÛŒÚ† Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒÛŒÛ•Ú© Ù†ÛŒÛŒÛ•</div>';
+        : '<div class="notification-empty">هیچ ئاگادارییەک نییە</div>';
 
 
     panel.innerHTML =
@@ -806,13 +806,13 @@
 
       "<div>" +
 
-      '<span class="section-kicker">Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒÛŒÛ•Ú©Ø§Ù†</span>' +
+      '<span class="section-kicker">ئاگادارییەکان</span>' +
 
-      "<h3>Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒÛŒÛ•Ú©Ø§Ù†</h3>" +
+      "<h3>ئاگادارییەکان</h3>" +
 
       "</div>" +
 
-      '<button type="button" class="icon-btn" data-notification-close aria-label="Ø¯Ø§Ø®Ø³ØªÙ†">' +
+      '<button type="button" class="icon-btn" data-notification-close aria-label="داخستن">' +
 
       '<i class="fa-solid fa-xmark"></i>' +
 
@@ -830,13 +830,13 @@
 
       '<button type="button" class="ghost" data-notification-disable>' +
 
-      "Ú©ÙˆÚ˜Ø§Ù†Ø¯Ù†Û•ÙˆÛ•ÛŒ Ø¦Ø§Ú¯Ø§Ø¯Ø§Ø±ÛŒÛŒÛ•Ú©Ø§Ù†" +
+      "کوژاندنەوەی ئاگادارییەکان" +
 
       "</button>" +
 
       '<button type="button" class="primary" data-notification-read>' +
 
-      "Ù‡Û•Ù…ÙˆÙˆÛŒ Ø¨Ø®ÙˆÛŽÙ†Û•ÙˆÛ•" +
+      "هەمووی بخوێنەوە" +
 
       "</button>" +
 
