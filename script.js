@@ -20,6 +20,7 @@
       : null;
 
   var BOOKS_BUCKET = "books";
+  var BOOK_COVERS_BUCKET = "book-covers";
   var MUSIC_BUCKET = "music";
 
 
@@ -172,6 +173,11 @@
     else if (language === "فارسی") lang = "fa";
     else if (language === "ئینگلیزی") lang = "en";
 
+    var ownerProfile = row.profiles || null;
+    if (Array.isArray(ownerProfile)) {
+      ownerProfile = ownerProfile[0] || null;
+    }
+
     return {
       id: String(row.id),
       remoteId: row.id,
@@ -188,6 +194,7 @@
       keywords: row.keywords || "",
       cover_url: row.cover_url || "",
       pdf_url: row.pdf_url || "",
+      ownerProfile: ownerProfile,
       pages: [],
       pdfData: null,
       lang: lang,
@@ -211,7 +218,7 @@
     return supabaseClient
       .from("books")
       .select(
-        "id,created_at,title,author,language,category,description,pages,cover_url,pdf_url,keywords,owner_id,status,rejection_reason,reviewed_by,reviewed_at"
+        "id,created_at,title,author,language,category,description,pages,cover_url,pdf_url,keywords,owner_id,status,rejection_reason,reviewed_by,reviewed_at,profiles:profiles!books_owner_id_fkey(display_name,username,avatar_url)"
       )
       .order("created_at", { ascending: false })
       .then(function (result) {
@@ -243,10 +250,11 @@
         pages: Number(book.pageCount) || 0,
         cover_url: book.cover_url || "",
         pdf_url: book.pdf_url || "",
-        keywords: book.keywords || ""
+        keywords: book.keywords || "",
+        owner_id: authState.user ? authState.user.id : null
       })
       .select(
-        "id,created_at,title,author,language,category,description,pages,cover_url,pdf_url,keywords,owner_id,status,rejection_reason,reviewed_by,reviewed_at"
+        "id,created_at,title,author,language,category,description,pages,cover_url,pdf_url,keywords,owner_id,status,rejection_reason,reviewed_by,reviewed_at,profiles:profiles!books_owner_id_fkey(display_name,username,avatar_url)"
       )
       .single()
       .then(function (result) {
@@ -1985,6 +1993,246 @@
 
 
   /* =======================================================
+     ADD BOOK FORM
+     ======================================================= */
+
+  var addBookCoverObjectUrl = "";
+
+  function setAddBookMessage(message, type) {
+    var box = $("addBookFormMessage");
+    if (!box) return;
+    box.textContent = message || "";
+    box.className = "add-book-form-message" + (type ? " " + type : "");
+  }
+
+  function resetAddBookCoverPreview() {
+    var preview = $("bookCoverPreview");
+    if (addBookCoverObjectUrl) {
+      try {
+        URL.revokeObjectURL(addBookCoverObjectUrl);
+      } catch (error) {}
+      addBookCoverObjectUrl = "";
+    }
+    if (preview) {
+      preview.innerHTML = '<i class="fa-solid fa-image"></i>';
+    }
+    if ($("bookCoverName")) {
+      $("bookCoverName").textContent = "ئارەزوومەندانەیە";
+    }
+  }
+
+  function resetAddBookForm() {
+    var form = $("addBookForm");
+    if (form) form.reset();
+    if ($("bookPdfName")) $("bookPdfName").textContent = "PDF ـەکە هەڵبژێرە";
+    resetAddBookCoverPreview();
+    setAddBookMessage("", "");
+  }
+
+  function closeAddBookSheet() {
+    var shell = $("addBookSheet");
+    var back = $("addBookBack");
+    if (!shell) return;
+    shell.setAttribute("aria-hidden", "true");
+    closeSheet(back, shell);
+    resetAddBookForm();
+  }
+
+  function openAddBookSheet() {
+    if (!authState.user) {
+      openAuthModal("login", "بۆ زیادکردنی کتێب سەرەتا بچۆ ژوورەوە.");
+      return;
+    }
+    var shell = $("addBookSheet");
+    var back = $("addBookBack");
+    if (!shell || !back) return;
+    resetAddBookForm();
+    shell.setAttribute("aria-hidden", "false");
+    openSheet(back, shell);
+  }
+
+  function handleBookCoverPreview(file) {
+    var preview = $("bookCoverPreview");
+    if (!preview) return;
+
+    resetAddBookCoverPreview();
+
+    if (!file) return;
+    if (!String(file.type || "").startsWith("image/")) {
+      setAddBookMessage("تکایە فایلێکی وێنە هەڵبژێرە.", "error");
+      return;
+    }
+
+    addBookCoverObjectUrl = URL.createObjectURL(file);
+    preview.innerHTML = '<img src="' + esc(addBookCoverObjectUrl) + '" alt="پێشبینینی بەرگی کتێب">';
+    if ($("bookCoverName")) {
+      $("bookCoverName").textContent = file.name || "وێنەی بەرگ";
+    }
+  }
+
+  function submitAddBookForm(event) {
+    event.preventDefault();
+
+    if (!authState.user) {
+      openAuthModal("login", "بۆ زیادکردنی کتێب سەرەتا بچۆ ژوورەوە.");
+      return;
+    }
+
+    var pdfInput = $("bookPdfInput");
+    var coverInput = $("bookCoverInput");
+    var titleInput = $("bookTitleInput");
+    var authorInput = $("bookAuthorInput");
+    var categoryInput = $("bookCategoryInput");
+    var languageInput = $("bookLanguageInput");
+    var descriptionInput = $("bookDescriptionInput");
+    var submitButton = $("addBookSubmit");
+
+    var pdfFile = pdfInput && pdfInput.files ? pdfInput.files[0] : null;
+    var coverFile = coverInput && coverInput.files ? coverInput.files[0] : null;
+    var title = String(titleInput && titleInput.value || "").trim();
+    var author = String(authorInput && authorInput.value || "").trim();
+    var category = String(categoryInput && categoryInput.value || "گشتی").trim() || "گشتی";
+    var language = String(languageInput && languageInput.value || "کوردی").trim() || "کوردی";
+    var description = String(descriptionInput && descriptionInput.value || "").trim();
+
+    if (!pdfFile) {
+      setAddBookMessage("تکایە سەرەتا فایلی PDF هەڵبژێرە.", "error");
+      return;
+    }
+    if (pdfFile.type && pdfFile.type !== "application/pdf") {
+      setAddBookMessage("تکایە تەنیا فایلێکی PDF هەڵبژێرە.", "error");
+      return;
+    }
+    if (!title) {
+      setAddBookMessage("ناوی کتێب پێویستە.", "error");
+      return;
+    }
+    if (coverFile && !String(coverFile.type || "").startsWith("image/")) {
+      setAddBookMessage("فایلی بەرگ دەبێت وێنە بێت.", "error");
+      return;
+    }
+
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.classList.add("is-loading");
+    }
+    setAddBookMessage("کتێبەکە خەریکی بارکردنە...", "");
+
+    var uploadedPdfPath = "";
+    var uploadedCoverPath = "";
+
+    getFreshProfile()
+      .then(function (profile) {
+        if (!profile) throw new Error("پڕۆفایل بەردەست نییە");
+
+        var uid = authState.user.id;
+        var safePdfName = pdfFile.name
+          .replace(/[^a-zA-Z0-9._-]+/g, "-")
+          .replace(/-+/g, "-")
+          .replace(/^[-.]+|[-.]+$/g, "") || "book.pdf";
+
+        var pdfPath = uid + "/" + Date.now() + "-" + Math.floor(Math.random() * 1000000) + "-" + safePdfName;
+        uploadedPdfPath = pdfPath;
+
+        return uploadToStorage(BOOKS_BUCKET, pdfPath, pdfFile)
+          .then(function (pdfUploaded) {
+            return extractPDF(pdfFile).then(function (data) {
+              var coverPromise = Promise.resolve({ url: "", path: "" });
+
+              if (coverFile) {
+                var safeCoverName = (coverFile.name || "cover")
+                  .replace(/[^a-zA-Z0-9._-]+/g, "-")
+                  .replace(/-+/g, "-")
+                  .replace(/^[-.]+|[-.]+$/g, "") || "cover.jpg";
+                var coverPath = uid + "/" + Date.now() + "-" + Math.floor(Math.random() * 1000000) + "-" + safeCoverName;
+                uploadedCoverPath = coverPath;
+                coverPromise = uploadToStorage(BOOK_COVERS_BUCKET, coverPath, coverFile);
+              }
+
+              return coverPromise.then(function (coverUploaded) {
+                var book = {
+                  title: title,
+                  author: author,
+                  category: category,
+                  description: description,
+                  keywords: "",
+                  language: language,
+                  lang: data.lang || "en",
+                  pageCount: data.pageCount || 0,
+                  cover_url: coverUploaded.url || "",
+                  pdf_url: pdfUploaded.url
+                };
+
+                return insertRemoteBook(book).then(function (remoteBook) {
+                  remoteBook.pdfData = data.pdfData;
+                  remoteBook.pages = data.pages || [];
+                  remoteBook.lang = data.lang || remoteBook.lang || "en";
+                  remoteBook.pageCount = data.pageCount || 0;
+                  remoteBook.currentPage = 0;
+                  remoteBook.progress = 0;
+                  remoteBook.favorite = !!authState.favorites[favoriteKey("book", remoteBook.remoteId)];
+                  remoteBook.bookmarked = false;
+                  remoteBook.isPublished = remoteBook.status === "approved";
+                  remoteBook.isRemote = true;
+                  return remoteBook;
+                });
+              });
+            });
+          });
+      })
+      .then(function (savedBook) {
+        books.unshift(savedBook);
+        renderBooks();
+        renderOwnerPanel();
+        renderProfile();
+        closeAddBookSheet();
+        toast(savedBook.status === "approved"
+          ? "کتێبەکە ڕاستەوخۆ بڵاوکرایەوە"
+          : "کتێبەکە نێردرا بۆ پشکنین");
+      })
+      .catch(function (error) {
+        console.error("submitAddBookForm:", error);
+        var cleanupTasks = [];
+        if (uploadedPdfPath) cleanupTasks.push(deleteFromStorage(BOOKS_BUCKET, uploadedPdfPath).catch(function (cleanupError) { console.error("PDF cleanup:", cleanupError); }));
+        if (uploadedCoverPath) cleanupTasks.push(deleteFromStorage(BOOK_COVERS_BUCKET, uploadedCoverPath).catch(function (cleanupError) { console.error("Cover cleanup:", cleanupError); }));
+        return Promise.all(cleanupTasks).finally(function () {
+          setAddBookMessage("نەتوانرا کتێب زیاد بکرێت: " + String(error && error.message || "هەڵە").slice(0, 140), "error");
+          if (submitButton) {
+            submitButton.disabled = false;
+            submitButton.classList.remove("is-loading");
+          }
+        });
+      });
+  }
+
+  function initAddBookForm() {
+    var form = $("addBookForm");
+    var coverInput = $("bookCoverInput");
+    var pdfInput = $("bookPdfInput");
+
+    if (form) {
+      form.addEventListener("submit", submitAddBookForm);
+    }
+
+    if (coverInput) {
+      coverInput.addEventListener("change", function () {
+        var file = this.files && this.files[0] ? this.files[0] : null;
+        handleBookCoverPreview(file);
+      });
+    }
+
+    if (pdfInput) {
+      pdfInput.addEventListener("change", function () {
+        var file = this.files && this.files[0] ? this.files[0] : null;
+        if ($("bookPdfName")) {
+          $("bookPdfName").textContent = file ? file.name : "PDF ـەکە هەڵبژێرە";
+        }
+      });
+    }
+  }
+
+
+  /* =======================================================
      ADD PDF → SUPABASE
      ======================================================= */
 
@@ -2219,7 +2467,7 @@
     if (query) {
       var q = query.toLowerCase();
       list = list.filter(function (book) {
-        var text = [book.title, book.author, book.category]
+        var text = [book.title, book.author, book.category, book.description, book.language]
           .filter(Boolean)
           .join(" ")
           .toLowerCase();
@@ -2608,6 +2856,9 @@
               "</button>" +
 
               '<div class="cover">' +
+              (book.cover_url
+                ? '<img class="book-cover-image" src="' + esc(book.cover_url) + '" alt="بەرگی ' + esc(book.title) + '" loading="lazy">'
+                : '') +
               '<i class="fa-solid fa-book-bookmark"></i>' +
               "</div>" +
 
@@ -2659,6 +2910,23 @@
               percent +
               '%"></span>' +
               "</div>" +
+
+              (book.ownerProfile
+                ? '<div class="book-attribution">' +
+                  '<span class="book-owner-avatar">' +
+                  (book.ownerProfile.avatar_url
+                    ? '<img src="' + esc(book.ownerProfile.avatar_url) + '" alt="">'
+                    : '<i class="fa-solid fa-user"></i>') +
+                  '</span>' +
+                  '<span class="book-owner-copy">' +
+                    '<small>بڵاوکراوەتەوە لەلایەن:</small>' +
+                    '<strong class="book-owner-name">' + esc(book.ownerProfile.display_name || "بێ ناو") + '</strong>' +
+                    '<span class="book-owner-username' + (!book.ownerProfile.username ? ' muted' : '') + '">' +
+                      (book.ownerProfile.username ? '@' + esc(normalizeUsername(book.ownerProfile.username)) : '@username') +
+                    '</span>' +
+                  '</span>' +
+                '</div>'
+                : '') +
 
               '<div class="actions">' +
 
@@ -4582,19 +4850,15 @@
         name ===
         "add-pdf"
       ) {
-        if (!authState.user) {
-          openAuthModal("login", "بۆ زیادکردنی PDF سەرەتا بچۆ ژوورەوە.");
-          return;
-        }
-        var pdfInput =
-          $("pdfInput");
+        openAddBookSheet();
+        return;
+      }
 
-        if (
-          pdfInput
-        ) {
-          pdfInput.click();
-        }
-
+      if (
+        name ===
+        "close-add-book"
+      ) {
+        closeAddBookSheet();
         return;
       }
 
@@ -7308,6 +7572,7 @@
     renderVocab();
     renderTracks();
     updatePlayButton();
+    initAddBookForm();
     injectAuthUI();
     updateTelegramBtnForPremium();
     initAuth();
