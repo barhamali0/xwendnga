@@ -428,205 +428,6 @@
 
 
     /* =====================================================
-       SETTINGS PAGE
-       ===================================================== */
-
-    .settings-page{
-      display:grid;
-
-      gap:12px;
-    }
-
-    .settings-page-card{
-      position:relative;
-
-      overflow:hidden;
-
-      display:grid;
-
-      grid-template-columns:
-        58px
-        minmax(0,1fr);
-
-      align-items:center;
-
-      gap:13px;
-
-      padding:17px;
-
-      border:
-        1px solid
-        color-mix(
-          in srgb,
-          var(--a) 20%,
-          var(--line)
-        );
-
-      border-radius:22px;
-
-      background:
-        radial-gradient(
-          circle at 100% 0%,
-          color-mix(
-            in srgb,
-            var(--a) 11%,
-            transparent
-          ),
-          transparent 35%
-        ),
-        linear-gradient(
-          145deg,
-          var(--surface2),
-          var(--surface)
-        );
-
-      box-shadow:
-        var(--shadow);
-    }
-
-    .settings-page-icon{
-      width:58px;
-      height:58px;
-
-      display:grid;
-      place-items:center;
-
-      border-radius:18px;
-
-      background:
-        linear-gradient(
-          135deg,
-          var(--a),
-          var(--b)
-        );
-
-      color:#fff;
-
-      font-size:23px;
-
-      box-shadow:
-        0 13px 28px
-        rgba(0,0,0,.22);
-    }
-
-    .settings-page-copy h3{
-      margin:0;
-
-      color:#fff;
-
-      font-size:15px;
-    }
-
-    .settings-page-copy p{
-      margin:
-        5px
-        0
-        0;
-
-      color:
-        var(--muted);
-
-      font-size:8px;
-
-      line-height:1.85;
-    }
-
-    .settings-page-button{
-      grid-column:1 / -1;
-
-      min-height:45px;
-
-      width:100%;
-
-      margin-top:3px;
-    }
-
-    .settings-shortcuts{
-      display:grid;
-
-      gap:8px;
-    }
-
-    .settings-shortcut{
-      width:100%;
-      min-height:67px;
-
-      display:grid;
-
-      grid-template-columns:
-        40px
-        minmax(0,1fr)
-        18px;
-
-      align-items:center;
-
-      gap:10px;
-
-      padding:
-        9px 11px;
-
-      border:
-        1px solid
-        rgba(255,255,255,.055);
-
-      border-radius:16px;
-
-      background:
-        rgba(255,255,255,.025);
-
-      color:#fff;
-
-      text-align:right;
-    }
-
-    .settings-shortcut-icon{
-      width:40px;
-      height:40px;
-
-      display:grid;
-      place-items:center;
-
-      border-radius:12px;
-
-      color:
-        var(--a);
-
-      background:
-        color-mix(
-          in srgb,
-          var(--a) 9%,
-          transparent
-        );
-    }
-
-    .settings-shortcut > span:nth-child(2){
-      min-width:0;
-
-      display:flex;
-      flex-direction:column;
-
-      gap:3px;
-    }
-
-    .settings-shortcut strong{
-      font-size:9px;
-    }
-
-    .settings-shortcut small{
-      color:
-        var(--muted);
-
-      font-size:7px;
-    }
-
-    .settings-shortcut > i:last-child{
-      color:#71869d;
-
-      font-size:9px;
-    }
-
-
-    /* =====================================================
        MOBILE
        ===================================================== */
 
@@ -2112,149 +1913,132 @@
 
         <section class="section settings-page">
 
+          <div class="settings-head">
+            <div class="settings-head-copy">
+              <div class="section-kicker">ڕێکخستن</div>
+              <h2 class="section-title">ڕێکخستنەکان</h2>
+              <p>هەموو ڕێکخستنەکانی خوێندن و ئەزموونی خوێندنگە لە یەک شوێن.</p>
+            </div>
+          </div>
 
-          <div class="section-head">
-
-            <div>
-
-              <div class="section-kicker">
-                SETTINGS
+          <button class="settings-card settings-profile-card" type="button" data-nav="profile">
+            <div class="settings-profile-main">
+              <div class="settings-profile-avatar">
+                <img id="settingsProfileAvatar" class="hidden" alt="وێنەی پڕۆفایل">
+                <i id="settingsProfileAvatarIcon" class="fa-solid fa-user"></i>
+                <span id="settingsProfileStatus" class="settings-profile-status" aria-hidden="true"></span>
               </div>
-
-              <h2 class="section-title">
-                ڕێکخستنەکان
-              </h2>
-
+              <div class="settings-profile-copy">
+                <div class="settings-profile-line">
+                  <span id="settingsProfileName" class="settings-profile-name">بەکارهێنەر</span>
+                  <span id="settingsPremiumBadge" class="settings-premium-badge"><i class="fa-solid fa-crown"></i> پریمیۆم</span>
+                </div>
+                <div id="settingsProfileUsername" class="settings-profile-username">@username</div>
+                <div id="settingsProfileEmail" class="settings-profile-email">email@example.com</div>
+              </div>
+              <i class="fa-solid fa-chevron-left settings-profile-arrow"></i>
             </div>
+          </button>
 
-          </div>
-
-
-          <div class="settings-page-card">
-
-            <div class="settings-page-icon">
-              <i class="fa-solid fa-sliders"></i>
+          <section class="settings-card">
+            <div class="settings-card-head">
+              <div class="settings-card-title-wrap">
+                <span class="settings-card-icon"><i class="fa-solid fa-palette"></i></span>
+                <div class="settings-card-title">
+                  <strong>ڕووکار و ڕەنگ</strong>
+                  <small>هەمان ١٢ ڕەنگی ئێستای پلاتفۆرم</small>
+                </div>
+              </div>
             </div>
+            <div id="settingsSiteThemes" class="settings-theme-grid"></div>
+          </section>
 
-
-            <div class="settings-page-copy">
-
-              <h3>
-                ڕێکخستنەکانی خوێندنگە
-              </h3>
-
-              <p>
-                لێرە دەتوانیت ڕووکاری پلاتفۆرم،
-                ڕووکاری خوێندن و هەڵبژاردەکانی
-                Smart Reading ڕێکبخەیت.
-              </p>
-
+          <section class="settings-card">
+            <div class="settings-card-head">
+              <div class="settings-card-title-wrap">
+                <span class="settings-card-icon"><i class="fa-solid fa-book-open-reader"></i></span>
+                <div class="settings-card-title">
+                  <strong>خوێنەری کتێب</strong>
+                  <small>قەبارەی فۆنت و ڕەنگی لاپەڕەی کتێب</small>
+                </div>
+              </div>
             </div>
+            <div class="settings-range-row">
+              <span class="settings-range-label">A−</span>
+              <input id="fontSize" class="settings-range" type="range" min="14" max="34" step="1" value="20">
+              <span class="settings-range-label">A+</span>
+            </div>
+            <div class="settings-reader-preview">
+              <span>پێشبینین</span>
+              <strong id="settingsFontValue">٢٠px</strong>
+            </div>
+            <div style="margin-top:12px" class="settings-card-title">
+              <strong style="font-size:9px">ڕەنگی لاپەڕە</strong>
+              <small>هەمان ڕەنگەکانی Reader</small>
+            </div>
+            <div id="settingsReaderThemes" class="settings-reader-grid" style="margin-top:8px"></div>
+          </section>
 
+          <section class="settings-card">
+            <div class="settings-card-head">
+              <div class="settings-card-title-wrap">
+                <span class="settings-card-icon"><i class="fa-solid fa-wand-magic-sparkles"></i></span>
+                <div class="settings-card-title">
+                  <strong>ژیریی دەستکرد و Smart Reading</strong>
+                  <small>کلیلی Gemini بۆ فەرهەنگ و دەرهێنانی دەق</small>
+                </div>
+              </div>
+            </div>
+            <div class="settings-api-row">
+              <div class="settings-api-field">
+                <i class="fa-solid fa-lock settings-api-lock"></i>
+                <input id="geminiApiKey" type="password" autocomplete="off" spellcheck="false" placeholder="AIzaSy..." dir="ltr">
+                <button id="settingsGeminiToggle" class="settings-api-toggle" type="button" aria-label="پیشاندان یان شاردنەوەی کلیل"><i class="fa-regular fa-eye"></i></button>
+              </div>
+              <span id="settingsGeminiStatus" class="settings-gemini-status">پەیوەست نییە</span>
+            </div>
+          </section>
 
-            <button
-              class="primary settings-page-button"
-              type="button"
-              data-action="settings"
-            >
+          <section class="settings-card">
+            <div class="settings-card-head">
+              <div class="settings-card-title-wrap">
+                <span class="settings-card-icon"><i class="fa-solid fa-music"></i></span>
+                <div class="settings-card-title">
+                  <strong>دەنگ و موزیک</strong>
+                  <small>ئاستی دەنگی موزیکی پاشبنەما</small>
+                </div>
+              </div>
+            </div>
+            <div class="settings-range-row">
+              <span class="settings-range-label"><i class="fa-solid fa-volume-high"></i></span>
+              <input id="settingsMusicVolume" class="settings-range" type="range" min="0" max="100" step="1" value="32">
+              <span id="settingsMusicValue" class="settings-range-value">٣٢٪</span>
+            </div>
+            <div class="settings-audio-presets">
+              <button class="settings-audio-pill active" type="button" data-audio-preset="32">ئارام</button>
+              <button class="settings-audio-pill" type="button" data-audio-preset="50">ناوەند</button>
+              <button class="settings-audio-pill" type="button" data-audio-preset="70">بەرز</button>
+              <button class="settings-audio-pill" type="button" data-audio-preset="0">بێدەنگ</button>
+            </div>
+          </section>
 
-              <i class="fa-solid fa-sliders"></i>
-
-              کردنەوەی ڕێکخستن
-
-            </button>
-
-          </div>
-
-
-          <div class="settings-shortcuts">
-
-
-            <button
-              class="settings-shortcut"
-              type="button"
-              data-action="settings"
-            >
-
-              <span class="settings-shortcut-icon">
-                <i class="fa-solid fa-palette"></i>
-              </span>
-
-              <span>
-
-                <strong>
-                  ڕووکاری پلاتفۆرم
-                </strong>
-
-                <small>
-                  ڕەنگ و دۆخی دیزاین
-                </small>
-
-              </span>
-
-              <i class="fa-solid fa-chevron-left"></i>
-
-            </button>
-
-
-            <button
-              class="settings-shortcut"
-              type="button"
-              data-action="settings"
-            >
-
-              <span class="settings-shortcut-icon">
-                <i class="fa-solid fa-book-open-reader"></i>
-              </span>
-
-              <span>
-
-                <strong>
-                  ڕێکخستنی خوێنەر
-                </strong>
-
-                <small>
-                  فۆنت و ڕووکاری لاپەڕە
-                </small>
-
-              </span>
-
-              <i class="fa-solid fa-chevron-left"></i>
-
-            </button>
-
-
-            <button
-              class="settings-shortcut"
-              type="button"
-              data-action="settings"
-            >
-
-              <span class="settings-shortcut-icon">
-                <i class="fa-solid fa-key"></i>
-              </span>
-
-              <span>
-
-                <strong>
-                  Smart Reading
-                </strong>
-
-                <small>
-                  ڕێکخستنی Gemini و AI
-                </small>
-
-              </span>
-
-              <i class="fa-solid fa-chevron-left"></i>
-
-            </button>
-
-
-          </div>
+          <section class="settings-card">
+            <div class="settings-card-head">
+              <div class="settings-card-title-wrap">
+                <span class="settings-card-icon"><i class="fa-solid fa-language"></i></span>
+                <div class="settings-card-title">
+                  <strong>وشەکان</strong>
+                  <small>وشە خەزنکراوەکان لە فەرهەنگ</small>
+                </div>
+              </div>
+            </div>
+            <div class="settings-danger-row">
+              <span class="settings-range-value">ژمارەی وشەکانت پارێزراوە.</span>
+              <button class="ghost" type="button" data-action="clear-vocab"><i class="fa-regular fa-trash-can"></i> سڕینەوە</button>
+            </div>
+          </section>
 
         </section>
-
       </section>
 
 
@@ -2429,300 +2213,6 @@
     </nav>
 
   </div>
-
-
-  <!-- =====================================================
-       SETTINGS BACKDROP
-       ===================================================== -->
-
-  <div
-    id="sheetBack"
-    class="back"
-  ></div>
-
-
-  <!-- =====================================================
-       SETTINGS SHEET
-       ===================================================== -->
-
-  <section
-    id="settingsSheet"
-    class="sheet"
-    role="dialog"
-    aria-modal="true"
-    aria-label="ڕێکخستن"
-  >
-
-    <div class="handle"></div>
-
-
-    <div class="section-head">
-
-      <div class="sheet-title-wrap">
-
-        <span class="sheet-icon">
-          <i class="fa-solid fa-sliders"></i>
-        </span>
-
-        <div>
-
-          <div class="section-kicker">
-            SETTINGS
-          </div>
-
-          <h3>
-            ڕێکخستن
-          </h3>
-
-        </div>
-
-      </div>
-
-
-      <button
-        class="icon-btn"
-        type="button"
-        data-action="close-settings"
-        aria-label="داخستن"
-      >
-
-        <i class="fa-solid fa-xmark"></i>
-
-      </button>
-
-    </div>
-
-
-    <!-- Gemini -->
-
-    <div class="field field-premium">
-
-      <label for="geminiApiKey">
-
-        کلیلی ژیریی دەستکرد
-
-        <span>
-          (Gemini API Key)
-        </span>
-
-      </label>
-
-
-      <div class="api-input-wrap">
-
-        <i class="fa-solid fa-key"></i>
-
-        <input
-          id="geminiApiKey"
-          type="password"
-          autocomplete="off"
-          spellcheck="false"
-          placeholder="AIzaSy..."
-          dir="ltr"
-        >
-
-      </div>
-
-
-      <small>
-        کلیلی Gemini بۆ Smart Reading و
-        دەرهێنانی دەق بەکار دێت.
-      </small>
-
-    </div>
-
-
-    <!-- Font size -->
-
-    <div class="field">
-
-      <label for="fontSize">
-        قەبارەی فۆنتی خوێنەر
-      </label>
-
-
-      <select id="fontSize">
-
-        <option value="18">
-          کەم — 18px
-        </option>
-
-        <option
-          value="20"
-          selected
-        >
-          ئاسایی — 20px
-        </option>
-
-        <option value="23">
-          گەورە — 23px
-        </option>
-
-        <option value="26">
-          زۆر گەورە — 26px
-        </option>
-
-      </select>
-
-    </div>
-
-
-    <!-- Platform colors -->
-
-    <div class="setting-accordion">
-
-      <button
-        class="setting-header"
-        type="button"
-        data-toggle-target="siteThemesWrap"
-      >
-
-        <div class="setting-header-left">
-
-          <span
-            id="siteThemeDot"
-            class="color-dot"
-          ></span>
-
-          <div>
-
-            <strong>
-              ڕەنگی پلاتفۆرم
-            </strong>
-
-            <span>
-              هەستی گشتیی Xwendnga
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <div class="setting-header-right">
-
-          <span
-            id="siteThemeLabel"
-            class="setting-sub-label"
-          >
-            شینی ئاسمانی
-          </span>
-
-          <i class="fa-solid fa-chevron-down arrow-icon"></i>
-
-        </div>
-
-      </button>
-
-
-      <div
-        id="siteThemesWrap"
-        class="setting-collapse hidden"
-      >
-
-        <div
-          id="siteThemes"
-          class="theme-grid"
-        ></div>
-
-      </div>
-
-    </div>
-
-
-    <!-- Reader colors -->
-
-    <div class="setting-accordion">
-
-      <button
-        class="setting-header"
-        type="button"
-        data-toggle-target="readerThemesWrap"
-      >
-
-        <div class="setting-header-left">
-
-          <span
-            id="readerThemeDot"
-            class="color-dot"
-          ></span>
-
-          <div>
-
-            <strong>
-              ڕەنگی لاپەڕە
-            </strong>
-
-            <span>
-              بۆ ژینگەی خوێندن
-            </span>
-
-          </div>
-
-        </div>
-
-
-        <div class="setting-header-right">
-
-          <span
-            id="readerThemeLabel"
-            class="setting-sub-label"
-          >
-            سپی
-          </span>
-
-          <i class="fa-solid fa-chevron-down arrow-icon"></i>
-
-        </div>
-
-      </button>
-
-
-      <div
-        id="readerThemesWrap"
-        class="setting-collapse hidden"
-      >
-
-        <div
-          id="readerThemes"
-          class="theme-grid"
-        ></div>
-
-      </div>
-
-    </div>
-
-
-    <!-- Settings actions -->
-
-    <div class="hero-actions sheet-actions">
-
-      <button
-        class="ghost"
-        type="button"
-        data-action="clear-vocab"
-      >
-
-        <i class="fa-regular fa-trash-can"></i>
-
-        سڕینەوەی وشەکان
-
-      </button>
-
-
-      <button
-        class="primary"
-        type="button"
-        data-action="close-settings"
-      >
-
-        تەواو
-
-      </button>
-
-    </div>
-
-  </section>
 
 
   <!-- =====================================================
@@ -3551,9 +3041,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script src="script.js?v=2.4"></script>
-  <script src="reader.js?v=2.4"></script>
-  <script src="app.js?v=2.4"></script>
+  <script src="script.js?v=2.5"></script>
+  <script src="reader.js?v=2.5"></script>
+  <script src="app.js?v=2.5"></script>
 
 </body>
 
