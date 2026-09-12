@@ -1454,11 +1454,16 @@
 
   function renderSiteThemes() {
     var box =
+      $("settingsSiteThemes") ||
       $("siteThemes");
 
     if (!box) {
       return;
     }
+
+    var modern =
+      box.id ===
+      "settingsSiteThemes";
 
     box.innerHTML =
       Object.keys(
@@ -1471,38 +1476,53 @@
                 key
               ];
 
+            if (modern) {
+              return (
+                '<button class="settings-theme-option ' +
+                (
+                  key === siteTheme
+                    ? "active"
+                    : ""
+                ) +
+                '" type="button" data-site-theme="' +
+                esc(key) +
+                '" title="' +
+                esc(theme.name) +
+                '">' +
+                '<span class="settings-theme-swatch" style="--theme-color:' +
+                theme.a +
+                '"></span>' +
+                '<span class="settings-theme-name">' +
+                esc(theme.name) +
+                '</span>' +
+                '</button>'
+              );
+            }
+
             return (
               '<button class="theme ' +
               (
-                key ===
-                siteTheme
+                key === siteTheme
                   ? "active"
                   : ""
               ) +
               '" data-site-theme="' +
-              esc(
-                key
-              ) +
+              esc(key) +
               '" title="' +
-              esc(
-                theme.name
-              ) +
+              esc(theme.name) +
               '" style="background:linear-gradient(145deg,' +
               theme.bg2 +
               "," +
               theme.bg +
               ')">' +
-
               '<i style="background:' +
               theme.a +
               '"></i>' +
-
               '<b style="background:linear-gradient(90deg,' +
               theme.a +
               "," +
               theme.b +
               ')"></b>' +
-
               "</button>"
             );
           }
@@ -1512,11 +1532,16 @@
 
   function renderReaderThemes() {
     var box =
+      $("settingsReaderThemes") ||
       $("readerThemes");
 
     if (!box) {
       return;
     }
+
+    var modern =
+      box.id ===
+      "settingsReaderThemes";
 
     box.innerHTML =
       Object.keys(
@@ -1529,34 +1554,48 @@
                 key
               ];
 
+            if (modern) {
+              return (
+                '<button class="settings-reader-option ' +
+                (
+                  key === readerTheme
+                    ? "active"
+                    : ""
+                ) +
+                '" type="button" data-set-reader-theme="' +
+                esc(key) +
+                '" title="' +
+                esc(theme.name) +
+                '">' +
+                '<span class="settings-reader-swatch" style="--reader-fg:' +
+                theme.fg + ';background:' + theme.bg + '"></span>' +
+                '<span class="settings-theme-name">' +
+                esc(theme.name) +
+                '</span>' +
+                '</button>'
+              );
+            }
+
             return (
               '<button class="theme ' +
               (
-                key ===
-                readerTheme
+                key === readerTheme
                   ? "active"
                   : ""
               ) +
               '" data-set-reader-theme="' +
-              esc(
-                key
-              ) +
+              esc(key) +
               '" title="' +
-              esc(
-                theme.name
-              ) +
+              esc(theme.name) +
               '" style="background:' +
               theme.bg +
               '">' +
-
               '<i style="background:' +
               theme.fg +
               '"></i>' +
-
               '<b style="background:' +
               theme.fg +
               '"></b>' +
-
               "</button>"
             );
           }
@@ -4355,6 +4394,47 @@
       });
   }
 
+
+  function setMusicVolume(
+    value
+  ) {
+    var next =
+      Number(value);
+
+    if (!Number.isFinite(next)) {
+      next =
+        0.32;
+    }
+
+    musicVolume =
+      Math.max(
+        0,
+        Math.min(
+          1,
+          next
+        )
+      );
+
+    try {
+      localStorage.setItem(
+        "kh_music_volume",
+        String(musicVolume)
+      );
+    } catch (error) {}
+
+    var audio =
+      $("audio");
+
+    if (audio) {
+      audio.volume =
+        musicVolume;
+    }
+  }
+
+  function getMusicVolume() {
+    return musicVolume;
+  }
+
   function loadTrack(
     index,
     autoplay
@@ -4630,14 +4710,18 @@
         name ===
         "settings"
       ) {
-        openSheet(
-          $("sheetBack"),
-          $("settingsSheet")
-        );
-
-        renderSiteThemes();
-        renderReaderThemes();
-        updateThemeBadges();
+        if (
+          window.XwendngaApp &&
+          typeof window.XwendngaApp.navigate ===
+            "function"
+        ) {
+          window.XwendngaApp.navigate(
+            "settings"
+          );
+        } else {
+          window.location.hash =
+            "#settings";
+        }
 
         return;
       }
@@ -4646,10 +4730,15 @@
         name ===
         "close-settings"
       ) {
-        closeSheet(
-          $("sheetBack"),
-          $("settingsSheet")
-        );
+        if (
+          window.XwendngaApp &&
+          typeof window.XwendngaApp.navigate ===
+            "function"
+        ) {
+          window.XwendngaApp.navigate(
+            "home"
+          );
+        }
 
         return;
       }
@@ -5232,6 +5321,7 @@
           );
         } catch (error) {}
 
+        renderReaderThemes();
         updateThemeBadges();
 
         if (
@@ -5558,6 +5648,8 @@
             this.value.trim()
           );
         } catch (error) {}
+
+        updateSettingsGeminiStatus();
       }
     );
   }
@@ -5574,12 +5666,19 @@
     fontSizeInput
   ) {
     fontSizeInput.addEventListener(
-      "change",
+      "input",
       function () {
+        var value =
+          Number(this.value);
+
+        if (!Number.isFinite(value)) {
+          return;
+        }
+
         try {
           localStorage.setItem(
             "kh_font",
-            this.value
+            String(value)
           );
         } catch (error) {}
 
@@ -5589,15 +5688,149 @@
             "function"
         ) {
           window.ReaderEngine.setFontSize(
-            Number(
-              this.value
-            )
+            value
           );
+        }
+
+        var label =
+          $("settingsFontValue");
+
+        if (label) {
+          label.textContent =
+            value +
+            "px";
         }
       }
     );
   }
 
+
+
+  /* =======================================================
+     MODERN SETTINGS CONTROLS
+     ======================================================= */
+
+  var settingsMusicRange =
+    $("settingsMusicVolume");
+
+  if (settingsMusicRange) {
+    settingsMusicRange.addEventListener(
+      "input",
+      function () {
+        var value =
+          Number(this.value) /
+          100;
+
+        setMusicVolume(
+          value
+        );
+
+        var label =
+          $("settingsMusicValue");
+
+        if (label) {
+          label.textContent =
+            Math.round(
+              musicVolume * 100
+            ) +
+            "٪";
+        }
+      }
+    );
+  }
+
+  document.addEventListener(
+    "click",
+    function (event) {
+      var preset =
+        event.target.closest(
+          "[data-audio-preset]"
+        );
+
+      if (!preset) {
+        return;
+      }
+
+      var value =
+        Number(
+          preset.getAttribute(
+            "data-audio-preset"
+          )
+        );
+
+      if (!Number.isFinite(value)) {
+        return;
+      }
+
+      setMusicVolume(
+        value / 100
+      );
+
+      var range =
+        $("settingsMusicVolume");
+      var label =
+        $("settingsMusicValue");
+
+      if (range) {
+        range.value =
+          String(value);
+      }
+
+      if (label) {
+        label.textContent =
+          value +
+          "٪";
+      }
+
+      document
+        .querySelectorAll(
+          "[data-audio-preset]"
+        )
+        .forEach(
+          function (button) {
+            button.classList.toggle(
+              "active",
+              Number(
+                button.getAttribute(
+                  "data-audio-preset"
+                )
+              ) === value
+            );
+          }
+        );
+    }
+  );
+
+  var geminiToggle =
+    $("settingsGeminiToggle");
+
+  if (geminiToggle) {
+    geminiToggle.addEventListener(
+      "click",
+      function () {
+        var input =
+          $("geminiApiKey");
+
+        if (!input) {
+          return;
+        }
+
+        var hidden =
+          input.type ===
+          "password";
+
+        input.type =
+          hidden
+            ? "text"
+            : "password";
+
+        this.innerHTML =
+          hidden
+            ? '<i class="fa-regular fa-eye-slash"></i>'
+            : '<i class="fa-regular fa-eye"></i>';
+      }
+    );
+  }
 
   /* =======================================================
      SHEET BACKDROPS
@@ -5685,6 +5918,7 @@
       renderTracks();
       updateTelegramBtn();
       renderLibraryModeControls();
+      renderSettingsPage();
 
       var route =
         event &&
@@ -5772,14 +6006,23 @@
   window.AppLib = {
     openSettings:
       function () {
-        openSheet(
-          $("sheetBack"),
-          $("settingsSheet")
-        );
+        if (
+          window.XwendngaApp &&
+          typeof window.XwendngaApp.navigate ===
+            "function"
+        ) {
+          window.XwendngaApp.navigate(
+            "settings"
+          );
+        } else {
+          window.location.hash =
+            "#settings";
+        }
 
-        renderSiteThemes();
-        renderReaderThemes();
-        updateThemeBadges();
+        window.setTimeout(
+          renderSettingsPage,
+          0
+        );
       },
 
     updateTelegram:
@@ -5799,6 +6042,15 @@
 
     renderProfile:
       renderProfile,
+
+    renderSettingsPage:
+      renderSettingsPage,
+
+    setMusicVolume:
+      setMusicVolume,
+
+    getMusicVolume:
+      getMusicVolume,
 
     dbPut:
       dbPut,
@@ -6475,6 +6727,191 @@
     }
   }
 
+
+  function getSettingsFontSize() {
+    var saved =
+      Number(
+        localStorage.getItem("kh_font") || 20
+      );
+
+    return Number.isFinite(saved)
+      ? Math.max(14, Math.min(34, saved))
+      : 20;
+  }
+
+  function updateSettingsGeminiStatus() {
+    var status =
+      $("settingsGeminiStatus");
+
+    if (!status) {
+      return;
+    }
+
+    var key =
+      (
+        localStorage.getItem("kh_gemini_key") || ""
+      ).trim();
+
+    status.classList.toggle(
+      "connected",
+      !!key
+    );
+
+    status.textContent =
+      key
+        ? "پەیوەستە"
+        : "پەیوەست نییە";
+  }
+
+  function renderSettingsPage() {
+    var page =
+      document.querySelector(
+        "[data-app-view='settings']"
+      );
+
+    if (!page) {
+      return;
+    }
+
+    var profile =
+      authState.profile || {};
+
+    var user =
+      authState.user;
+
+    var displayName =
+      String(
+        profile.display_name ||
+        profile.username ||
+        (user && user.email
+          ? user.email.split("@")[0]
+          : "بەکارهێنەر")
+      ).trim() ||
+      "بەکارهێنەر";
+
+    var username =
+      normalizeUsername(
+        profile.username ||
+        (user && user.user_metadata
+          ? user.user_metadata.username
+          : "")
+      );
+
+    var email =
+      user && user.email
+        ? user.email
+        : "";
+
+    var nameEl =
+      $("settingsProfileName");
+    var usernameEl =
+      $("settingsProfileUsername");
+    var emailEl =
+      $("settingsProfileEmail");
+    var premiumEl =
+      $("settingsPremiumBadge");
+    var avatar =
+      $("settingsProfileAvatar");
+    var avatarIcon =
+      $("settingsProfileAvatarIcon");
+
+    if (nameEl) {
+      nameEl.textContent =
+        displayName;
+    }
+
+    if (usernameEl) {
+      usernameEl.textContent =
+        username
+          ? "@" + username
+          : "@username";
+    }
+
+    if (emailEl) {
+      emailEl.textContent =
+        email ||
+        "ئیمەیل بەردەست نییە";
+      emailEl.title =
+        email || "";
+    }
+
+    if (premiumEl) {
+      premiumEl.classList.toggle(
+        "show",
+        authState.role === "premium" ||
+        authState.isAdmin
+      );
+    }
+
+    if (avatar) {
+      var avatarUrl =
+        String(
+          profile.avatar_url || ""
+        ).trim();
+
+      if (avatarUrl) {
+        avatar.src = avatarUrl;
+        avatar.classList.remove("hidden");
+        if (avatarIcon) {
+          avatarIcon.classList.add("hidden");
+        }
+      } else {
+        avatar.removeAttribute("src");
+        avatar.classList.add("hidden");
+        if (avatarIcon) {
+          avatarIcon.classList.remove("hidden");
+        }
+      }
+    }
+
+    var fontRange =
+      $("fontSize");
+    var fontValue =
+      getSettingsFontSize();
+
+    if (fontRange) {
+      fontRange.value =
+        String(fontValue);
+    }
+
+    var fontLabel =
+      $("settingsFontValue");
+
+    if (fontLabel) {
+      fontLabel.textContent =
+        fontValue +
+        "px";
+    }
+
+    var musicRange =
+      $("settingsMusicVolume");
+
+    if (musicRange) {
+      musicRange.value =
+        String(
+          Math.round(
+            musicVolume * 100
+          )
+        );
+    }
+
+    var musicLabel =
+      $("settingsMusicValue");
+
+    if (musicLabel) {
+      musicLabel.textContent =
+        Math.round(
+          musicVolume * 100
+        ) +
+        "٪";
+    }
+
+    renderSiteThemes();
+    renderReaderThemes();
+    updateThemeBadges();
+    updateSettingsGeminiStatus();
+  }
+
   function updateAuthUI() {
     var ownerButtons = document.querySelectorAll("[data-action='owner-panel']");
     ownerButtons.forEach(function (button) {
@@ -6482,6 +6919,7 @@
     });
 
     renderProfile();
+    renderSettingsPage();
 
     var profileButton = document.querySelector(".profile-action");
     if (profileButton) {
@@ -6815,6 +7253,7 @@
   }
 
   window.renderProfile = renderProfile;
+  window.renderSettingsPage = renderSettingsPage;
 
   /* =======================================================
      INIT
@@ -6864,6 +7303,7 @@
 
     renderReaderThemes();
     updateThemeBadges();
+    renderSettingsPage();
 
     renderVocab();
     renderTracks();
