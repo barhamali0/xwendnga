@@ -7551,6 +7551,8 @@
         actions += '<button class="icon-btn" type="button" data-admin-music-delete="' + esc(track.id) + '" title="سڕینەوە"><i class="fa-regular fa-trash-can"></i></button>';
         return '<div class="owner-book-row"><div class="owner-book-main"><strong>' + esc(track.name || "موزیک") + '</strong><small>' + esc(track.artist || "") + ' · ' + statusText + '</small></div><div class="owner-book-actions">' + actions + '</div></div>';
       }).join("") : '<div class="empty" style="padding:14px">هیچ موزیکێکی چاوەڕوان نییە.</div>');
+
+    return Promise.resolve();
   }
 
   function loadAdminUsers() {
