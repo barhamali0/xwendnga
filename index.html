@@ -2408,6 +2408,183 @@
 
 
   <!-- =====================================================
+       ADD BOOK BACKDROP
+       ===================================================== -->
+
+  <div
+    id="addBookBack"
+    class="back"
+  ></div>
+
+
+  <!-- =====================================================
+       ADD BOOK SHEET
+       ===================================================== -->
+
+  <section
+    id="addBookSheet"
+    class="sheet add-book-sheet"
+    role="dialog"
+    aria-modal="true"
+    aria-label="زیادکردنی کتێب"
+    aria-hidden="true"
+  >
+
+    <div class="handle"></div>
+
+    <div class="section-head">
+
+      <div class="sheet-title-wrap">
+
+        <span class="sheet-icon">
+          <i class="fa-solid fa-book-medical"></i>
+        </span>
+
+        <div>
+          <div class="section-kicker">کتێبخانە</div>
+          <h3>زیادکردنی کتێب</h3>
+        </div>
+
+      </div>
+
+      <button
+        class="icon-btn"
+        type="button"
+        data-action="close-add-book"
+        aria-label="داخستن"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+
+    </div>
+
+    <p class="sheet-description add-book-description">
+      زانیارییەکانی کتێبەکە پڕ بکەرەوە تا لە کتێبخانەی گشتی بە شێوەی ڕێک و جوان پیشان بدرێت.
+    </p>
+
+    <form id="addBookForm" class="add-book-form">
+
+      <div class="add-book-file-grid">
+
+        <label class="add-book-file-card">
+          <span class="add-book-file-icon"><i class="fa-solid fa-file-pdf"></i></span>
+          <span class="add-book-file-copy">
+            <strong>فایلی PDF</strong>
+            <small id="bookPdfName">PDF ـەکە هەڵبژێرە</small>
+          </span>
+          <input
+            id="bookPdfInput"
+            type="file"
+            accept="application/pdf"
+            required
+          >
+        </label>
+
+        <label class="add-book-cover-card">
+          <span id="bookCoverPreview" class="add-book-cover-preview">
+            <i class="fa-solid fa-image"></i>
+          </span>
+          <span class="add-book-file-copy">
+            <strong>بەرگی کتێب</strong>
+            <small id="bookCoverName">ئارەزوومەندانەیە</small>
+          </span>
+          <input
+            id="bookCoverInput"
+            type="file"
+            accept="image/*"
+          >
+        </label>
+
+      </div>
+
+      <label class="add-book-field">
+        <span>ناوی کتێب</span>
+        <input
+          id="bookTitleInput"
+          type="text"
+          maxlength="180"
+          autocomplete="off"
+          required
+          placeholder="ناوی کتێب بنووسە"
+        >
+      </label>
+
+      <label class="add-book-field">
+        <span>نووسەر</span>
+        <input
+          id="bookAuthorInput"
+          type="text"
+          maxlength="140"
+          autocomplete="off"
+          placeholder="ناوی نووسەر"
+        >
+      </label>
+
+      <div class="add-book-two-col">
+
+        <label class="add-book-field">
+          <span>جۆری کتێب</span>
+          <select id="bookCategoryInput" required>
+            <option value="گشتی">گشتی</option>
+            <option value="زمان">زمان</option>
+            <option value="ئەدەب">ئەدەب</option>
+            <option value="مێژوو">مێژوو</option>
+            <option value="زانست">زانست</option>
+            <option value="فەلسەفە">فەلسەفە</option>
+            <option value="ئایین">ئایین</option>
+            <option value="ئینگلیزی">ئینگلیزی</option>
+          </select>
+        </label>
+
+        <label class="add-book-field">
+          <span>زمانی کتێب</span>
+          <select id="bookLanguageInput" required>
+            <option value="کوردی">کوردی</option>
+            <option value="ئینگلیزی">ئینگلیزی</option>
+            <option value="عەرەبی">عەرەبی</option>
+            <option value="فارسی">فارسی</option>
+          </select>
+        </label>
+
+      </div>
+
+      <label class="add-book-field">
+        <span>کورتەیەک دەربارەی کتێبەکە</span>
+        <textarea
+          id="bookDescriptionInput"
+          maxlength="800"
+          rows="4"
+          placeholder="پوختەیەکی کورت بنووسە..."
+        ></textarea>
+      </label>
+
+      <div id="addBookFormMessage" class="add-book-form-message" role="status" aria-live="polite"></div>
+
+      <div class="add-book-actions">
+        <button
+          class="primary"
+          id="addBookSubmit"
+          type="submit"
+        >
+          <i class="fa-solid fa-cloud-arrow-up"></i>
+          ناردنی کتێب
+        </button>
+
+        <button
+          class="ghost"
+          type="button"
+          data-action="close-add-book"
+        >
+          پاشگەزبوونەوە
+        </button>
+      </div>
+
+    </form>
+
+  </section>
+
+
+  <!-- =====================================================
        WORD BACKDROP
        ===================================================== -->
 
@@ -3041,9 +3218,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script src="script.js?v=2.5"></script>
-  <script src="reader.js?v=2.5"></script>
-  <script src="app.js?v=2.5"></script>
+  <script src="script.js?v=2.6"></script>
+  <script src="reader.js?v=2.6"></script>
+  <script src="app.js?v=2.6"></script>
 
 </body>
 
