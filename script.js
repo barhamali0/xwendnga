@@ -100,6 +100,31 @@
       );
     }
 
+    var fileType =
+      String(file.type || "").toLowerCase();
+
+    if (
+      !fileType ||
+      fileType === "application/octet-stream"
+    ) {
+      var fileName = String(file.name || "").toLowerCase();
+      var extensionMatch =
+        fileName.match(
+          /\.(jpe?g|png|webp|gif)(?:\.\d+)?$/i
+        );
+
+      if (extensionMatch) {
+        var extension =
+          extensionMatch[1].toLowerCase();
+
+        fileType =
+          extension === "jpg" ||
+          extension === "jpeg"
+            ? "image/jpeg"
+            : "image/" + extension;
+      }
+    }
+
     return supabaseClient.storage
       .from(bucket)
       .upload(
@@ -111,10 +136,8 @@
           upsert:
             false,
           contentType:
-            file &&
-            file.type
-              ? file.type
-              : undefined
+            fileType ||
+            undefined
         }
       )
       .then(
@@ -2234,9 +2257,37 @@
       setAddBookMessage("ناوی کتێب پێویستە.", "error");
       return;
     }
-    if (coverFile && !String(coverFile.type || "").startsWith("image/")) {
-      setAddBookMessage("فایلی بەرگ دەبێت وێنە بێت.", "error");
-      return;
+    if (coverFile) {
+      var coverType =
+        String(coverFile.type || "").toLowerCase();
+
+      if (
+        !coverType ||
+        coverType === "application/octet-stream"
+      ) {
+        var coverName =
+          String(coverFile.name || "").toLowerCase();
+        var coverExtensionMatch =
+          coverName.match(
+            /\.(jpe?g|png|webp|gif)(?:\.\d+)?$/i
+          );
+
+        if (coverExtensionMatch) {
+          var coverExtension =
+            coverExtensionMatch[1].toLowerCase();
+
+          coverType =
+            coverExtension === "jpg" ||
+            coverExtension === "jpeg"
+              ? "image/jpeg"
+              : "image/" + coverExtension;
+        }
+      }
+
+      if (!coverType.startsWith("image/")) {
+        setAddBookMessage("فایلی بەرگ دەبێت وێنە بێت.", "error");
+        return;
+      }
     }
 
     if (submitButton) {
@@ -3052,7 +3103,7 @@
 
               '<div class="cover">' +
               (book.cover_url
-                ? '<img class="book-cover-image" src="' + esc(book.cover_url) + '" alt="" loading="lazy" onerror="this.remove()">'
+                ? '<img class="book-cover-image" src="' + esc(book.cover_url) + '" alt="" loading="lazy" onerror="this.onerror=null;this.style.display=\'none\'">'
                 : '') +
               '<i class="fa-solid fa-book-bookmark"></i>' +
               "</div>" +
