@@ -210,6 +210,78 @@
     };
   }
 
+  function loadOwnerProfiles(ownerIds) {
+    var ids = Array.from(
+      new Set(
+        (ownerIds || [])
+          .filter(function (id) {
+            return !!id;
+          })
+          .map(function (id) {
+            return String(id);
+          })
+      )
+    );
+
+    if (!ids.length || !supabaseReady()) {
+      return Promise.resolve({});
+    }
+
+    return supabaseClient
+      .from("profiles")
+      .select("id,display_name,username,avatar_url")
+      .in("id", ids)
+      .then(function (result) {
+        if (result.error) {
+          console.warn("loadOwnerProfiles:", result.error);
+          return {};
+        }
+
+        var map = {};
+
+        (result.data || []).forEach(function (profile) {
+          if (profile && profile.id) {
+            map[String(profile.id)] = profile;
+          }
+        });
+
+        return map;
+      });
+  }
+
+  function attachOwnerProfiles(bookItems) {
+    var items = Array.isArray(bookItems) ? bookItems : [];
+    var ownerIds = items.map(function (book) {
+      return book && book.ownerId ? book.ownerId : null;
+    });
+
+    return loadOwnerProfiles(ownerIds)
+      .then(function (profilesMap) {
+        items.forEach(function (book) {
+          if (!book) return;
+
+          var ownerId = book.ownerId ? String(book.ownerId) : "";
+
+          book.ownerProfile =
+            (ownerId && profilesMap[ownerId])
+              ? profilesMap[ownerId]
+              : (
+                  authState.user &&
+                  ownerId === String(authState.user.id) &&
+                  authState.profile
+                    ? {
+                        display_name: authState.profile.display_name || "",
+                        username: authState.profile.username || "",
+                        avatar_url: authState.profile.avatar_url || ""
+                      }
+                    : null
+                );
+        });
+
+        return items;
+      });
+  }
+
   function loadRemoteBooks() {
     if (!supabaseReady()) {
       return Promise.resolve([]);
@@ -218,7 +290,7 @@
     return supabaseClient
       .from("books")
       .select(
-        "id,created_at,title,author,language,category,description,pages,cover_url,pdf_url,keywords,owner_id,status,rejection_reason,reviewed_by,reviewed_at,profiles:profiles!books_owner_id_fkey(display_name,username,avatar_url)"
+        "id,created_at,title,author,language,category,description,pages,cover_url,pdf_url,keywords,owner_id,status,rejection_reason,reviewed_by,reviewed_at"
       )
       .order("created_at", { ascending: false })
       .then(function (result) {
@@ -226,9 +298,11 @@
           throw result.error;
         }
 
-        return (result.data || [])
+        var items = (result.data || [])
           .map(mapRemoteBook)
           .filter(Boolean);
+
+        return attachOwnerProfiles(items);
       });
   }
 
@@ -254,14 +328,19 @@
         owner_id: authState.user ? authState.user.id : null
       })
       .select(
-        "id,created_at,title,author,language,category,description,pages,cover_url,pdf_url,keywords,owner_id,status,rejection_reason,reviewed_by,reviewed_at,profiles:profiles!books_owner_id_fkey(display_name,username,avatar_url)"
+        "id,created_at,title,author,language,category,description,pages,cover_url,pdf_url,keywords,owner_id,status,rejection_reason,reviewed_by,reviewed_at"
       )
       .single()
       .then(function (result) {
         if (result.error) {
           throw result.error;
         }
-        return mapRemoteBook(result.data);
+
+        return attachOwnerProfiles([
+          mapRemoteBook(result.data)
+        ]).then(function (items) {
+          return items[0] || mapRemoteBook(result.data);
+        });
       });
   }
 
@@ -2121,10 +2200,8 @@
     var uploadedPdfPath = "";
     var uploadedCoverPath = "";
 
-    getFreshProfile()
-      .then(function (profile) {
-        if (!profile) throw new Error("پڕۆفایل بەردەست نییە");
-
+    Promise.resolve(authState.profile || null)
+      .then(function () {
         var uid = authState.user.id;
         var safePdfName = pdfFile.name
           .replace(/[^a-zA-Z0-9._-]+/g, "-")
@@ -6571,56 +6648,88 @@
 
   function getFreshProfile() {
     if (!authState.user) return Promise.resolve(null);
+
+    var metadata = authState.user.user_metadata || {};
+
+    function applyProfile(profileData) {
+      var profile = profileData || {};
+      authState.profile = profile;
+
+      var profileRole = profile.role || "user";
+      var premiumActive =
+        profileRole === "premium" &&
+        (
+          !profile.premium_until ||
+          new Date(profile.premium_until).getTime() > Date.now()
+        );
+
+      authState.role =
+        profileRole === "admin"
+          ? "admin"
+          : premiumActive
+            ? "premium"
+            : "user";
+
+      authState.isAdmin = authState.role === "admin";
+      updateAuthUI();
+      return profile;
+    }
+
     return supabaseClient
       .from("profiles")
       .select("id,role,premium_until,book_limit,music_limit,is_disabled,created_at,updated_at,display_name,username,avatar_url,phone,birth_date,gender")
       .eq("id", authState.user.id)
       .single()
       .then(function (result) {
-        if (result.error) throw result.error;
+        if (result.error) {
+          throw result.error;
+        }
 
-        authState.profile = result.data;
+        var profile = result.data || {};
+        var metadataUsername = normalizeUsername(metadata.username || "");
 
-        var authMetadata = authState.user.user_metadata || {};
-        var metadataUsername = normalizeUsername(authMetadata.username || "");
-        if (!authState.profile.username && metadataUsername) {
+        if (!profile.username && metadataUsername) {
           return supabaseClient
             .from("profiles")
             .update({ username: metadataUsername })
             .eq("id", authState.user.id)
             .then(function () {
-              authState.profile.username = metadataUsername;
-              return result;
+              profile.username = metadataUsername;
+              return profile;
             })
             .catch(function () {
-              return result;
+              return profile;
             });
         }
 
-        return result;
+        return profile;
       })
-      .then(function (result) {
-        var profileData = result.data || authState.profile || {};
-        authState.profile = profileData;
+      .then(function (profile) {
+        return applyProfile(profile);
+      })
+      .catch(function (error) {
+        console.warn("getFreshProfile fallback:", error);
 
-        var profileRole = profileData.role || "user";
-        var premiumActive =
-          profileRole === "premium" &&
-          (
-            !result.data.premium_until ||
-            new Date(result.data.premium_until).getTime() > Date.now()
-          );
+        var fallbackProfile = Object.assign(
+          {},
+          authState.profile || {},
+          {
+            id: authState.user.id,
+            display_name: metadata.display_name || (authState.profile && authState.profile.display_name) || "",
+            username: normalizeUsername(metadata.username || (authState.profile && authState.profile.username) || ""),
+            avatar_url: metadata.avatar_url || (authState.profile && authState.profile.avatar_url) || "",
+            phone: metadata.phone || (authState.profile && authState.profile.phone) || "",
+            birth_date: metadata.birth_date || (authState.profile && authState.profile.birth_date) || "",
+            gender: metadata.gender || (authState.profile && authState.profile.gender) || "",
+            role: (authState.profile && authState.profile.role) || metadata.role || "user",
+            premium_until: (authState.profile && authState.profile.premium_until) || metadata.premium_until || null,
+            book_limit: (authState.profile && authState.profile.book_limit) || metadata.book_limit || 3,
+            music_limit: (authState.profile && authState.profile.music_limit) || metadata.music_limit || 5,
+            is_disabled: false
+          }
+        );
 
-        authState.role =
-          profileRole === "admin"
-            ? "admin"
-            : premiumActive
-              ? "premium"
-              : "user";
-
-        authState.isAdmin = authState.role === "admin";
-        updateAuthUI();
-        return result.data;
+        return applyProfile(fallbackProfile);
       });
   }
 
@@ -6889,7 +6998,24 @@
           .eq("id", authState.user.id)
           .then(function (result) {
             if (result.error) throw result.error;
-            return patch;
+
+            return supabaseClient.auth
+              .updateUser({
+                data: {
+                  display_name: patch.display_name || null,
+                  username: patch.username || null,
+                  avatar_url: patch.avatar_url || null,
+                  phone: patch.phone || null,
+                  birth_date: patch.birth_date || null,
+                  gender: patch.gender || null
+                }
+              })
+              .catch(function (metadataError) {
+                console.warn("saveProfileEdits metadata:", metadataError);
+              })
+              .then(function () {
+                return patch;
+              });
           });
       })
       .then(function (patch) {
