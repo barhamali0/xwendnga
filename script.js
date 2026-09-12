@@ -4474,6 +4474,16 @@
         return;
       }
 
+      if (name === "edit-profile") {
+        openProfileEdit();
+        return;
+      }
+
+      if (name === "close-profile-edit") {
+        closeProfileEdit();
+        return;
+      }
+
       if (name === "auth-close") {
         closeAuthModal();
         return;
@@ -5878,6 +5888,27 @@
     $("xwAuthBackdrop").addEventListener("click", closeAuthModal);
   }
 
+  function normalizeUsername(value) {
+    return String(value || "")
+      .trim()
+      .replace(/^@+/, "")
+      .trim();
+  }
+
+  function validateUsername(value) {
+    var username = normalizeUsername(value);
+    if (!username) {
+      return "تکایە ناوی بەکارهێنەر بنووسە.";
+    }
+    if (/\s/u.test(username)) {
+      return "ناوی بەکارهێنەر نابێت بۆشایی هەبێت.";
+    }
+    if (username.length < 2 || username.length > 30) {
+      return "ناوی بەکارهێنەر دەبێت لە 2 تا 30 پیت بێت.";
+    }
+    return "";
+  }
+
   function openAuthModal(mode, message) {
     injectAuthUI();
     var title = $("xwAuthTitle");
@@ -5890,6 +5921,9 @@
 
     fields.innerHTML =
       '<form id="xwAuthForm" style="display:grid;gap:10px">' +
+      (mode === "signup"
+        ? '<label style="display:grid;gap:5px;color:#9fb1c5;font-size:9px">ناوی بەکارهێنەر<input id="xwAuthUsername" type="text" autocomplete="username" placeholder="@username" required style="min-height:46px;border:1px solid rgba(255,255,255,.10);border-radius:13px;background:#0b1727;color:#fff;padding:0 12px"></label>'
+        : '') +
       '<label style="display:grid;gap:5px;color:#9fb1c5;font-size:9px">ئیمەیڵ<input id="xwAuthEmail" type="email" autocomplete="email" required style="min-height:46px;border:1px solid rgba(255,255,255,.10);border-radius:13px;background:#0b1727;color:#fff;padding:0 12px"></label>' +
       '<label style="display:grid;gap:5px;color:#9fb1c5;font-size:9px">وشەی نهێنی<input id="xwAuthPassword" type="password" autocomplete="current-password" minlength="6" required style="min-height:46px;border:1px solid rgba(255,255,255,.10);border-radius:13px;background:#0b1727;color:#fff;padding:0 12px"></label>' +
       '<button class="primary" type="submit" style="min-height:48px">' + (mode === "signup" ? "دروستکردنی هەژمار" : "چوونەژوورەوە") + '</button>' +
@@ -5903,8 +5937,17 @@
       event.preventDefault();
       var email = $("xwAuthEmail").value.trim();
       var password = $("xwAuthPassword").value;
-      if (mode === "signup") signUp(email, password);
-      else signIn(email, password);
+      if (mode === "signup") {
+        var username = normalizeUsername($("xwAuthUsername").value);
+        var usernameError = validateUsername(username);
+        if (usernameError) {
+          authMessage(usernameError);
+          return;
+        }
+        signUp(email, password, username);
+      } else {
+        signIn(email, password);
+      }
     });
 
     var modeButton = fields.querySelector("[data-auth-mode]");
@@ -5944,25 +5987,58 @@
       });
   }
 
-  function signUp(email, password) {
+  function signUp(email, password, username) {
     if (!supabaseReady()) {
       authMessage("Supabase پەیوەست نییە.");
       return;
     }
+
+    var cleanUsername = normalizeUsername(username);
+    var usernameError = validateUsername(cleanUsername);
+    if (usernameError) {
+      authMessage(usernameError);
+      return;
+    }
+
     authMessage("خەریکی دروستکردنی هەژمارە...");
     supabaseClient.auth.signUp({
       email: email,
-      password: password
+      password: password,
+      options: {
+        data: {
+          username: cleanUsername
+        }
+      }
     }).then(function (result) {
       if (result.error) throw result.error;
-      if (result.data && result.data.session) {
-        closeAuthModal();
-        return refreshAuthState();
+
+      var userId = result.data && result.data.user
+        ? result.data.user.id
+        : null;
+
+      if (result.data && result.data.session && userId) {
+        return supabaseClient
+          .from("profiles")
+          .update({
+            username: cleanUsername
+          })
+          .eq("id", userId)
+          .then(function (profileResult) {
+            if (profileResult.error) throw profileResult.error;
+            closeAuthModal();
+            return refreshAuthState();
+          });
       }
-      authMessage(AUTH_RECOVERY_NOTICE);
+
+      authMessage(AUTH_RECOVERY_NOTICE + "\nناوی بەکارهێنەر: @" + cleanUsername);
     }).catch(function (error) {
       console.error("signUp:", error);
-      authMessage("دروستکردنی هەژمار سەرکەوتوو نەبوو: " + String(error.message || "هەڵە").slice(0, 140));
+      var message = String(error.message || "هەڵە");
+      if (error && (error.code === "23505" || message.toLowerCase().indexOf("duplicate") >= 0)) {
+        authMessage("ئەم ناوی بەکارهێنەرە پێشتر بەکارهاتووە. ناوێکی تر هەڵبژێرە.");
+        return;
+      }
+      authMessage("دروستکردنی هەژمار سەرکەوتوو نەبوو: " + message.slice(0, 140));
     });
   }
 
@@ -5981,14 +6057,37 @@
     if (!authState.user) return Promise.resolve(null);
     return supabaseClient
       .from("profiles")
-      .select("id,role,premium_until,book_limit,music_limit,is_disabled,created_at,updated_at")
+      .select("id,role,premium_until,book_limit,music_limit,is_disabled,created_at,updated_at,display_name,username,avatar_url,phone,birth_date,gender")
       .eq("id", authState.user.id)
       .single()
       .then(function (result) {
         if (result.error) throw result.error;
+
         authState.profile = result.data;
 
-        var profileRole = result.data.role || "user";
+        var authMetadata = authState.user.user_metadata || {};
+        var metadataUsername = normalizeUsername(authMetadata.username || "");
+        if (!authState.profile.username && metadataUsername) {
+          return supabaseClient
+            .from("profiles")
+            .update({ username: metadataUsername })
+            .eq("id", authState.user.id)
+            .then(function () {
+              authState.profile.username = metadataUsername;
+              return result;
+            })
+            .catch(function () {
+              return result;
+            });
+        }
+
+        return result;
+      })
+      .then(function (result) {
+        var profileData = result.data || authState.profile || {};
+        authState.profile = profileData;
+
+        var profileRole = profileData.role || "user";
         var premiumActive =
           profileRole === "premium" &&
           (
@@ -6105,6 +6204,195 @@
     return Promise.resolve(false);
   }
 
+  function injectProfileEditUI() {
+    if ($("profileEditSheet")) return;
+
+    var wrap = document.createElement("div");
+    wrap.innerHTML =
+      '<div id="profileEditBack" class="back"></div>' +
+      '<section id="profileEditSheet" class="sheet profile-edit-sheet" role="dialog" aria-modal="true" aria-label="دەستکاریی پڕۆفایل">' +
+        '<div class="handle"></div>' +
+        '<div class="profile-edit-head">' +
+          '<div class="sheet-title-wrap">' +
+            '<span class="sheet-icon"><i class="fa-solid fa-user-pen"></i></span>' +
+            '<div><div class="section-kicker">PROFILE</div><h3>دەستکاریی پڕۆفایل</h3></div>' +
+          '</div>' +
+          '<button class="icon-btn" type="button" data-action="close-profile-edit"><i class="fa-solid fa-xmark"></i></button>' +
+        '</div>' +
+        '<div id="profileEditMessage" class="sheet-description"></div>' +
+        '<form id="profileEditForm" class="profile-edit-grid">' +
+          '<div class="profile-edit-avatar-row">' +
+            '<div id="profileEditAvatar" class="profile-edit-avatar"><i class="fa-solid fa-user"></i></div>' +
+            '<div class="profile-edit-grid">' +
+              '<label class="profile-edit-field"><span>وێنەی پڕۆفایل</span><input id="profileAvatarInput" type="file" accept="image/*"></label>' +
+              '<p class="profile-edit-help">وێنەیەکی خۆت هەڵبژێرە بۆ پڕۆفایل.</p>' +
+            '</div>' +
+          '</div>' +
+          '<label class="profile-edit-field"><span>ناو</span><input id="profileDisplayNameInput" type="text" autocomplete="name" maxlength="80" placeholder="ناوی تەواوی کەسەکە"></label>' +
+          '<label class="profile-edit-field"><span>ناوی بەکارهێنەر</span><input id="profileUsernameInput" type="text" autocomplete="username" maxlength="30" placeholder="@username" required></label>' +
+          '<label class="profile-edit-field"><span>ئیمەیڵ</span><input id="profileEmailInput" type="email" readonly></label>' +
+          '<label class="profile-edit-field"><span>ژمارەی مۆبایل</span><input id="profilePhoneInput" type="tel" autocomplete="tel" maxlength="30" placeholder="ئارەزوومەندانە"></label>' +
+          '<label class="profile-edit-field"><span>ڕۆژی لەدایکبوون</span><input id="profileBirthDateInput" type="date"></label>' +
+          '<label class="profile-edit-field"><span>ڕەگەز</span><select id="profileGenderInput"><option value="">دیاری نەکراوە</option><option value="نێر">نێر</option><option value="مێ">مێ</option></select></label>' +
+          '<div class="profile-edit-actions">' +
+            '<button class="ghost" type="button" data-action="close-profile-edit">پاشگەزبوونەوە</button>' +
+            '<button class="primary" type="submit">پاشەکەوتکردن</button>' +
+          '</div>' +
+        '</form>' +
+      '</section>';
+
+    while (wrap.firstChild) {
+      document.body.appendChild(wrap.firstChild);
+    }
+
+    var input = $("profileAvatarInput");
+    if (input) {
+      input.addEventListener("change", function () {
+        var file = input.files && input.files[0];
+        var preview = $("profileEditAvatar");
+        if (!file || !preview) return;
+        if (window.FileReader) {
+          var reader = new FileReader();
+          reader.onload = function () {
+            preview.innerHTML = '<img src="' + esc(String(reader.result || "")) + '" alt="">';
+          };
+          reader.readAsDataURL(file);
+        }
+      });
+    }
+
+    var form = $("profileEditForm");
+    if (form) {
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        saveProfileEdits();
+      });
+    }
+
+    var back = $("profileEditBack");
+    if (back) {
+      back.addEventListener("click", function () {
+        closeSheet($("profileEditBack"), $("profileEditSheet"));
+      });
+    }
+  }
+
+  function renderProfileEditValues() {
+    injectProfileEditUI();
+
+    var profile = authState.profile || {};
+    var user = authState.user;
+    if (!user) return;
+
+    var avatar = $("profileEditAvatar");
+    if (avatar) {
+      avatar.innerHTML = profile.avatar_url
+        ? '<img src="' + esc(profile.avatar_url) + '" alt="">'
+        : '<i class="fa-solid fa-user"></i>';
+    }
+
+    if ($("profileDisplayNameInput")) $("profileDisplayNameInput").value = profile.display_name || "";
+    if ($("profileUsernameInput")) $("profileUsernameInput").value = profile.username ? "@" + normalizeUsername(profile.username) : "";
+    if ($("profileEmailInput")) $("profileEmailInput").value = user.email || "";
+    if ($("profilePhoneInput")) $("profilePhoneInput").value = profile.phone || "";
+    if ($("profileBirthDateInput")) $("profileBirthDateInput").value = profile.birth_date || "";
+    if ($("profileGenderInput")) $("profileGenderInput").value = profile.gender || "";
+    if ($("profileEditMessage")) $("profileEditMessage").textContent = "";
+    if ($("profileAvatarInput")) $("profileAvatarInput").value = "";
+  }
+
+  function openProfileEdit() {
+    if (!authState.user) {
+      openAuthModal("login", "سەرەتا بچۆ ژوورەوە.");
+      return;
+    }
+
+    renderProfileEditValues();
+    openSheet($("profileEditBack"), $("profileEditSheet"));
+  }
+
+  function closeProfileEdit() {
+    closeSheet($("profileEditBack"), $("profileEditSheet"));
+  }
+
+  function setProfileEditMessage(text) {
+    var el = $("profileEditMessage");
+    if (el) el.textContent = text || "";
+  }
+
+  function saveProfileEdits() {
+    if (!authState.user || !supabaseReady()) return;
+
+    var cleanUsername = normalizeUsername($("profileUsernameInput").value);
+    var usernameError = validateUsername(cleanUsername);
+    if (usernameError) {
+      setProfileEditMessage(usernameError);
+      return;
+    }
+
+    var displayName = String($("profileDisplayNameInput").value || "").trim();
+    var phone = String($("profilePhoneInput").value || "").trim();
+    var birthDate = String($("profileBirthDateInput").value || "").trim();
+    var gender = String($("profileGenderInput").value || "").trim();
+    var avatarInput = $("profileAvatarInput");
+    var file = avatarInput && avatarInput.files ? avatarInput.files[0] : null;
+
+    setProfileEditMessage("خەریکی پاشەکەوتکردنی زانیارییەکانە...");
+
+    var oldAvatarUrl = authState.profile && authState.profile.avatar_url
+      ? authState.profile.avatar_url
+      : "";
+
+    var avatarPromise = Promise.resolve(oldAvatarUrl);
+
+    if (file) {
+      var safeExtension = (String(file.name || "").split(".").pop() || "jpg")
+        .replace(/[^a-zA-Z0-9]/g, "")
+        .toLowerCase() || "jpg";
+      var path = authState.user.id + "/" + Date.now() + "-" + Math.random().toString(36).slice(2, 10) + "." + safeExtension;
+
+      avatarPromise = uploadToStorage("avatars", path, file).then(function (result) {
+        return result.url || "";
+      });
+    }
+
+    avatarPromise
+      .then(function (avatarUrl) {
+        var patch = {
+          display_name: displayName || null,
+          username: cleanUsername,
+          avatar_url: avatarUrl || oldAvatarUrl || null,
+          phone: phone || null,
+          birth_date: birthDate || null,
+          gender: gender || null
+        };
+
+        return supabaseClient
+          .from("profiles")
+          .update(patch)
+          .eq("id", authState.user.id)
+          .then(function (result) {
+            if (result.error) throw result.error;
+            return patch;
+          });
+      })
+      .then(function (patch) {
+        authState.profile = Object.assign({}, authState.profile || {}, patch);
+        closeProfileEdit();
+        renderProfile();
+        toast("پڕۆفایل پاشەکەوت کرا");
+      })
+      .catch(function (error) {
+        console.error("saveProfileEdits:", error);
+        var message = String(error && error.message || "هەڵە");
+        if (error && (error.code === "23505" || message.toLowerCase().indexOf("duplicate") >= 0)) {
+          setProfileEditMessage("ئەم ناوی بەکارهێنەرە پێشتر بەکارهاتووە.");
+          return;
+        }
+        setProfileEditMessage("پاشەکەوتکردن سەرکەوتوو نەبوو: " + message.slice(0, 120));
+      });
+  }
+
   function renderProfile() {
     var page = document.querySelector("[data-app-view='profile'] .profile-page");
     if (!page) return;
@@ -6117,18 +6405,21 @@
       return;
     }
 
+    var profile = authState.profile || {};
     var roleLabel = authState.isAdmin ? "OWNER / ADMIN 👑" : (authState.role === "premium" ? "PREMIUM" : "USER");
+    var profileName = String(profile.display_name || "").trim() || "بێ ناو";
+    var profileUsername = normalizeUsername(profile.username || "");
     var profileEmail = esc(authState.user.email || "");
     var planText = authState.isAdmin
       ? "دەسەڵاتی تەواوی پلاتفۆرم"
       : authState.role === "premium"
-        ? (authState.profile && authState.profile.premium_until
-            ? "Premium ـی چالاک تا " + new Date(authState.profile.premium_until).toLocaleDateString("ku-IQ")
+        ? (profile.premium_until
+            ? "Premium ـی چالاک تا " + new Date(profile.premium_until).toLocaleDateString("ku-IQ")
             : "Premium ـی چالاک")
         : "سنووری نێردان: 3 کتێب + 5 موزیک";
 
-    var bookLimit = authState.isAdmin ? "∞" : (authState.profile && authState.profile.book_limit != null ? authState.profile.book_limit : "3");
-    var musicLimit = authState.isAdmin ? "∞" : (authState.profile && authState.profile.music_limit != null ? authState.profile.music_limit : "5");
+    var bookLimit = authState.isAdmin ? "∞" : (profile.book_limit != null ? profile.book_limit : "3");
+    var musicLimit = authState.isAdmin ? "∞" : (profile.music_limit != null ? profile.music_limit : "5");
     var bookUsage = userBookUsage();
     var musicUsage = userMusicUsage();
 
@@ -6139,8 +6430,21 @@
       return authState.user && track.ownerId === authState.user.id;
     });
 
+    var avatarMarkup = profile.avatar_url
+      ? '<img src="' + esc(profile.avatar_url) + '" alt="">'
+      : '<i class="fa-solid ' + (authState.isAdmin ? 'fa-crown' : 'fa-user') + '"></i>';
+
     page.innerHTML =
-      '<div class="profile-hero"><div class="profile-avatar-wrap"><div class="profile-avatar"><i class="fa-solid ' + (authState.isAdmin ? 'fa-crown' : 'fa-user') + '"></i></div><span class="profile-status" aria-hidden="true"></span></div><div class="profile-intro"><div class="section-kicker">' + roleLabel + '</div><h2 class="section-title">' + profileEmail + '</h2><p class="profile-welcome">' + planText + '</p></div></div>' +
+      '<div class="profile-hero">' +
+        '<div class="profile-public-avatar">' + avatarMarkup + '</div>' +
+        '<div class="profile-intro">' +
+          '<div class="section-kicker">' + roleLabel + '</div>' +
+          '<h2 class="section-title">' + esc(profileName) + '</h2>' +
+          '<div class="profile-username">' + (profileUsername ? '@' + esc(profileUsername) : '@username') + '</div>' +
+          '<p class="profile-welcome">' + planText + '</p>' +
+        '</div>' +
+      '</div>' +
+      '<button class="primary" type="button" data-action="edit-profile" style="margin-top:10px;min-height:48px"><i class="fa-solid fa-user-pen"></i> دەستکاریی پڕۆفایل</button>' +
       '<div style="display:grid;gap:9px;margin-top:12px">' +
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">' +
       '<div style="padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:16px;background:rgba(255,255,255,.025)"><small style="color:#8ea1b7;font-size:7px">کتێب</small><strong style="display:block;color:#fff;font-size:18px;margin-top:4px">' + bookUsage + ' / ' + bookLimit + '</strong></div>' +
@@ -6444,26 +6748,38 @@
 
   function loadAdminUsers() {
     if (!authState.isAdmin) return Promise.resolve();
-    return supabaseClient.from("profiles")
-      .select("id,role,premium_until,book_limit,music_limit,is_disabled,created_at")
-      .order("created_at", { ascending: false })
+
+    return supabaseClient
+      .rpc("admin_list_users")
       .then(function (result) {
         if (result.error) throw result.error;
+
         var box = $("adminUsersList");
         if (!box) return;
+
         var rows = result.data || [];
         box.innerHTML =
           '<strong style="font-size:12px;color:#fff">بەکارهێنەران</strong>' +
-          '<small style="color:#7f91a6;font-size:7px">ئیمەیڵی هەژمارەکانی تر لەلایەن Auth بە شێوەی پارێزراو هەڵگیراوە؛ لێرە UUID نیشان دەدرێت بۆ ناسینەوە.</small>' +
+          '<small style="color:#7f91a6;font-size:7px">وێنە، ناو، @username و ئیمەیڵی بەکارهێنەران لێرەدا بە شێوەی پارێزراو نیشان دەدرێت.</small>' +
           (rows.length ? rows.slice(0, 50).map(function (row) {
             var isSelf = row.id === authState.user.id;
             var label = row.role === "admin" ? "ADMIN" : row.role === "premium" ? "PREMIUM" : "USER";
             var next = row.role === "premium" ? "user" : "premium";
             var disabled = row.is_disabled;
-            return '<div style="display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:rgba(255,255,255,.02)">' +
-              '<div><strong style="display:block;color:#fff;font-size:8px;word-break:break-all">' + esc(row.id) + '</strong><small style="color:' + (disabled ? '#ff8b9d' : '#8295aa') + ';font-size:7px">' + label + (disabled ? ' · ناچالاک' : '') + '</small></div>' +
-              '<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end">' +
-              (!isSelf ? '<button class="small" type="button" data-admin-role-id="' + esc(row.id) + '" data-admin-next-role="' + next + '">' + (row.role === 'premium' ? 'لابردن Premium' : 'کردن Premium') + '</button><button class="small" type="button" data-admin-disable-id="' + esc(row.id) + '" data-admin-disable-value="' + (disabled ? 'false' : 'true') + '">' + (disabled ? 'چالاککردن' : 'ناچالاککردن') + '</button>' : '<span style="color:#f5cd68;font-size:8px">ئۆنەر</span>') +
+            var avatar = row.avatar_url
+              ? '<img src="' + esc(row.avatar_url) + '" alt="" style="width:44px;height:44px;border-radius:14px;object-fit:cover;border:1px solid rgba(255,255,255,.10)">' 
+              : '<div style="width:44px;height:44px;border-radius:14px;display:grid;place-items:center;background:linear-gradient(135deg,var(--a),var(--b));color:#fff"><i class="fa-solid fa-user"></i></div>';
+            var displayName = row.display_name || "بێ ناو";
+            var username = normalizeUsername(row.username || "");
+            var email = row.email || "";
+            return '<div style="display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;padding:10px;border:1px solid rgba(255,255,255,.06);border-radius:14px;background:rgba(255,255,255,.02)">' +
+              avatar +
+              '<div style="min-width:0"><strong style="display:block;color:#fff;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + esc(displayName) + '</strong>' +
+              '<div style="margin-top:2px;color:var(--a);font-size:7px;direction:ltr;text-align:right;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">' + (username ? '@' + esc(username) : '@username') + '</div>' +
+              '<div style="margin-top:2px;color:#a7b7c9;font-size:7px;word-break:break-word">' + esc(email) + '</div>' +
+              '<small style="display:block;margin-top:3px;color:' + (disabled ? '#ff8b9d' : '#8295aa') + ';font-size:7px">' + label + (disabled ? ' · ناچالاک' : '') + '</small></div>' +
+              '<div style="display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end;grid-column:1 / -1">' +
+              (!isSelf ? '<button class="small" type="button" data-admin-role-id="' + esc(row.id) + '" data-admin-next-role="' + next + '">' + (row.role === 'premium' ? 'لابردنی Premium' : 'کردنی Premium') + '</button><button class="small" type="button" data-admin-disable-id="' + esc(row.id) + '" data-admin-disable-value="' + (disabled ? 'false' : 'true') + '">' + (disabled ? 'چالاککردن' : 'ناچالاککردن') + '</button>' : '<span style="color:#f5cd68;font-size:8px">ئۆنەر</span>') +
               '</div></div>';
           }).join("") : '<div class="empty" style="padding:14px">هێشتا بەکارهێنەر نییە.</div>');
       });
