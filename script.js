@@ -92,6 +92,14 @@
       );
     }
 
+    if (!file) {
+      return Promise.reject(
+        new Error(
+          "فایل بۆ بارکردن دیاری نەکراوە"
+        )
+      );
+    }
+
     return supabaseClient.storage
       .from(bucket)
       .upload(
@@ -372,6 +380,12 @@
         BOOKS_BUCKET
       );
 
+    var coverPath =
+      storagePathFromPublicUrl(
+        book.cover_url,
+        BOOK_COVERS_BUCKET
+      );
+
     return supabaseClient
       .from("books")
       .delete()
@@ -385,10 +399,16 @@
             throw result.error;
           }
 
-          return deleteFromStorage(
-            BOOKS_BUCKET,
-            pdfPath
-          );
+          return Promise.all([
+            deleteFromStorage(
+              BOOKS_BUCKET,
+              pdfPath
+            ),
+            deleteFromStorage(
+              BOOK_COVERS_BUCKET,
+              coverPath
+            )
+          ]);
         }
       );
   }
@@ -2078,7 +2098,7 @@
   }
 
 
-  /* XWENDNGA V2.8 — PROMISE CLEANUP FIX */
+  /* XWENDNGA V3.0 — COVER CAPTURE + STORAGE CLEANUP HARDENING */
 
 
   /* =======================================================
@@ -2086,6 +2106,7 @@
      ======================================================= */
 
   var addBookCoverObjectUrl = "";
+  var selectedBookCoverFile = null;
 
   function setAddBookMessage(message, type) {
     var box = $("addBookFormMessage");
@@ -2111,6 +2132,8 @@
   }
 
   function resetAddBookForm() {
+    selectedBookCoverFile = null;
+
     var form = $("addBookForm");
     if (form) form.reset();
     if ($("bookPdfName")) $("bookPdfName").textContent = "PDF ـەکە هەڵبژێرە";
@@ -2145,6 +2168,7 @@
     if (!preview) return;
 
     resetAddBookCoverPreview();
+    selectedBookCoverFile = null;
 
     if (!file) return;
     if (!String(file.type || "").startsWith("image/")) {
@@ -2152,6 +2176,7 @@
       return;
     }
 
+    selectedBookCoverFile = file;
     addBookCoverObjectUrl = URL.createObjectURL(file);
     preview.innerHTML = '<img src="' + esc(addBookCoverObjectUrl) + '" alt="پێشبینینی بەرگی کتێب">';
     if ($("bookCoverName")) {
@@ -2176,8 +2201,20 @@
     var descriptionInput = $("bookDescriptionInput");
     var submitButton = $("addBookSubmit");
 
-    var pdfFile = pdfInput && pdfInput.files ? pdfInput.files[0] : null;
-    var coverFile = coverInput && coverInput.files ? coverInput.files[0] : null;
+    var pdfFiles = pdfInput && pdfInput.files
+      ? Array.from(pdfInput.files || [])
+      : [];
+
+    var coverFiles = coverInput && coverInput.files
+      ? Array.from(coverInput.files || [])
+      : [];
+
+    var pdfFile = pdfFiles[0] || null;
+    var coverFile =
+      selectedBookCoverFile ||
+      coverFiles[0] ||
+      null;
+
     var title = String(titleInput && titleInput.value || "").trim();
     var author = String(authorInput && authorInput.value || "").trim();
     var category = String(categoryInput && categoryInput.value || "گشتی").trim() || "گشتی";
@@ -2205,7 +2242,12 @@
       submitButton.disabled = true;
       submitButton.classList.add("is-loading");
     }
-    setAddBookMessage("کتێبەکە خەریکی بارکردنە...", "");
+    setAddBookMessage(
+      coverFile
+        ? "کتێبەکە و بەرگەکەی خەریکی بارکردنن..."
+        : "کتێبەکە خەریکی بارکردنە...",
+      ""
+    );
 
     var uploadedPdfPath = "";
     var uploadedCoverPath = "";
@@ -2221,51 +2263,71 @@
         var pdfPath = uid + "/" + Date.now() + "-" + Math.floor(Math.random() * 1000000) + "-" + safePdfName;
         uploadedPdfPath = pdfPath;
 
-        return uploadToStorage(BOOKS_BUCKET, pdfPath, pdfFile)
-          .then(function (pdfUploaded) {
-            return extractPDF(pdfFile).then(function (data) {
-              var coverPromise = Promise.resolve({ url: "", path: "" });
+        var coverPromise = Promise.resolve({
+          url: "",
+          path: ""
+        });
 
-              if (coverFile) {
-                var safeCoverName = (coverFile.name || "cover")
-                  .replace(/[^a-zA-Z0-9._-]+/g, "-")
-                  .replace(/-+/g, "-")
-                  .replace(/^[-.]+|[-.]+$/g, "") || "cover.jpg";
-                var coverPath = uid + "/" + Date.now() + "-" + Math.floor(Math.random() * 1000000) + "-" + safeCoverName;
-                uploadedCoverPath = coverPath;
-                coverPromise = uploadToStorage(BOOK_COVERS_BUCKET, coverPath, coverFile);
-              }
+        if (coverFile) {
+          var safeCoverName = (coverFile.name || "cover")
+            .replace(/[^a-zA-Z0-9._-]+/g, "-")
+            .replace(/-+/g, "-")
+            .replace(/^[-.]+|[-.]+$/g, "") || "cover.jpg";
 
-              return coverPromise.then(function (coverUploaded) {
-                var book = {
-                  title: title,
-                  author: author,
-                  category: category,
-                  description: description,
-                  keywords: "",
-                  language: language,
-                  lang: data.lang || "en",
-                  pageCount: data.pageCount || 0,
-                  cover_url: coverUploaded.url || "",
-                  pdf_url: pdfUploaded.url
-                };
+          var coverPath = uid + "/" + Date.now() + "-" +
+            Math.floor(Math.random() * 1000000) + "-" + safeCoverName;
 
-                return insertRemoteBook(book).then(function (remoteBook) {
-                  remoteBook.pdfData = data.pdfData;
-                  remoteBook.pages = data.pages || [];
-                  remoteBook.lang = data.lang || remoteBook.lang || "en";
-                  remoteBook.pageCount = data.pageCount || 0;
-                  remoteBook.currentPage = 0;
-                  remoteBook.progress = 0;
-                  remoteBook.favorite = !!authState.favorites[favoriteKey("book", remoteBook.remoteId)];
-                  remoteBook.bookmarked = false;
-                  remoteBook.isPublished = remoteBook.status === "approved";
-                  remoteBook.isRemote = true;
-                  return remoteBook;
-                });
-              });
-            });
+          uploadedCoverPath = coverPath;
+
+          coverPromise = uploadToStorage(
+            BOOK_COVERS_BUCKET,
+            coverPath,
+            coverFile
+          );
+        }
+
+        return Promise.all([
+          uploadToStorage(
+            BOOKS_BUCKET,
+            pdfPath,
+            pdfFile
+          ),
+          coverPromise,
+          extractPDF(pdfFile)
+        ]).then(function (results) {
+          var pdfUploaded = results[0];
+          var coverUploaded = results[1];
+          var data = results[2];
+
+          var book = {
+            title: title,
+            author: author,
+            category: category,
+            description: description,
+            keywords: "",
+            language: language,
+            lang: data.lang || "en",
+            pageCount: data.pageCount || 0,
+            cover_url: coverUploaded.url || "",
+            pdf_url: pdfUploaded.url
+          };
+
+          return insertRemoteBook(book).then(function (remoteBook) {
+            remoteBook.pdfData = data.pdfData;
+            remoteBook.pages = data.pages || [];
+            remoteBook.lang = data.lang || remoteBook.lang || "en";
+            remoteBook.pageCount = data.pageCount || 0;
+            remoteBook.currentPage = 0;
+            remoteBook.progress = 0;
+            remoteBook.favorite = !!authState.favorites[
+              favoriteKey("book", remoteBook.remoteId)
+            ];
+            remoteBook.bookmarked = false;
+            remoteBook.isPublished = remoteBook.status === "approved";
+            remoteBook.isRemote = true;
+            return remoteBook;
           });
+        });
       })
       .then(function (savedBook) {
         books.unshift(savedBook);
@@ -2987,7 +3049,7 @@
 
               '<div class="cover">' +
               (book.cover_url
-                ? '<img class="book-cover-image" src="' + esc(book.cover_url) + '" alt="بەرگی ' + esc(book.title) + '" loading="lazy">'
+                ? '<img class="book-cover-image" src="' + esc(book.cover_url) + '" alt="" loading="lazy" onerror="this.remove()">'
                 : '') +
               '<i class="fa-solid fa-book-bookmark"></i>' +
               "</div>" +
