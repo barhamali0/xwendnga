@@ -7551,320 +7551,77 @@ main{
 
 
 /* =========================================================
-   41 — READER MODERN IMMERSIVE UI (ZERO-REGRESSION)
-   UI-only overrides: no reader logic or data behavior changes.
+   42 — READER v3.9 CONTROL RELOCATION
+   Zero Regression: keep reader.js data-action / IDs stable.
    ========================================================= */
 
-/* When the full-screen Reader is active, remove the site's
-   normal chrome so the book gets the whole viewport. */
-body:has(#reader.show) .topbar,
-body:has(#reader.show) .bottom,
-body:has(#reader.show) #telegramBtn{
-  display:none !important;
-}
-
-/* Keep the Reader truly edge-to-edge on phones. */
-body:has(#reader.show){
-  overflow:hidden;
-}
-
-/* Give the reading surface maximum usable height. */
-.reader.show .rbody{
-  padding-bottom:
-    calc(
-      84px +
-      var(--safe-bottom)
-    );
-}
-
-/* The legacy top toolbar is intentionally hidden. Its controls live in the bottom sheet. */
+/* The legacy reader-bar is intentionally gone from index.html.
+   Keep this defensive rule in case stale markup is ever served. */
 .reader.show .reader-bar{
   display:none !important;
 }
 
-/* Modern bottom-sheet Reader controls. */
-.reader-tools{
-  left:0;
-  right:0;
-  bottom:0;
-
-  width:100%;
-  max-width:none;
-  max-height:min(62vh, 620px);
-
-  margin:0;
-
-  display:flex;
-  flex-direction:column;
-
-  padding:
-    9px
-    14px
-    calc(
-      12px +
-      var(--safe-bottom)
-    );
-
-  border:
-    1px solid
-    color-mix(
-      in srgb,
-      var(--reader-focus) 18%,
-      var(--reader-line)
-    );
-
-  border-bottom:0;
-  border-radius:24px 24px 0 0;
-
-  background:
-    linear-gradient(
-      180deg,
-      rgba(13,28,49,.985),
-      rgba(5,15,28,.985)
-    );
-
-  box-shadow:
-    0 -18px 60px
-    rgba(0,0,0,.40),
-    0 -2px 0
-    rgba(255,255,255,.035) inset;
-
-  backdrop-filter:
-    blur(28px)
-    saturate(145%);
-
-  -webkit-backdrop-filter:
-    blur(28px)
-    saturate(145%);
-
-  opacity:0;
-  visibility:hidden;
-  pointer-events:none;
-  transform:translateY(calc(100% + 24px));
-
-  transition:
-    transform .28s cubic-bezier(.2,.8,.2,1),
-    opacity .20s ease,
-    visibility 0s linear .28s;
-}
-
-.reader-tools.show{
-  display:flex;
-  opacity:1;
-  visibility:visible;
-  pointer-events:auto;
-  transform:translateY(0);
-  animation:none;
-  transition:
-    transform .28s cubic-bezier(.2,.8,.2,1),
-    opacity .20s ease,
-    visibility 0s linear 0s;
-}
-
-.tools-handle{
-  width:42px;
-  height:4px;
-  flex:0 0 4px;
-
-  margin:
-    0
-    auto
-    8px;
-
-  border-radius:999px;
-
-  background:
-    linear-gradient(
-      90deg,
-      var(--reader-accent-strong),
-      var(--reader-accent)
-    );
-
-  box-shadow:
-    0 0 14px
-    color-mix(
-      in srgb,
-      var(--reader-accent) 24%,
-      transparent
-    );
-}
-
-.tools-head{
-  flex:0 0 auto;
-  margin-bottom:12px;
-  padding:0 2px;
-}
-
-.tools-primary-controls{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
+.reader-top{
   gap:8px;
-  margin-bottom:12px;
+}
+
+.reader-top .rbtn{
   flex:0 0 auto;
 }
 
-.tools-control,
-.tools-zoom{
-  min-width:0;
-  min-height:56px;
-  border:1px solid var(--reader-line);
-  border-radius:15px;
-  background:rgba(255,255,255,.045);
-  color:var(--reader-copy);
+.tools-quick{
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:6px;
-  padding:8px 6px;
+  gap:7px;
+  flex-wrap:wrap;
+  padding:4px 0 10px;
+  border-bottom:1px solid var(--reader-line);
+  margin-bottom:10px;
 }
 
-.tools-control{
-  flex-direction:column;
-  font-size:9px;
-  font-weight:800;
-  transition:transform .14s ease,background .18s ease,border-color .18s ease;
-  touch-action:manipulation;
-}
-
-.tools-control i{
-  font-size:15px;
-}
-
-.tools-control:active{
-  transform:scale(.96);
-}
-
-.tools-control.kur{
-  color:var(--reader-accent);
-  border-color:color-mix(in srgb,var(--reader-accent) 30%,var(--reader-line));
-  background:color-mix(in srgb,var(--reader-accent) 8%,transparent);
-}
-
-.tools-zoom{
-  flex-direction:column;
-}
-
-.tools-zoom-label{
-  color:var(--reader-copy-muted);
-  font-size:7px;
-}
-
-.tools-zoom .zoom-readout{
-  display:block;
-  min-width:0;
-  color:var(--reader-copy);
-  font-size:11px;
-  font-weight:800;
-}
-
-.tools-head strong{
-  font-size:12px;
-  letter-spacing:.1px;
-}
-
-.tools-close{
-  width:38px;
-  height:38px;
+.tools-quick .rb{
   min-width:38px;
   min-height:38px;
-  border-radius:12px;
+  padding:7px 10px;
+  border:1px solid var(--reader-line);
+  border-radius:11px;
+  background:rgba(255,255,255,.045);
+  color:var(--reader-copy);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
 }
 
-#toolsBody{
-  min-height:0;
-  overflow-y:auto;
-  overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
-  padding-bottom:2px;
+.tools-quick .rb.kur{
+  min-width:72px;
 }
 
-/* More breathable controls for touch use. */
-.vols{
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-}
-
-.vol{
-  padding:11px;
-  border-radius:14px;
-  background:
-    linear-gradient(
-      145deg,
-      rgba(255,255,255,.05),
-      rgba(255,255,255,.025)
-    );
-}
-
-.vol label{
-  font-size:9px;
-}
-
-.vol input{
-  min-height:28px;
-}
-
-.reader-col-title{
-  margin:
-    14px
-    0
-    8px;
-
+.tools-quick .zoom-readout{
+  min-width:48px;
+  text-align:center;
   font-size:10px;
+  font-weight:700;
+  color:var(--reader-copy);
 }
 
-.reader-colors{
-  gap:8px;
-}
-
-.reader-colors button{
-  height:48px;
-  border-radius:13px;
-  touch-action:manipulation;
-}
-
-.reader-colors button span{
-  height:5px;
-  bottom:5px;
-}
-
-/* Give the page itself a little more visual calm. */
-.reader.show .paper{
-  box-shadow:
-    0 2px 4px rgba(4,12,22,.08),
-    0 18px 48px rgba(4,12,22,.15);
-}
-
-/* Phones: full-width sheet with thumb-friendly spacing. */
-@media (max-width:639px){
-  .reader-tools{
-    max-height:58vh;
-    padding-inline:12px;
+@media (max-width:560px){
+  .reader-top{
+    gap:5px;
   }
 
-  .vols{
-    grid-template-columns:1fr;
+  .reader-top .rbtn{
+    width:36px;
+    height:36px;
+    min-width:36px;
   }
 
-  .tools-head strong{
-    font-size:13px;
-  }
-
-  .reader.show .rbody{
-    padding-bottom:
-      calc(
-        82px +
-        var(--safe-bottom)
-      );
-  }
-
-  .tools-primary-controls{
-    grid-template-columns:repeat(5,minmax(48px,1fr));
+  .tools-quick{
     gap:6px;
   }
 
-  .tools-control,
-  .tools-zoom{
-    min-height:52px;
-    border-radius:13px;
+  .tools-quick .rb{
+    min-height:40px;
   }
 }
