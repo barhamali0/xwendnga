@@ -8240,3 +8240,187 @@ main{
     padding:8px;
   }
 }
+
+
+/* =========================================================
+   READER v3.13 — DESKTOP CONTROL PANEL POLISH
+   Presentation-only: mobile layout and all reader/music logic stay unchanged.
+   ========================================================= */
+@media (min-width:900px){
+  .reader-tools{
+    width:min(1080px,calc(100vw - 48px));
+    max-width:1080px;
+    max-height:min(78vh,780px);
+    padding:12px 18px calc(18px + var(--safe-bottom));
+    border-radius:28px 28px 0 0;
+    box-shadow:
+      0 -22px 70px rgba(0,0,0,.38),
+      0 -2px 22px color-mix(in srgb,var(--reader-accent) 10%,transparent);
+  }
+
+  .tools-handle{
+    width:52px;
+    height:5px;
+    margin:3px auto 12px;
+  }
+
+  .tools-head{
+    min-height:44px;
+    margin-bottom:12px;
+    padding-inline:2px;
+  }
+
+  .tools-head strong{
+    font-size:15px;
+  }
+
+  .tools-close{
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border-radius:13px;
+  }
+
+  .reader-mini-player{
+    grid-template-columns:54px minmax(260px,1fr) auto;
+    gap:15px;
+    margin:0 0 12px;
+    padding:12px 14px;
+    border-radius:20px;
+    background:
+      linear-gradient(135deg,rgba(255,255,255,.085),rgba(255,255,255,.028));
+    box-shadow:
+      0 12px 32px rgba(0,0,0,.20),
+      inset 0 1px 0 rgba(255,255,255,.055);
+  }
+
+  .reader-mini-cover{
+    width:54px;
+    height:54px;
+    border-radius:15px;
+    font-size:20px;
+  }
+
+  .reader-mini-info strong{
+    font-size:13px;
+    line-height:1.4;
+  }
+
+  .reader-mini-info span{
+    font-size:9px;
+  }
+
+  .reader-mini-actions{
+    gap:8px;
+  }
+
+  .reader-mini-btn{
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border-radius:13px;
+    font-size:14px;
+  }
+
+  #toolsBody{
+    max-height:calc(78vh - 160px);
+    padding:3px 2px 8px;
+  }
+
+  .reader-settings-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+  }
+
+  .reader-control-card{
+    padding:14px;
+    border-radius:19px;
+  }
+
+  .reader-font-card{
+    grid-column:span 2;
+  }
+
+  .reader-theme-card,
+  .reader-volume-card{
+    grid-column:1 / -1;
+  }
+
+  .reader-control-head{
+    margin-bottom:12px;
+  }
+
+  .reader-control-head strong{
+    font-size:12px;
+  }
+
+  .reader-control-head span{
+    font-size:9px;
+  }
+
+  .reader-control-head > b{
+    min-width:50px;
+    padding:6px 8px;
+    font-size:10px;
+  }
+
+  .reader-font-row{
+    grid-template-columns:44px minmax(0,1fr) 44px;
+    gap:11px;
+  }
+
+  .reader-step-btn{
+    width:44px;
+    height:44px;
+    border-radius:13px;
+  }
+
+  .reader-wide-action{
+    min-height:48px;
+    border-radius:13px;
+    font-size:10px;
+  }
+
+  .reader-action-row{
+    gap:10px;
+  }
+
+  .reader-colors-modern{
+    grid-template-columns:repeat(12,minmax(0,1fr));
+    gap:9px;
+  }
+
+  .reader-colors-modern button{
+    min-width:0;
+    aspect-ratio:1.45;
+    border-radius:13px;
+  }
+
+  #toolsBody > .vols{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    margin:0;
+    padding:10px;
+    border-radius:14px;
+  }
+
+  #toolsBody > .vols .vol{
+    padding:10px 11px;
+    border-radius:13px;
+  }
+}
+
+@media (min-width:1200px){
+  .reader-tools{
+    width:min(1160px,calc(100vw - 72px));
+    max-width:1160px;
+  }
+
+  .reader-settings-grid{
+    gap:14px;
+  }
+
+  .reader-control-card{
+    padding:15px;
+  }
+}
