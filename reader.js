@@ -3634,317 +3634,85 @@
     syncReaderMiniMusic();
   }
 
-  function showReaderTools() {
-    var tools =
-      $("readerTools");
+  function renderReaderMusicPanel() {
+    var body = $("toolsBody");
+    if (!body) return;
 
-    var body =
-      $("toolsBody");
+    var catalog = window.AppLib && typeof window.AppLib.getReaderMusicCatalog === "function"
+      ? window.AppLib.getReaderMusicCatalog()
+      : { publicItems: [], privateItems: [], privateLimit: 5, isPremium: false };
 
-    if (
-      !tools ||
-      !body
-    ) {
-      return;
+    var publicItems = Array.isArray(catalog.publicItems) ? catalog.publicItems : [];
+    var privateItems = Array.isArray(catalog.privateItems) ? catalog.privateItems : [];
+    var limit = catalog.privateLimit == null ? privateItems.length : Math.max(0, Number(catalog.privateLimit) || 5);
+    var shownPrivate = catalog.privateLimit == null ? privateItems : privateItems.slice(0, limit);
+
+    function musicRows(items) {
+      if (!items.length) return '<div class="reader-music-empty">هێشتا مۆسیقایەک لەم بەشەدا نییە.</div>';
+      return items.map(function (track) {
+        var cover = track.cover_url ? '<img src="' + esc(track.cover_url) + '" alt="">' : '<i class="fa-solid fa-music"></i>';
+        return '<button class="reader-track-row" type="button" data-track-play="' + esc(track.index) + '">' +
+          '<span class="reader-track-art">' + cover + '</span>' +
+          '<span class="reader-track-copy"><strong>' + esc(track.name) + '</strong><small>' + esc(track.artist || "مۆسیقا") + '</small></span>' +
+          '<i class="fa-solid fa-play reader-track-play-icon"></i>' +
+          '</button>';
+      }).join('');
     }
 
-    var musicVolume =
-      window.AppLib &&
-      typeof window.AppLib.getMusicVolume ===
-        "function"
-        ? window.AppLib.getMusicVolume()
-        : 0.32;
-
-    var fontValue =
-      viewMode === "canvas"
-        ? Math.round(
-            canvasZoom * 100
-          )
-        : Math.round(readerFont);
-
-    var fontMin =
-      viewMode === "canvas" ? 50 : 14;
-
-    var fontMax =
-      viewMode === "canvas" ? 250 : 34;
-
-    var fontStep =
-      viewMode === "canvas" ? 5 : 1;
-
-    var fontLabel =
-      viewMode === "canvas"
-        ? "زوومی پەڕە"
-        : "قەبارەی فۆنت";
+    var privateNote = catalog.privateLimit == null ? 'مۆسیقای تایبەتی — بێ سنوور' : 'تا ' + limit + ' دانە بۆ بەکارهێنەری ئاسایی';
 
     body.innerHTML =
-      '<div class="reader-settings-grid">' +
-
-      '<section class="reader-control-card reader-font-card">' +
-        '<div class="reader-control-head">' +
-          '<div>' +
-            '<strong>🔤 ' +
-              fontLabel +
-            '</strong>' +
-            '<span>گەورە و بچووککردنی خوێندنەوە</span>' +
+      '<div class="reader-music-panel">' +
+        '<section class="reader-music-card reader-music-card-primary">' +
+          '<div class="reader-music-card-head"><div><span class="reader-panel-kicker">MUSIC</span><strong>مۆسیقا لە خوێندنەوە</strong><small>هەموو کۆنترۆڵەکانی مۆسیقا لە یەک شوێن.</small></div><span class="reader-music-badge"><i class="fa-solid fa-headphones"></i> Live</span></div>' +
+          '<div class="reader-mini-player reader-mini-player-large" id="readerMusicMiniPlayer">' +
+            '<div class="reader-mini-cover" aria-hidden="true"><i class="fa-solid fa-music"></i></div>' +
+            '<div class="reader-mini-info"><strong id="readerMiniMusicName">هیچ موزیکێک هەڵنەبژێردراوە</strong><span id="readerMiniMusicSub">موزیکی گشتی</span></div>' +
+            '<div class="reader-mini-actions"><button class="reader-mini-btn" type="button" data-action="prev-track" aria-label="پێشوو"><i class="fa-solid fa-backward-step"></i></button><button class="reader-mini-btn reader-mini-play" type="button" data-action="play-pause" aria-label="لێدان و وەستاندن"><i class="fa-solid fa-play"></i></button><button class="reader-mini-btn" type="button" data-action="next-track" aria-label="داهاتوو"><i class="fa-solid fa-forward-step"></i></button></div>' +
           '</div>' +
-          '<b id="readerFontValue">' +
-            fontValue +
-            '%' +
-          '</b>' +
-        '</div>' +
-        '<div class="reader-font-row">' +
-          '<button class="reader-step-btn" type="button" data-action="font-down" aria-label="کەمکردنەوە">' +
-            '<i class="fa-solid fa-minus"></i>' +
-          '</button>' +
-          '<input id="readerFontRange" class="reader-control-range" type="range" min="' +
-            fontMin +
-            '" max="' +
-            fontMax +
-            '" step="' +
-            fontStep +
-            '" value="' +
-            fontValue +
-            '" aria-label="' +
-            fontLabel +
-          '">' +
-          '<button class="reader-step-btn" type="button" data-action="font-up" aria-label="زیادکردنەوە">' +
-            '<i class="fa-solid fa-plus"></i>' +
-          '</button>' +
-        '</div>' +
-      '</section>' +
-
-      '<section class="reader-control-card">' +
-        '<div class="reader-control-head">' +
-          '<div>' +
-            '<strong>☀️ ڕووناکی</strong>' +
-            '<span>ڕووناکیی پەڕەی خوێندنەوە</span>' +
-          '</div>' +
-          '<b id="readerBrightnessValue">' +
-            Math.round(readerBrightness) +
-            '%' +
-          '</b>' +
-        '</div>' +
-        '<input id="readerBrightnessRange" class="reader-control-range" type="range" min="55" max="120" step="1" value="' +
-          Math.round(readerBrightness) +
-          '" aria-label="ڕووناکیی پەڕە">' +
-      '</section>' +
-
-      '<section class="reader-control-card reader-theme-card">' +
-        '<div class="reader-control-head">' +
-          '<div>' +
-            '<strong>🎨 ڕەنگی پەڕە</strong>' +
-            '<span>شێوازی ئارام بۆ خوێندنەوە</span>' +
-          '</div>' +
-        '</div>' +
-        '<div class="reader-colors reader-colors-modern">' +
-          Object.keys(THEMES)
-            .map(function(key) {
-              var theme = THEMES[key];
-              return (
-                '<button type="button" data-reader-theme-choice="' +
-                esc(key) +
-                '" title="' +
-                esc(theme.name) +
-                '" aria-label="' +
-                esc(theme.name) +
-                '" class="' +
-                (key === readerTheme ? 'active' : '') +
-                '" style="--theme-bg:' +
-                theme.bg +
-                ';--theme-fg:' +
-                theme.fg +
-                '">' +
-                  '<span></span>' +
-                '</button>'
-              );
-            })
-            .join("") +
-        '</div>' +
-      '</section>' +
-
-      '<section class="reader-control-card reader-mode-card">' +
-        '<div class="reader-control-head">' +
-          '<div>' +
-            '<strong>📖 شێوازی پیشاندان</strong>' +
-            '<span>نێوان پەڕەی PDF و دەقی AI</span>' +
-          '</div>' +
-        '</div>' +
-        '<button class="reader-wide-action" id="viewToggleBtn" type="button" data-action="toggle-view">' +
-          '<i class="fa-solid fa-robot"></i>' +
-          '<span>دەق</span>' +
-        '</button>' +
-      '</section>' +
-
-      '<section class="reader-control-card reader-language-card">' +
-        '<div class="reader-control-head">' +
-          '<div>' +
-            '<strong>↔️ زمان</strong>' +
-            '<span>وەرگێڕانی لاپەڕە بۆ کوردی</span>' +
-          '</div>' +
-        '</div>' +
-        '<div class="reader-action-row">' +
-          '<button class="reader-wide-action" id="readerKurdish" type="button" data-action="reader-kurdish">' +
-            '<i class="fa-solid fa-language"></i>' +
-            '<span>کوردی</span>' +
-          '</button>' +
-          '<button class="reader-wide-action reader-disabled-action" type="button" disabled title="شێوازی دووانە لە قۆناغێکی داهاتوودا زیاد دەکرێت">' +
-            '<i class="fa-solid fa-columns"></i>' +
-            '<span>دووانە</span>' +
-          '</button>' +
-        '</div>' +
-      '</section>' +
-
-      '<section class="reader-control-card reader-ai-card">' +
-        '<div class="reader-control-head">' +
-          '<div>' +
-            '<strong>🤖 فەرهەنگی AI</strong>' +
-            '<span>وشەی هەڵبژێردراو لە فەرهەنگدا بکەرەوە</span>' +
-          '</div>' +
-        '</div>' +
-        '<button class="reader-wide-action reader-ai-action" type="button" data-action="reader-dictionary">' +
-          '<i class="fa-solid fa-book-open"></i>' +
-          '<span>کردنەوەی فەرهەنگی AI</span>' +
-        '</button>' +
-      '</section>' +
-
-      '<section class="reader-control-card reader-volume-card">' +
-        '<div class="reader-control-head">' +
-          '<div>' +
-            '<strong>🔊 دەنگ</strong>' +
-            '<span>کۆنترۆڵی دەنگی مۆسیقا و خوێندنەوە</span>' +
-          '</div>' +
-        '</div>' +
-        '<div class="vols reader-vols">' +
-          '<div class="vol">' +
-            '<label><span>🎵 مۆسیقا</span><b id="mvt">' +
-              Math.round(musicVolume * 100) +
-              '%' +
-            '</b></label>' +
-            '<input id="mvr" type="range" min="0" max="100" value="' +
-              Math.round(musicVolume * 100) +
-            '">' +
-          '</div>' +
-          '<div class="vol">' +
-            '<label><span>🔊 خوێندنەوە</span><b id="svt">' +
-              Math.round(speechVolume * 100) +
-              '%' +
-            '</b></label>' +
-            '<input id="svr" type="range" min="0" max="100" value="' +
-              Math.round(speechVolume * 100) +
-            '">' +
-          '</div>' +
-        '</div>' +
-      '</section>' +
-
+          '<div class="reader-volume-grid"><div class="reader-volume-mini"><label><span>🎵 دەنگی مۆسیقا</span><b id="mvt">0%</b></label><input id="mvr" type="range" min="0" max="100" value="0"></div><div class="reader-volume-mini"><label><span>🔊 دەنگی وشەکان</span><b id="svt">' + Math.round(speechVolume * 100) + '%</b></label><input id="svr" type="range" min="0" max="100" value="' + Math.round(speechVolume * 100) + '"></div></div>' +
+        '</section>' +
+        '<section class="reader-music-card"><div class="reader-music-section-title"><div><strong>مۆسیقای گشتی</strong><small>مۆسیقای پەسەندکراو بۆ هەموو خوێنەران</small></div><span>' + publicItems.length + '</span></div><div class="reader-track-list">' + musicRows(publicItems) + '</div></section>' +
+        '<section class="reader-music-card"><div class="reader-music-section-title"><div><strong>مۆسیقای تایبەت</strong><small>' + privateNote + '</small></div><span class="reader-lock-badge">' + (catalog.privateLimit == null ? '∞' : String(limit)) + '</span></div><div class="reader-track-list">' + musicRows(shownPrivate) + '</div>' + (catalog.privateLimit != null && privateItems.length > limit ? '<div class="reader-premium-note"><i class="fa-solid fa-crown"></i><span>بۆ زیاتر لە ' + limit + ' مۆسیقا، Premium پێویستە.</span></div>' : '') + '</section>' +
       '</div>';
 
-    var fontRange =
-      $("readerFontRange");
-
-    if (fontRange) {
-      fontRange.addEventListener(
-        "input",
-        function () {
-          var value =
-            Number(this.value);
-
-          if (viewMode === "canvas") {
-            setCanvasZoom(value / 100);
-          } else {
-            setFontSize(value);
-          }
-
-          var label =
-            $("readerFontValue");
-
-          if (label) {
-            label.textContent =
-              Math.round(value) +
-              "%";
-          }
-        }
-      );
-    }
-
-    var brightnessRange =
-      $("readerBrightnessRange");
-
-    if (brightnessRange) {
-      brightnessRange.addEventListener(
-        "input",
-        function () {
-          setReaderBrightness(
-            this.value
-          );
-        }
-      );
-    }
-
-    var musicRange =
-      $("mvr");
-
+    var musicRange = $("mvr");
     if (musicRange) {
-      musicRange.addEventListener(
-        "input",
-        function () {
-          var value =
-            Number(this.value) / 100;
-
-          if (
-            window.AppLib &&
-            typeof window.AppLib.setMusicVolume ===
-              "function"
-          ) {
-            window.AppLib.setMusicVolume(
-              value
-            );
-          }
-
-          var label =
-            $("mvt");
-
-          if (label) {
-            label.textContent =
-              Math.round(value * 100) +
-              "%";
-          }
-        }
-      );
+      var mv = window.AppLib && typeof window.AppLib.getMusicVolume === "function" ? window.AppLib.getMusicVolume() : 0.32;
+      musicRange.value = Math.round(mv * 100);
+      var mvt = $("mvt"); if (mvt) mvt.textContent = Math.round(mv * 100) + "%";
+      musicRange.addEventListener("input", function () { var value = Number(this.value) / 100; if (window.AppLib && typeof window.AppLib.setMusicVolume === "function") window.AppLib.setMusicVolume(value); var label=$("mvt"); if(label) label.textContent=Math.round(value*100)+"%"; });
     }
-
-    var speechRange =
-      $("svr");
-
-    if (speechRange) {
-      speechRange.addEventListener(
-        "input",
-        function () {
-          speechVolume =
-            Number(this.value) / 100;
-
-          try {
-            localStorage.setItem(
-              "kh_speech_volume",
-              String(speechVolume)
-            );
-          } catch (e) {}
-
-          var label =
-            $("svt");
-
-          if (label) {
-            label.textContent =
-              Math.round(
-                speechVolume * 100
-              ) +
-              "%";
-          }
-        }
-      );
-    }
-
-    updateViewButton();
+    var speechRange = $("svr");
+    if (speechRange) speechRange.addEventListener("input", function () { speechVolume=Number(this.value)/100; try{localStorage.setItem("kh_speech_volume",String(speechVolume));}catch(e){} var label=$("svt"); if(label) label.textContent=Math.round(speechVolume*100)+"%"; });
     syncReaderMiniMusic();
+  }
+
+  function renderReaderSettingsPanel() {
+    var body = $("toolsBody");
+    if (!body) return;
+    var fontValue = viewMode === "canvas" ? Math.round(canvasZoom * 100) : Math.round(readerFont);
+    var fontMin = viewMode === "canvas" ? 50 : 14;
+    var fontMax = viewMode === "canvas" ? 250 : 34;
+    var fontStep = viewMode === "canvas" ? 5 : 1;
+    var fontLabel = viewMode === "canvas" ? "زوومی پەڕە" : "قەبارەی فۆنت";
+    body.innerHTML =
+      '<div class="reader-settings-panel">' +
+        '<section class="reader-control-card reader-font-card"><div class="reader-control-head"><div><strong>🔤 ' + fontLabel + '</strong><span>ڕێکخستنی قەبارەی خوێندنەوە</span></div><b id="readerFontValue">' + fontValue + '%</b></div><div class="reader-font-row"><button class="reader-step-btn" type="button" data-action="font-down"><i class="fa-solid fa-minus"></i></button><input id="readerFontRange" class="reader-control-range" type="range" min="' + fontMin + '" max="' + fontMax + '" step="' + fontStep + '" value="' + fontValue + '"><button class="reader-step-btn" type="button" data-action="font-up"><i class="fa-solid fa-plus"></i></button></div></section>' +
+        '<section class="reader-control-card reader-theme-card"><div class="reader-control-head"><div><strong>🎨 ڕەنگی پەڕە</strong><span>ڕەنگێکی ئارام بۆ خوێندنەوە هەڵبژێرە</span></div></div><div class="reader-colors reader-colors-modern">' + Object.keys(THEMES).map(function(key){var t=THEMES[key];return '<button type="button" data-reader-theme-choice="'+esc(key)+'" title="'+esc(t.name)+'" class="'+(key===readerTheme?'active':'')+'" style="--theme-bg:'+t.bg+';--theme-fg:'+t.fg+'"><span></span></button>';}).join('') + '</div></section>' +
+        '<section class="reader-control-card reader-saved-words-card"><div class="reader-control-head"><div><strong>🔖 وشە سیڤکراوەکان</strong><span>هەموو وشە هەڵبژێردراوەکانی تۆ</span></div></div><a class="reader-wide-action" href="#vocab"><i class="fa-solid fa-bookmark"></i><span>بینینی وشە سیڤکراوەکان</span></a></section>' +
+      '</div>';
+    var fontRange=$("readerFontRange");
+    if(fontRange) fontRange.addEventListener("input",function(){var value=Number(this.value);if(viewMode==="canvas")setCanvasZoom(value/100);else setFontSize(value);var label=$("readerFontValue");if(label)label.textContent=Math.round(value)+"%";});
+  }
+
+  function showReaderTools(panel) {
+    var tools=$("readerTools"), body=$("toolsBody"), title=$("toolsTitle");
+    if(!tools||!body)return;
+    var mode=panel==="music"?"music":"settings";
+    if(title) title.textContent=mode==="music"?"مۆسیقا لە خوێندنەوە":"ڕێکخستنەکانی خوێندنەوە";
+    if(mode==="music") renderReaderMusicPanel(); else renderReaderSettingsPanel();
+    tools.setAttribute("data-reader-panel",mode);
     tools.classList.add("show");
   }
 
@@ -4443,14 +4211,13 @@
         return;
       }
 
-      if (
-        name ===
-        "reader-tools" ||
-        name ===
-        "reader-music"
-      ) {
+      if (name === "reader-tools") {
+        showReaderTools("settings");
+        return;
+      }
 
-        showReaderTools();
+      if (name === "reader-music") {
+        showReaderTools("music");
         return;
       }
 
