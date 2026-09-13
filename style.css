@@ -8092,3 +8092,151 @@ main{
   .reader-mini-cover{width:40px;height:40px;border-radius:11px;font-size:15px;}
   .reader-mini-btn{width:32px;height:32px;min-width:32px;border-radius:10px;}
 }
+
+/* =========================================================
+   READER v3.12 — TOP BAR + MINI PLAYER POLISH
+   Presentation-only: keep existing music actions and reader IDs.
+   ========================================================= */
+
+.reader-top{
+  grid-template-columns:
+    44px
+    minmax(0,1fr)
+    44px
+    44px;
+  gap:8px;
+}
+
+.reader-top .rtitle{
+  min-width:0;
+  display:grid;
+  justify-items:center;
+  text-align:center;
+}
+
+.reader-top .rtitle strong,
+.reader-top .rtitle span{
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.reader-top .rbtn{
+  width:44px;
+  height:44px;
+  min-width:44px;
+}
+
+.reader-mini-player{
+  grid-template-columns:44px minmax(0,1fr) auto;
+  gap:12px;
+  margin:0;
+  padding:11px 12px;
+  border-radius:18px 18px 14px 14px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.075),
+      rgba(255,255,255,.028)
+    );
+  border-bottom-color:transparent;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.18),
+    inset 0 1px 0 rgba(255,255,255,.045);
+}
+
+.reader-mini-info strong{
+  font-size:11px;
+  line-height:1.35;
+}
+
+.reader-mini-info span{
+  font-size:8px;
+}
+
+.reader-mini-actions{
+  gap:6px;
+}
+
+.reader-mini-btn{
+  width:36px;
+  height:36px;
+  min-width:36px;
+  border-radius:12px;
+}
+
+#toolsBody > .vols{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin:0 0 10px;
+  padding:9px 10px 10px;
+  border:1px solid color-mix(in srgb,var(--reader-line) 92%,transparent);
+  border-top:1px solid color-mix(in srgb,var(--reader-line) 78%,transparent);
+  border-radius:0 0 16px 16px;
+  background:rgba(255,255,255,.025);
+  box-shadow:0 8px 20px rgba(0,0,0,.10);
+}
+
+#toolsBody > .vols .vol{
+  min-width:0;
+  margin:0;
+  padding:8px 9px;
+  border:1px solid color-mix(in srgb,var(--reader-line) 78%,transparent);
+  border-radius:13px;
+  background:rgba(255,255,255,.032);
+}
+
+#toolsBody > .vols label{
+  min-width:0;
+  gap:8px;
+}
+
+#toolsBody > .vols label span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+#toolsBody > .vols input[type="range"]{
+  width:100%;
+  accent-color:var(--a);
+}
+
+@media (max-width:560px){
+  .reader-top{
+    grid-template-columns:40px minmax(0,1fr) 40px 40px;
+    gap:6px;
+    padding-inline:8px;
+  }
+
+  .reader-top .rbtn{
+    width:40px;
+    height:40px;
+    min-width:40px;
+  }
+
+  .reader-mini-player{
+    grid-template-columns:40px minmax(0,1fr) auto;
+    gap:9px;
+    padding:10px;
+  }
+
+  .reader-mini-cover{
+    width:40px;
+    height:40px;
+  }
+
+  .reader-mini-btn{
+    width:34px;
+    height:34px;
+    min-width:34px;
+  }
+
+  #toolsBody > .vols{
+    grid-template-columns:1fr;
+    gap:7px;
+    padding:8px;
+  }
+}
