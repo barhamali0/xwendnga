@@ -7577,14 +7577,9 @@ body:has(#reader.show){
     );
 }
 
-/* A cleaner, quieter reader toolbar. */
+/* The legacy top toolbar is intentionally hidden. Its controls live in the bottom sheet. */
 .reader.show .reader-bar{
-  min-height:54px;
-  padding:6px 9px;
-  gap:6px;
-  background:rgba(7,17,31,.72);
-  border-bottom:1px solid rgba(210,229,244,.11);
-  box-shadow:0 8px 24px rgba(0,0,0,.10);
+  display:none !important;
 }
 
 /* Modern bottom-sheet Reader controls. */
@@ -7700,6 +7695,68 @@ body:has(#reader.show){
   padding:0 2px;
 }
 
+.tools-primary-controls{
+  display:grid;
+  grid-template-columns:repeat(5,minmax(0,1fr));
+  gap:8px;
+  margin-bottom:12px;
+  flex:0 0 auto;
+}
+
+.tools-control,
+.tools-zoom{
+  min-width:0;
+  min-height:56px;
+  border:1px solid var(--reader-line);
+  border-radius:15px;
+  background:rgba(255,255,255,.045);
+  color:var(--reader-copy);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:8px 6px;
+}
+
+.tools-control{
+  flex-direction:column;
+  font-size:9px;
+  font-weight:800;
+  transition:transform .14s ease,background .18s ease,border-color .18s ease;
+  touch-action:manipulation;
+}
+
+.tools-control i{
+  font-size:15px;
+}
+
+.tools-control:active{
+  transform:scale(.96);
+}
+
+.tools-control.kur{
+  color:var(--reader-accent);
+  border-color:color-mix(in srgb,var(--reader-accent) 30%,var(--reader-line));
+  background:color-mix(in srgb,var(--reader-accent) 8%,transparent);
+}
+
+.tools-zoom{
+  flex-direction:column;
+}
+
+.tools-zoom-label{
+  color:var(--reader-copy-muted);
+  font-size:7px;
+}
+
+.tools-zoom .zoom-readout{
+  display:block;
+  min-width:0;
+  color:var(--reader-copy);
+  font-size:11px;
+  font-weight:800;
+}
+
 .tools-head strong{
   font-size:12px;
   letter-spacing:.1px;
@@ -7798,5 +7855,16 @@ body:has(#reader.show){
         82px +
         var(--safe-bottom)
       );
+  }
+
+  .tools-primary-controls{
+    grid-template-columns:repeat(5,minmax(48px,1fr));
+    gap:6px;
+  }
+
+  .tools-control,
+  .tools-zoom{
+    min-height:52px;
+    border-radius:13px;
   }
 }
