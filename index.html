@@ -61,7 +61,7 @@
        Main stylesheet
        ===================================================== -->
 
-  <link rel="stylesheet" href="style.css?v=3.10">
+  <link rel="stylesheet" href="style.css?v=3.11">
 
 
   <!-- =====================================================
@@ -3103,6 +3103,33 @@
     </div>
 
 
+    <div class="reader-mini-player" id="readerMiniPlayer" aria-label="مۆسیقا لە خوێنەرەکەدا">
+
+      <div class="reader-mini-cover" aria-hidden="true">
+        <i class="fa-solid fa-music"></i>
+      </div>
+
+      <div class="reader-mini-info">
+        <strong id="readerMiniMusicName">هیچ موزیکێک هەڵنەبژێردراوە</strong>
+        <span id="readerMiniMusicSub">موزیکی خۆت</span>
+      </div>
+
+      <div class="reader-mini-actions">
+        <button class="reader-mini-btn" type="button" data-action="prev-track" aria-label="مۆسیقی پێشوو" title="پێشوو">
+          <i class="fa-solid fa-backward-step"></i>
+        </button>
+
+        <button class="reader-mini-btn reader-mini-play" type="button" data-action="play-pause" aria-label="لێدان و وەستاندن" title="لێدان و وەستاندن">
+          <i class="fa-solid fa-play"></i>
+        </button>
+
+        <button class="reader-mini-btn" type="button" data-action="next-track" aria-label="مۆسیقی داهاتوو" title="داهاتوو">
+          <i class="fa-solid fa-forward-step"></i>
+        </button>
+      </div>
+
+    </div>
+
     <div id="toolsBody"></div>
 
   </section>
@@ -3136,9 +3163,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script src="script.js?v=3.10"></script>
-  <script src="reader.js?v=3.10"></script>
-  <script src="app.js?v=3.10"></script>
+  <script src="script.js?v=3.11"></script>
+  <script src="reader.js?v=3.11"></script>
+  <script src="app.js?v=3.11"></script>
 
 </body>
 
