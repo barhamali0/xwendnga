@@ -7551,649 +7551,1123 @@ main{
 
 
 /* =========================================================
-   41 — READER MODERN IMMERSIVE UI (ZERO-REGRESSION)
-   UI-only overrides: no reader logic or data behavior changes.
+   42 — READER v3.9 CONTROL RELOCATION
+   Zero Regression: keep reader.js data-action / IDs stable.
    ========================================================= */
 
-/* When the full-screen Reader is active, remove the site's
-   normal chrome so the book gets the whole viewport. */
-body:has(#reader.show) .topbar,
-body:has(#reader.show) .bottom,
-body:has(#reader.show) #telegramBtn{
-  display:none !important;
-}
-
-/* Keep the Reader truly edge-to-edge on phones. */
-body:has(#reader.show){
-  overflow:hidden;
-}
-
-/* Give the reading surface maximum usable height. */
-.reader.show .rbody{
-  padding-bottom:
-    calc(
-      84px +
-      var(--safe-bottom)
-    );
-}
-
-/* The legacy top toolbar is intentionally hidden. Its controls live in the bottom sheet. */
+/* The legacy reader-bar is intentionally gone from index.html.
+   Keep this defensive rule in case stale markup is ever served. */
 .reader.show .reader-bar{
   display:none !important;
 }
 
-/* Modern bottom-sheet Reader controls. */
+.reader-top{
+  gap:8px;
+}
+
+.reader-top .rbtn{
+  flex:0 0 auto;
+}
+
+.tools-quick{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  flex-wrap:wrap;
+  padding:4px 0 10px;
+  border-bottom:1px solid var(--reader-line);
+  margin-bottom:10px;
+}
+
+.tools-quick .rb{
+  min-width:38px;
+  min-height:38px;
+  padding:7px 10px;
+  border:1px solid var(--reader-line);
+  border-radius:11px;
+  background:rgba(255,255,255,.045);
+  color:var(--reader-copy);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+}
+
+.tools-quick .rb.kur{
+  min-width:72px;
+}
+
+.tools-quick .zoom-readout{
+  min-width:48px;
+  text-align:center;
+  font-size:10px;
+  font-weight:700;
+  color:var(--reader-copy);
+}
+
+@media (max-width:560px){
+  .reader-top{
+    gap:5px;
+  }
+
+  .reader-top .rbtn{
+    width:36px;
+    height:36px;
+    min-width:36px;
+  }
+
+  .tools-quick{
+    gap:6px;
+  }
+
+  .tools-quick .rb{
+    min-height:40px;
+  }
+}
+
+
+/* =========================================================
+   43 — READER STEP 2: READING CONTROLS
+   Premium mobile-first control sheet.
+   Zero Regression: existing data-actions remain unchanged.
+   ========================================================= */
+
+.paper{
+  filter:
+    brightness(var(--reader-brightness,1));
+}
+
 .reader-tools{
   left:0;
   right:0;
   bottom:0;
-
   width:100%;
-  max-width:none;
-  max-height:min(62vh, 620px);
-
-  margin:0;
-
-  display:flex;
-  flex-direction:column;
-
+  max-width:760px;
+  max-height:
+    min(82vh,760px);
+  margin:0 auto;
   padding:
-    9px
+    8px
     14px
-    calc(
-      12px +
-      var(--safe-bottom)
-    );
-
+    calc(14px + var(--safe-bottom));
+  border-radius:
+    24px 24px 0 0;
   border:
     1px solid
     color-mix(
       in srgb,
-      var(--reader-focus) 18%,
-      var(--reader-line)
+      var(--reader-line) 90%,
+      transparent
     );
-
   border-bottom:0;
-  border-radius:24px 24px 0 0;
-
   background:
     linear-gradient(
       180deg,
-      rgba(13,28,49,.985),
-      rgba(5,15,28,.985)
+      rgba(10,22,39,.985),
+      rgba(5,14,27,.99)
     );
-
   box-shadow:
     0 -18px 60px
-    rgba(0,0,0,.40),
-    0 -2px 0
-    rgba(255,255,255,.035) inset;
-
-  backdrop-filter:
-    blur(28px)
-    saturate(145%);
-
-  -webkit-backdrop-filter:
-    blur(28px)
-    saturate(145%);
-
+    rgba(0,0,0,.34),
+    0 -2px 18px
+    color-mix(
+      in srgb,
+      var(--reader-accent) 8%,
+      transparent
+    );
+  backdrop-filter:blur(26px);
+  -webkit-backdrop-filter:blur(26px);
+  animation:none;
+  transform:translateY(105%);
   opacity:0;
   visibility:hidden;
   pointer-events:none;
-  transform:translateY(calc(100% + 24px));
-
   transition:
-    transform .28s cubic-bezier(.2,.8,.2,1),
+    transform .24s cubic-bezier(.2,.8,.2,1),
     opacity .20s ease,
-    visibility 0s linear .28s;
+    visibility 0s linear .24s;
 }
 
 .reader-tools.show{
-  display:flex;
+  display:block;
+  transform:translateY(0);
   opacity:1;
   visibility:visible;
   pointer-events:auto;
-  transform:translateY(0);
-  animation:none;
   transition:
-    transform .28s cubic-bezier(.2,.8,.2,1),
+    transform .24s cubic-bezier(.2,.8,.2,1),
     opacity .20s ease,
-    visibility 0s linear 0s;
+    visibility 0s;
 }
 
 .tools-handle{
-  width:42px;
+  width:44px;
   height:4px;
-  flex:0 0 4px;
-
-  margin:
-    0
-    auto
-    8px;
-
-  border-radius:999px;
-
-  background:
-    linear-gradient(
-      90deg,
-      var(--reader-accent-strong),
-      var(--reader-accent)
-    );
-
-  box-shadow:
-    0 0 14px
-    color-mix(
-      in srgb,
-      var(--reader-accent) 24%,
-      transparent
-    );
+  margin:2px auto 10px;
+  border-radius:99px;
+  background:rgba(255,255,255,.20);
 }
 
 .tools-head{
-  flex:0 0 auto;
-  margin-bottom:12px;
-  padding:0 2px;
-}
-
-.tools-primary-controls{
-  display:grid;
-  grid-template-columns:repeat(5,minmax(0,1fr));
-  gap:8px;
-  margin-bottom:12px;
-  flex:0 0 auto;
-}
-
-.tools-control,
-.tools-zoom{
-  min-width:0;
-  min-height:56px;
-  border:1px solid var(--reader-line);
-  border-radius:15px;
-  background:rgba(255,255,255,.045);
-  color:var(--reader-copy);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:6px;
-  padding:8px 6px;
-}
-
-.tools-control{
-  flex-direction:column;
-  font-size:9px;
-  font-weight:800;
-  transition:transform .14s ease,background .18s ease,border-color .18s ease;
-  touch-action:manipulation;
-}
-
-.tools-control i{
-  font-size:15px;
-}
-
-.tools-control:active{
-  transform:scale(.96);
-}
-
-.tools-control.kur{
-  color:var(--reader-accent);
-  border-color:color-mix(in srgb,var(--reader-accent) 30%,var(--reader-line));
-  background:color-mix(in srgb,var(--reader-accent) 8%,transparent);
-}
-
-.tools-zoom{
-  flex-direction:column;
-}
-
-.tools-zoom-label{
-  color:var(--reader-copy-muted);
-  font-size:7px;
-}
-
-.tools-zoom .zoom-readout{
-  display:block;
-  min-width:0;
-  color:var(--reader-copy);
-  font-size:11px;
-  font-weight:800;
+  min-height:38px;
+  margin-bottom:10px;
 }
 
 .tools-head strong{
-  font-size:12px;
-  letter-spacing:.1px;
+  font-size:13px;
+  letter-spacing:-.1px;
 }
 
 .tools-close{
   width:38px;
   height:38px;
   min-width:38px;
-  min-height:38px;
   border-radius:12px;
+  background:rgba(255,255,255,.055);
 }
 
 #toolsBody{
-  min-height:0;
+  max-height:
+    calc(82vh - 66px);
   overflow-y:auto;
   overscroll-behavior:contain;
   -webkit-overflow-scrolling:touch;
-  padding-bottom:2px;
+  padding:2px 1px 4px;
+  scrollbar-width:thin;
 }
 
-/* More breathable controls for touch use. */
-.vols{
-  grid-template-columns:repeat(2,minmax(0,1fr));
+.reader-settings-grid{
+  display:grid;
+  grid-template-columns:
+    repeat(2,minmax(0,1fr));
   gap:10px;
 }
 
-.vol{
-  padding:11px;
-  border-radius:14px;
+.reader-control-card{
+  min-width:0;
+  padding:12px;
+  border:1px solid rgba(210,229,244,.09);
+  border-radius:17px;
   background:
     linear-gradient(
       145deg,
-      rgba(255,255,255,.05),
+      rgba(255,255,255,.055),
       rgba(255,255,255,.025)
     );
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.025);
 }
 
-.vol label{
+.reader-font-card,
+.reader-theme-card,
+.reader-volume-card{
+  grid-column:1 / -1;
+}
+
+.reader-control-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+
+.reader-control-head > div{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+
+.reader-control-head strong{
+  color:#f6fbff;
+  font-size:11px;
+  font-weight:800;
+}
+
+.reader-control-head span{
+  color:var(--reader-copy-muted);
+  font-size:8px;
+  line-height:1.5;
+}
+
+.reader-control-head > b{
+  flex:0 0 auto;
+  min-width:44px;
+  padding:5px 7px;
+  border-radius:9px;
+  background:rgba(255,255,255,.055);
+  color:#fff;
   font-size:9px;
+  text-align:center;
+  font-variant-numeric:tabular-nums;
 }
 
-.vol input{
-  min-height:28px;
+.reader-font-row{
+  display:grid;
+  grid-template-columns:40px minmax(0,1fr) 40px;
+  align-items:center;
+  gap:9px;
 }
 
-.reader-col-title{
-  margin:
-    14px
-    0
-    8px;
-
-  font-size:10px;
+.reader-step-btn{
+  width:40px;
+  height:40px;
+  border:1px solid rgba(210,229,244,.10);
+  border-radius:12px;
+  background:rgba(255,255,255,.055);
+  color:#fff;
+  display:grid;
+  place-items:center;
+  font-size:12px;
 }
 
-.reader-colors{
+.reader-step-btn:active,
+.reader-wide-action:active,
+.reader-colors-modern button:active{
+  transform:scale(.97);
+}
+
+.reader-control-range{
+  width:100%;
+  min-width:0;
+  accent-color:var(--reader-accent);
+}
+
+.reader-control-range::-webkit-slider-runnable-track{
+  height:5px;
+  border-radius:99px;
+  background:rgba(255,255,255,.12);
+}
+
+.reader-control-range::-webkit-slider-thumb{
+  margin-top:-5px;
+}
+
+.reader-control-range::-moz-range-track{
+  height:5px;
+  border-radius:99px;
+  background:rgba(255,255,255,.12);
+}
+
+.reader-wide-action{
+  width:100%;
+  min-height:43px;
+  padding:8px 11px;
+  border:1px solid rgba(210,229,244,.10);
+  border-radius:12px;
+  background:rgba(255,255,255,.045);
+  color:#f7fbff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  font-size:9px;
+  font-weight:800;
+  transition:
+    transform .15s ease,
+    border-color .15s ease,
+    background .15s ease;
+}
+
+.reader-wide-action.active,
+.reader-wide-action:hover{
+  border-color:color-mix(
+    in srgb,
+    var(--reader-accent) 48%,
+    transparent
+  );
+  background:color-mix(
+    in srgb,
+    var(--reader-accent) 10%,
+    rgba(255,255,255,.04)
+  );
+}
+
+.reader-action-row{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
   gap:8px;
 }
 
-.reader-colors button{
-  height:48px;
-  border-radius:13px;
-  touch-action:manipulation;
+.reader-disabled-action{
+  opacity:.42;
+  cursor:not-allowed;
 }
 
-.reader-colors button span{
-  height:5px;
-  bottom:5px;
+.reader-ai-action{
+  background:
+    linear-gradient(
+      135deg,
+      color-mix(in srgb,var(--reader-accent) 13%,rgba(255,255,255,.035)),
+      rgba(255,255,255,.035)
+    );
 }
 
-/* Give the page itself a little more visual calm. */
-.reader.show .paper{
+.reader-colors-modern{
+  display:grid;
+  grid-template-columns:repeat(6,minmax(0,1fr));
+  gap:8px;
+}
+
+.reader-colors-modern button{
+  position:relative;
+  width:100%;
+  aspect-ratio:1 / .72;
+  min-height:43px;
+  border:2px solid transparent;
+  border-radius:12px;
+  overflow:hidden;
+  background:var(--theme-bg);
   box-shadow:
-    0 2px 4px rgba(4,12,22,.08),
-    0 18px 48px rgba(4,12,22,.15);
+    inset 0 0 0 1px rgba(255,255,255,.13);
+  transition:
+    transform .15s ease,
+    border-color .15s ease,
+    box-shadow .15s ease;
 }
 
-/* Phones: full-width sheet with thumb-friendly spacing. */
-@media (max-width:639px){
+.reader-colors-modern button span{
+  position:absolute;
+  left:20%;
+  right:20%;
+  bottom:7px;
+  height:4px;
+  border-radius:99px;
+  background:var(--theme-fg);
+  opacity:.9;
+}
+
+.reader-colors-modern button.active{
+  border-color:var(--reader-accent);
+  box-shadow:
+    0 0 0 2px
+    color-mix(
+      in srgb,
+      var(--reader-accent) 18%,
+      transparent
+    ),
+    inset 0 0 0 1px rgba(255,255,255,.18);
+}
+
+.reader-vols{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+
+.reader-volume-card .vol{
+  border-color:rgba(210,229,244,.08);
+  background:rgba(255,255,255,.035);
+}
+
+.reader-volume-card .vol input{
+  accent-color:var(--reader-accent);
+}
+
+@media (max-width:560px){
   .reader-tools{
-    max-height:58vh;
-    padding-inline:12px;
+    max-height:84vh;
+    padding-inline:10px;
+    border-radius:22px 22px 0 0;
   }
 
-  .vols{
+  #toolsBody{
+    max-height:calc(84vh - 64px);
+  }
+
+  .reader-settings-grid{
     grid-template-columns:1fr;
   }
 
-  .tools-head strong{
-    font-size:13px;
+  .reader-font-card,
+  .reader-theme-card,
+  .reader-volume-card{
+    grid-column:auto;
   }
 
-  .reader.show .rbody{
-    padding-bottom:
-      calc(
-        82px +
-        var(--safe-bottom)
-      );
+  .reader-theme-card,
+  .reader-font-card{
+    grid-column:1;
   }
 
-  .tools-primary-controls{
-    grid-template-columns:repeat(5,minmax(48px,1fr));
-    gap:6px;
+  .reader-colors-modern{
+    gap:7px;
   }
 
-  .tools-control,
-  .tools-zoom{
-    min-height:52px;
-    border-radius:13px;
+  .reader-colors-modern button{
+    min-height:42px;
+    border-radius:11px;
+  }
+}
+
+@media (min-width:900px){
+  .reader-tools{
+    left:50%;
+    right:auto;
+    transform:translate(-50%,105%);
+    width:min(760px,calc(100vw - 32px));
+    border-radius:24px 24px 0 0;
+  }
+
+  .reader-tools.show{
+    transform:translate(-50%,0);
   }
 }
 
 
 /* =========================================================
-   58 — READER v4.0 HYBRID READER UI
-   UI-only layout refresh. JavaScript/data-action contracts preserved.
+   READER STEP 3 — MINI MUSIC PLAYER
+   Presentation only: existing music actions stay in script.js.
    ========================================================= */
-
-/* ---------- Top bar: quiet single row ---------- */
-.reader-top{
+.reader-mini-player{
+  display:grid;
   grid-template-columns:44px minmax(0,1fr) auto;
-  min-height:58px;
-  padding:calc(7px + var(--safe-top)) 12px 7px;
+  align-items:center;
   gap:10px;
+  margin:0 0 10px;
+  padding:9px 10px;
+  border:1px solid color-mix(in srgb,var(--reader-line) 92%,transparent);
+  border-radius:16px;
+  background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025));
+  box-shadow:0 8px 24px rgba(0,0,0,.16);
 }
-
-.reader-top-actions{
+.reader-mini-cover{
+  width:44px;
+  height:44px;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  color:#fff;
+  background:linear-gradient(135deg,var(--reader-accent),var(--reader-accent2,var(--reader-accent)));
+  box-shadow:0 8px 18px rgba(0,0,0,.18);
+  font-size:17px;
+}
+.reader-mini-info{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+.reader-mini-info strong,
+.reader-mini-info span{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.reader-mini-info strong{
+  color:var(--reader-copy);
+  font-size:10px;
+  font-weight:800;
+}
+.reader-mini-info span{
+  color:var(--reader-muted);
+  font-size:7px;
+}
+.reader-mini-actions{
   display:flex;
   align-items:center;
-  justify-content:flex-end;
+  gap:5px;
+}
+.reader-mini-btn{
+  width:34px;
+  height:34px;
+  min-width:34px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--reader-line);
+  border-radius:11px;
+  background:rgba(255,255,255,.045);
+  color:var(--reader-copy);
+  transition:transform .15s ease,background .18s ease,border-color .18s ease;
+}
+.reader-mini-btn:active{transform:scale(.94);}
+.reader-mini-btn:hover{background:rgba(255,255,255,.08);}
+.reader-mini-play{
+  border:0;
+  color:#fff;
+  background:linear-gradient(135deg,var(--a),var(--b));
+  box-shadow:0 8px 18px color-mix(in srgb,var(--a) 20%,transparent);
+}
+@media (max-width:560px){
+  .reader-mini-player{grid-template-columns:40px minmax(0,1fr) auto;gap:8px;padding:8px 9px;border-radius:15px;}
+  .reader-mini-cover{width:40px;height:40px;border-radius:11px;font-size:15px;}
+  .reader-mini-btn{width:32px;height:32px;min-width:32px;border-radius:10px;}
+}
+
+/* =========================================================
+   READER v3.12 — TOP BAR + MINI PLAYER POLISH
+   Presentation-only: keep existing music actions and reader IDs.
+   ========================================================= */
+
+.reader-top{
+  grid-template-columns:
+    44px
+    minmax(0,1fr)
+    44px
+    44px;
   gap:8px;
 }
 
-.reader-top-actions .rbtn{
-  width:42px;
-  height:42px;
-  min-width:42px;
-}
-
-.rtitle{
+.reader-top .rtitle{
+  min-width:0;
+  display:grid;
+  justify-items:center;
   text-align:center;
-  min-width:0;
 }
 
-.rtitle strong{
-  font-size:13px;
-}
-
-.rtitle span{
-  margin-top:1px;
-  font-size:8px;
-}
-
-/* ---------- Progress rail ---------- */
-.reader-progress{
-  height:3px;
-  flex:0 0 3px;
-  background:rgba(6,16,27,.76);
-}
-
-.reader-progress span{
-  border-radius:999px;
-}
-
-/* ---------- Bottom navigation: clean reading-first bar ---------- */
-.reader-bottom{
-  z-index:73;
-  grid-template-columns:47px minmax(0,1fr) 47px 47px;
-  gap:9px;
-  min-height:72px;
-  padding:8px 11px calc(8px + var(--safe-bottom));
-  background:color-mix(in srgb,var(--reader-shell) 92%,transparent);
-  box-shadow:0 -14px 34px rgba(0,0,0,.18);
-}
-
-.page-nav,
-.bookmark-control{
-  width:47px;
-  height:47px;
-  min-width:47px;
-  border-radius:14px;
-  background:rgba(255,255,255,.055);
-}
-
-.pagebox{
-  position:relative;
-  min-width:0;
-  height:47px;
-  padding:0 12px;
-  gap:7px;
-  border-radius:14px;
-  cursor:text;
-}
-
-.pagebox-label{
-  color:var(--reader-copy-muted);
-  font-size:8px;
-  flex:0 0 auto;
-}
-
-.pagebox input{
-  width:54px;
-  height:33px;
-  flex:0 0 54px;
-  border:1px solid rgba(140,230,239,.24);
-  border-radius:10px;
-  background:rgba(255,255,255,.035);
-}
-
-#pageTotal{
-  color:var(--reader-copy-muted);
-  font-size:9px;
-  font-variant-numeric:tabular-nums;
-}
-
-.pagebox-hint{
-  position:absolute;
-  inset:auto auto 5px 50%;
-  transform:translateX(-50%);
-  color:transparent;
-  font-size:7px;
+.reader-top .rtitle strong,
+.reader-top .rtitle span{
+  max-width:100%;
+  overflow:hidden;
+  text-overflow:ellipsis;
   white-space:nowrap;
-  pointer-events:none;
 }
 
-/* Focused page field becomes a clean, centered page-jump card on top of the reader. */
-.pagebox:focus-within{
-  position:fixed;
-  left:50%;
-  top:50%;
-  z-index:150;
-  width:min(92vw,420px);
-  height:auto;
-  min-height:170px;
-  transform:translate(-50%,-50%);
-  display:flex;
-  flex-wrap:wrap;
-  align-content:center;
-  justify-content:center;
+.reader-top .rbtn{
+  width:44px;
+  height:44px;
+  min-width:44px;
+}
+
+.reader-mini-player{
+  grid-template-columns:44px minmax(0,1fr) auto;
   gap:12px;
-  padding:24px 22px 20px;
-  border:1px solid color-mix(in srgb,var(--reader-accent) 28%,var(--reader-line));
-  border-radius:24px;
-  background:linear-gradient(160deg,rgba(14,29,49,.985),rgba(5,14,26,.985));
-  box-shadow:0 24px 90px rgba(0,0,0,.55),0 0 0 9999px rgba(3,10,18,.48);
-  backdrop-filter:blur(28px) saturate(150%);
-  -webkit-backdrop-filter:blur(28px) saturate(150%);
+  margin:0;
+  padding:11px 12px;
+  border-radius:18px 18px 14px 14px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.075),
+      rgba(255,255,255,.028)
+    );
+  border-bottom-color:transparent;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.18),
+    inset 0 1px 0 rgba(255,255,255,.045);
 }
 
-.pagebox:focus-within::before{
-  content:"گەڕان بۆ لاپەڕە";
-  flex:0 0 100%;
-  order:-2;
-  text-align:center;
-  color:var(--reader-copy);
-  font-size:14px;
-  font-weight:800;
+.reader-mini-info strong{
+  font-size:11px;
+  line-height:1.35;
 }
 
-.pagebox:focus-within::after{
-  content:"ژمارەی لاپەڕە بنووسە و Enter بکە";
-  flex:0 0 100%;
-  order:3;
-  text-align:center;
-  color:var(--reader-copy-muted);
+.reader-mini-info span{
   font-size:8px;
 }
 
-.pagebox:focus-within .pagebox-label{
-  order:-1;
-  font-size:9px;
-  color:var(--reader-copy-muted);
+.reader-mini-actions{
+  gap:6px;
 }
 
-.pagebox:focus-within input{
-  width:110px;
-  height:52px;
-  flex:0 0 110px;
-  border-color:var(--reader-accent);
-  border-radius:14px;
-  background:rgba(255,255,255,.06);
-  font-size:19px;
+.reader-mini-btn{
+  width:36px;
+  height:36px;
+  min-width:36px;
+  border-radius:12px;
 }
 
-.pagebox:focus-within #pageTotal{
-  order:-1;
-  font-size:12px;
+#toolsBody > .vols{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+  margin:0 0 10px;
+  padding:9px 10px 10px;
+  border:1px solid color-mix(in srgb,var(--reader-line) 92%,transparent);
+  border-top:1px solid color-mix(in srgb,var(--reader-line) 78%,transparent);
+  border-radius:0 0 16px 16px;
+  background:rgba(255,255,255,.025);
+  box-shadow:0 8px 20px rgba(0,0,0,.10);
 }
 
-.pagebox:focus-within .pagebox-hint{
-  color:transparent;
+#toolsBody > .vols .vol{
+  min-width:0;
+  margin:0;
+  padding:8px 9px;
+  border:1px solid color-mix(in srgb,var(--reader-line) 78%,transparent);
+  border-radius:13px;
+  background:rgba(255,255,255,.032);
 }
 
-/* ---------- Settings: modal on desktop, compact sheet on phones ---------- */
-.reader-tools{
-  left:50%;
-  right:auto;
-  bottom:auto;
-  top:50%;
-  transform:translate(-50%,calc(-50% + 14px)) scale(.985);
-  width:min(760px,calc(100vw - 32px));
-  max-height:min(82vh,760px);
-  padding:16px;
-  border-radius:26px;
-  box-shadow:0 30px 100px rgba(0,0,0,.55),0 0 0 9999px rgba(3,10,18,.48);
-  backdrop-filter:blur(28px) saturate(150%);
-  -webkit-backdrop-filter:blur(28px) saturate(150%);
+#toolsBody > .vols label{
+  min-width:0;
+  gap:8px;
 }
 
-.reader-tools.show{
-  transform:translate(-50%,-50%) scale(1);
+#toolsBody > .vols label span{
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
 }
 
-.tools-handle{
-  margin:0 auto 10px;
+#toolsBody > .vols input[type="range"]{
+  width:100%;
+  accent-color:var(--a);
 }
 
-.tools-head{
-  align-items:center;
-  margin-bottom:10px;
-}
-
-.tools-head strong{
-  font-size:14px;
-}
-
-.tools-primary-controls{
-  grid-template-columns:repeat(5,minmax(0,1fr));
-}
-
-#toolsBody{
-  flex:1 1 auto;
-  min-height:0;
-  max-height:calc(82vh - 150px);
-  overflow-y:auto;
-  overscroll-behavior:contain;
-  -webkit-overflow-scrolling:touch;
-  scrollbar-width:thin;
-  padding:0 2px 4px;
-}
-
-/* Let native range controls receive their normal drag gestures. */
-input[type="range"]{
-  touch-action:pan-x;
-}
-
-.vol input,
-.settings-range{
-  touch-action:pan-x;
-}
-
-/* ---------- Responsive: mobile remains a bottom sheet ---------- */
-@media (max-width:639px){
+@media (max-width:560px){
   .reader-top{
-    grid-template-columns:42px minmax(0,1fr) auto;
-    min-height:56px;
-    padding:calc(6px + var(--safe-top)) 9px 6px;
-    gap:7px;
-  }
-
-  .reader-top-actions{
+    grid-template-columns:40px minmax(0,1fr) 40px 40px;
     gap:6px;
+    padding-inline:8px;
   }
 
-  .reader-top-actions .rbtn{
+  .reader-top .rbtn{
     width:40px;
     height:40px;
     min-width:40px;
   }
 
-  .reader-bottom{
-    grid-template-columns:44px minmax(0,1fr) 44px 44px;
+  .reader-mini-player{
+    grid-template-columns:40px minmax(0,1fr) auto;
+    gap:9px;
+    padding:10px;
+  }
+
+  .reader-mini-cover{
+    width:40px;
+    height:40px;
+  }
+
+  .reader-mini-btn{
+    width:34px;
+    height:34px;
+    min-width:34px;
+  }
+
+  #toolsBody > .vols{
+    grid-template-columns:1fr;
     gap:7px;
-    min-height:68px;
-    padding-inline:8px;
-  }
-
-  .page-nav,
-  .bookmark-control{
-    width:44px;
-    height:44px;
-    min-width:44px;
-    border-radius:13px;
-  }
-
-  .pagebox{
-    height:44px;
-    padding-inline:8px;
-    gap:5px;
-  }
-
-  .pagebox input{
-    width:48px;
-    flex-basis:48px;
-    height:31px;
-  }
-
-  .pagebox:focus-within{
-    width:calc(100vw - 28px);
-    max-height:min(54vh,420px);
-    min-height:165px;
-    border-radius:22px;
-    padding:20px 18px 18px;
-  }
-
-  .reader-tools{
-    left:0;
-    right:0;
-    top:auto;
-    bottom:0;
-    width:100%;
-    max-height:min(74vh,680px);
-    transform:translateY(calc(100% + 24px));
-    border-radius:24px 24px 0 0;
-    padding:10px 12px calc(12px + var(--safe-bottom));
-    box-shadow:0 -20px 70px rgba(0,0,0,.45);
-  }
-
-  .reader-tools.show{
-    transform:translateY(0);
-  }
-
-  #toolsBody{
-    max-height:none;
+    padding:8px;
   }
 }
 
-/* ---------- Large screens: calmer reading surface, wider settings ---------- */
-@media (min-width:1024px){
-  .reader-bottom{
-    max-width:1180px;
-    left:50%;
-    right:auto;
-    width:min(1180px,calc(100vw - 32px));
-    transform:translateX(-50%);
-    border:1px solid var(--reader-line);
-    border-bottom:0;
-    border-radius:20px 20px 0 0;
+
+/* =========================================================
+   READER v3.13 — DESKTOP CONTROL PANEL POLISH
+   Presentation-only: mobile layout and all reader/music logic stay unchanged.
+   ========================================================= */
+@media (min-width:900px){
+  .reader-tools{
+    width:min(1080px,calc(100vw - 48px));
+    max-width:1080px;
+    max-height:min(78vh,780px);
+    padding:12px 18px calc(18px + var(--safe-bottom));
+    border-radius:28px 28px 0 0;
+    box-shadow:
+      0 -22px 70px rgba(0,0,0,.38),
+      0 -2px 22px color-mix(in srgb,var(--reader-accent) 10%,transparent);
+  }
+
+  .tools-handle{
+    width:52px;
+    height:5px;
+    margin:3px auto 12px;
+  }
+
+  .tools-head{
+    min-height:44px;
+    margin-bottom:12px;
+    padding-inline:2px;
+  }
+
+  .tools-head strong{
+    font-size:15px;
+  }
+
+  .tools-close{
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border-radius:13px;
+  }
+
+  .reader-mini-player{
+    grid-template-columns:54px minmax(260px,1fr) auto;
+    gap:15px;
+    margin:0 0 12px;
+    padding:12px 14px;
+    border-radius:20px;
+    background:
+      linear-gradient(135deg,rgba(255,255,255,.085),rgba(255,255,255,.028));
+    box-shadow:
+      0 12px 32px rgba(0,0,0,.20),
+      inset 0 1px 0 rgba(255,255,255,.055);
+  }
+
+  .reader-mini-cover{
+    width:54px;
+    height:54px;
+    border-radius:15px;
+    font-size:20px;
+  }
+
+  .reader-mini-info strong{
+    font-size:13px;
+    line-height:1.4;
+  }
+
+  .reader-mini-info span{
+    font-size:9px;
+  }
+
+  .reader-mini-actions{
+    gap:8px;
+  }
+
+  .reader-mini-btn{
+    width:42px;
+    height:42px;
+    min-width:42px;
+    border-radius:13px;
+    font-size:14px;
+  }
+
+  #toolsBody{
+    max-height:calc(78vh - 160px);
+    padding:3px 2px 8px;
+  }
+
+  .reader-settings-grid{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:12px;
+  }
+
+  .reader-control-card{
+    padding:14px;
+    border-radius:19px;
+  }
+
+  .reader-font-card{
+    grid-column:span 2;
+  }
+
+  .reader-theme-card,
+  .reader-volume-card{
+    grid-column:1 / -1;
+  }
+
+  .reader-control-head{
+    margin-bottom:12px;
+  }
+
+  .reader-control-head strong{
+    font-size:12px;
+  }
+
+  .reader-control-head span{
+    font-size:9px;
+  }
+
+  .reader-control-head > b{
+    min-width:50px;
+    padding:6px 8px;
+    font-size:10px;
+  }
+
+  .reader-font-row{
+    grid-template-columns:44px minmax(0,1fr) 44px;
+    gap:11px;
+  }
+
+  .reader-step-btn{
+    width:44px;
+    height:44px;
+    border-radius:13px;
+  }
+
+  .reader-wide-action{
+    min-height:48px;
+    border-radius:13px;
+    font-size:10px;
+  }
+
+  .reader-action-row{
+    gap:10px;
+  }
+
+  .reader-colors-modern{
+    grid-template-columns:repeat(12,minmax(0,1fr));
+    gap:9px;
+  }
+
+  .reader-colors-modern button{
+    min-width:0;
+    aspect-ratio:1.45;
+    border-radius:13px;
+  }
+
+  #toolsBody > .vols{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    margin:0;
+    padding:10px;
+    border-radius:14px;
+  }
+
+  #toolsBody > .vols .vol{
+    padding:10px 11px;
+    border-radius:13px;
+  }
+}
+
+@media (min-width:1200px){
+  .reader-tools{
+    width:min(1160px,calc(100vw - 72px));
+    max-width:1160px;
+  }
+
+  .reader-settings-grid{
+    gap:14px;
+  }
+
+  .reader-control-card{
+    padding:15px;
+  }
+}
+
+
+/* =========================================================
+   XWENDNGA v4.0 — READER MUSIC HUB
+   Presentation-only layer.
+   Existing JS owns playback, volume and track state.
+   ========================================================= */
+
+.reader-tools{
+  overflow:hidden;
+}
+
+.reader-tools .tools-head{
+  flex:0 0 auto;
+}
+
+.reader-mini-player{
+  flex:0 0 auto;
+  margin-bottom:10px;
+  background:
+    linear-gradient(145deg,
+      color-mix(in srgb,var(--reader-accent) 8%,rgba(255,255,255,.055)),
+      rgba(255,255,255,.025)
+    );
+  border-color:
+    color-mix(in srgb,var(--reader-accent) 24%,var(--reader-line));
+}
+
+.reader-music-hub{
+  flex:0 0 auto;
+  margin:0 0 10px;
+  padding:12px;
+  border:1px solid rgba(210,229,244,.10);
+  border-radius:18px;
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.022));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+}
+
+.reader-music-hub-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+
+.reader-music-hub-head > div{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+
+.reader-music-hub-head strong{
+  color:#f6fbff;
+  font-size:11px;
+  font-weight:800;
+}
+
+.reader-music-hub-head span{
+  color:var(--reader-copy-muted);
+  font-size:8px;
+  line-height:1.6;
+}
+
+.reader-music-tabs{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+
+.reader-music-tab{
+  min-width:0;
+  min-height:42px;
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  border:1px solid rgba(210,229,244,.10);
+  border-radius:12px;
+  background:rgba(255,255,255,.035);
+  color:#cdd9e4;
+  font-size:8px;
+  font-weight:800;
+}
+
+.reader-music-tab.active{
+  color:#fff;
+  border-color:color-mix(in srgb,var(--reader-accent) 45%,var(--reader-line));
+  background:
+    linear-gradient(135deg,
+      color-mix(in srgb,var(--reader-accent) 14%,rgba(255,255,255,.04)),
+      rgba(255,255,255,.04));
+  box-shadow:
+    0 8px 20px color-mix(in srgb,var(--reader-accent) 10%,transparent);
+}
+
+.reader-music-tab i{
+  color:var(--reader-accent);
+}
+
+.reader-music-tab-private{
+  justify-content:space-between;
+  padding-inline:11px;
+}
+
+.reader-music-tab-private b{
+  flex:0 0 auto;
+  min-width:24px;
+  padding:4px 6px;
+  border-radius:999px;
+  background:rgba(245,205,104,.10);
+  color:var(--gold);
+  font-family:"Manrope",sans-serif;
+  font-size:7px;
+  text-align:center;
+}
+
+.reader-music-library-note{
+  margin-top:9px;
+  display:grid;
+  grid-template-columns:32px minmax(0,1fr);
+  align-items:center;
+  gap:9px;
+  padding:9px 10px;
+  border:1px solid rgba(210,229,244,.07);
+  border-radius:13px;
+  background:rgba(0,0,0,.10);
+}
+
+.reader-music-library-note > i{
+  width:32px;
+  height:32px;
+  display:grid;
+  place-items:center;
+  border-radius:10px;
+  color:#fff;
+  background:
+    linear-gradient(135deg,var(--reader-accent),var(--reader-accent2,var(--reader-accent)));
+  box-shadow:0 7px 16px color-mix(in srgb,var(--reader-accent) 18%,transparent);
+}
+
+.reader-music-library-note > div{
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+}
+
+.reader-music-library-note strong{
+  color:#f5fbff;
+  font-size:8px;
+  font-weight:800;
+}
+
+.reader-music-library-note span{
+  color:var(--reader-copy-muted);
+  font-size:7px;
+  line-height:1.7;
+}
+
+/* Put the existing, logic-backed volume card directly beneath the music hub. */
+.reader-settings-grid{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+}
+
+.reader-volume-card{
+  grid-row:1;
+}
+
+.reader-font-card{
+  grid-row:2;
+}
+
+.reader-settings-grid > .reader-control-card:nth-child(2){
+  grid-row:3;
+}
+
+.reader-theme-card{
+  grid-row:4;
+}
+
+.reader-mode-card{
+  grid-row:5;
+  grid-column:1;
+}
+
+.reader-language-card{
+  grid-row:5;
+  grid-column:2;
+}
+
+.reader-ai-card{
+  grid-row:6;
+  grid-column:1 / -1;
+}
+
+.reader-volume-card .reader-vols{
+  margin-top:2px;
+}
+
+@media (max-width:639px){
+  .reader-music-tabs{
+    grid-template-columns:1fr 1fr;
+  }
+
+  .reader-music-library-note{
+    grid-template-columns:30px minmax(0,1fr);
+    padding:8px 9px;
+  }
+
+  .reader-settings-grid{
+    grid-template-columns:1fr;
+  }
+
+  .reader-settings-grid > .reader-control-card,
+  .reader-volume-card,
+  .reader-font-card,
+  .reader-theme-card,
+  .reader-mode-card,
+  .reader-language-card,
+  .reader-ai-card{
+    grid-column:1;
+    grid-row:auto;
+  }
+
+  /* Keep music controls first inside the settings stream on mobile. */
+  .reader-volume-card{order:-10;}
+  .reader-font-card{order:-9;}
+  .reader-settings-grid > .reader-control-card:nth-child(2){order:-8;}
+  .reader-theme-card{order:-7;}
+  .reader-mode-card{order:-6;}
+  .reader-language-card{order:-5;}
+  .reader-ai-card{order:-4;}
+}
+
+@media (min-width:900px){
+  .reader-tools{
+    width:min(760px,calc(100vw - 48px));
+  }
+
+  .reader-music-hub{
+    padding:14px;
   }
 }
