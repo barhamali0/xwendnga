@@ -8013,3 +8013,82 @@ main{
     transform:translate(-50%,0);
   }
 }
+
+
+/* =========================================================
+   READER STEP 3 — MINI MUSIC PLAYER
+   Presentation only: existing music actions stay in script.js.
+   ========================================================= */
+.reader-mini-player{
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  margin:0 0 10px;
+  padding:9px 10px;
+  border:1px solid color-mix(in srgb,var(--reader-line) 92%,transparent);
+  border-radius:16px;
+  background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025));
+  box-shadow:0 8px 24px rgba(0,0,0,.16);
+}
+.reader-mini-cover{
+  width:44px;
+  height:44px;
+  display:grid;
+  place-items:center;
+  border-radius:12px;
+  color:#fff;
+  background:linear-gradient(135deg,var(--reader-accent),var(--reader-accent2,var(--reader-accent)));
+  box-shadow:0 8px 18px rgba(0,0,0,.18);
+  font-size:17px;
+}
+.reader-mini-info{
+  min-width:0;
+  display:grid;
+  gap:3px;
+}
+.reader-mini-info strong,
+.reader-mini-info span{
+  overflow:hidden;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+.reader-mini-info strong{
+  color:var(--reader-copy);
+  font-size:10px;
+  font-weight:800;
+}
+.reader-mini-info span{
+  color:var(--reader-muted);
+  font-size:7px;
+}
+.reader-mini-actions{
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.reader-mini-btn{
+  width:34px;
+  height:34px;
+  min-width:34px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--reader-line);
+  border-radius:11px;
+  background:rgba(255,255,255,.045);
+  color:var(--reader-copy);
+  transition:transform .15s ease,background .18s ease,border-color .18s ease;
+}
+.reader-mini-btn:active{transform:scale(.94);}
+.reader-mini-btn:hover{background:rgba(255,255,255,.08);}
+.reader-mini-play{
+  border:0;
+  color:#fff;
+  background:linear-gradient(135deg,var(--a),var(--b));
+  box-shadow:0 8px 18px color-mix(in srgb,var(--a) 20%,transparent);
+}
+@media (max-width:560px){
+  .reader-mini-player{grid-template-columns:40px minmax(0,1fr) auto;gap:8px;padding:8px 9px;border-radius:15px;}
+  .reader-mini-cover{width:40px;height:40px;border-radius:11px;font-size:15px;}
+  .reader-mini-btn{width:32px;height:32px;min-width:32px;border-radius:10px;}
+}
