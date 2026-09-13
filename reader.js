@@ -3583,6 +3583,57 @@
      TOOLS
      ======================================================= */
 
+  /* =======================================================
+     READER STEP 3 — MINI MUSIC PLAYER SYNC
+     Presentation only: script.js keeps ownership of playback.
+     ======================================================= */
+  function syncReaderMiniMusic() {
+    var miniName = $("readerMiniMusicName");
+    var miniSub = $("readerMiniMusicSub");
+    var miniIcon = document.querySelector("#readerMiniPlayer [data-action='play-pause'] i");
+    var sourceName = $("nowName");
+    var sourceSub = $("nowSub");
+    var audio = $("audio");
+
+    if (miniName && sourceName) {
+      miniName.textContent = sourceName.textContent || "هیچ موزیکێک هەڵنەبژێردراوە";
+    }
+    if (miniSub && sourceSub) {
+      miniSub.textContent = sourceSub.textContent || "موزیکی خۆت";
+    }
+    if (miniIcon && audio) {
+      miniIcon.className = audio.paused
+        ? "fa-solid fa-play"
+        : "fa-solid fa-pause";
+    }
+  }
+
+  function initReaderMiniMusicSync() {
+    var audio = $("audio");
+    var sourceName = $("nowName");
+    var sourceSub = $("nowSub");
+
+    if (audio) {
+      audio.addEventListener("play", syncReaderMiniMusic);
+      audio.addEventListener("pause", syncReaderMiniMusic);
+      audio.addEventListener("ended", syncReaderMiniMusic);
+    }
+
+    if (window.MutationObserver && (sourceName || sourceSub)) {
+      var observer = new MutationObserver(function () {
+        syncReaderMiniMusic();
+      });
+      if (sourceName) {
+        observer.observe(sourceName, { childList:true, characterData:true, subtree:true });
+      }
+      if (sourceSub) {
+        observer.observe(sourceSub, { childList:true, characterData:true, subtree:true });
+      }
+    }
+
+    syncReaderMiniMusic();
+  }
+
   function showReaderTools() {
     var tools =
       $("readerTools");
@@ -3893,6 +3944,7 @@
     }
 
     updateViewButton();
+    syncReaderMiniMusic();
     tools.classList.add("show");
   }
 
@@ -4301,6 +4353,8 @@
     applyTheme:
       applyTheme
   };
+
+  initReaderMiniMusicSync();
 
   /* =======================================================
      ACTIONS
