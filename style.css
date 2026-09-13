@@ -7548,3 +7548,255 @@ main{
     transition:none !important;
   }
 }
+
+
+/* =========================================================
+   41 — READER MODERN IMMERSIVE UI (ZERO-REGRESSION)
+   UI-only overrides: no reader logic or data behavior changes.
+   ========================================================= */
+
+/* When the full-screen Reader is active, remove the site's
+   normal chrome so the book gets the whole viewport. */
+body:has(#reader.show) .topbar,
+body:has(#reader.show) .bottom,
+body:has(#reader.show) #telegramBtn{
+  display:none !important;
+}
+
+/* Keep the Reader truly edge-to-edge on phones. */
+body:has(#reader.show){
+  overflow:hidden;
+}
+
+/* Give the reading surface maximum usable height. */
+.reader.show .rbody{
+  padding-bottom:
+    calc(
+      84px +
+      var(--safe-bottom)
+    );
+}
+
+/* A cleaner, quieter reader toolbar. */
+.reader.show .reader-bar{
+  min-height:54px;
+  padding:6px 9px;
+  gap:6px;
+  background:rgba(7,17,31,.72);
+  border-bottom:1px solid rgba(210,229,244,.11);
+  box-shadow:0 8px 24px rgba(0,0,0,.10);
+}
+
+/* Modern bottom-sheet Reader controls. */
+.reader-tools{
+  left:0;
+  right:0;
+  bottom:0;
+
+  width:100%;
+  max-width:none;
+  max-height:min(62vh, 620px);
+
+  margin:0;
+
+  display:flex;
+  flex-direction:column;
+
+  padding:
+    9px
+    14px
+    calc(
+      12px +
+      var(--safe-bottom)
+    );
+
+  border:
+    1px solid
+    color-mix(
+      in srgb,
+      var(--reader-focus) 18%,
+      var(--reader-line)
+    );
+
+  border-bottom:0;
+  border-radius:24px 24px 0 0;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(13,28,49,.985),
+      rgba(5,15,28,.985)
+    );
+
+  box-shadow:
+    0 -18px 60px
+    rgba(0,0,0,.40),
+    0 -2px 0
+    rgba(255,255,255,.035) inset;
+
+  backdrop-filter:
+    blur(28px)
+    saturate(145%);
+
+  -webkit-backdrop-filter:
+    blur(28px)
+    saturate(145%);
+
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(calc(100% + 24px));
+
+  transition:
+    transform .28s cubic-bezier(.2,.8,.2,1),
+    opacity .20s ease,
+    visibility 0s linear .28s;
+}
+
+.reader-tools.show{
+  display:flex;
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0);
+  animation:none;
+  transition:
+    transform .28s cubic-bezier(.2,.8,.2,1),
+    opacity .20s ease,
+    visibility 0s linear 0s;
+}
+
+.tools-handle{
+  width:42px;
+  height:4px;
+  flex:0 0 4px;
+
+  margin:
+    0
+    auto
+    8px;
+
+  border-radius:999px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--reader-accent-strong),
+      var(--reader-accent)
+    );
+
+  box-shadow:
+    0 0 14px
+    color-mix(
+      in srgb,
+      var(--reader-accent) 24%,
+      transparent
+    );
+}
+
+.tools-head{
+  flex:0 0 auto;
+  margin-bottom:12px;
+  padding:0 2px;
+}
+
+.tools-head strong{
+  font-size:12px;
+  letter-spacing:.1px;
+}
+
+.tools-close{
+  width:38px;
+  height:38px;
+  min-width:38px;
+  min-height:38px;
+  border-radius:12px;
+}
+
+#toolsBody{
+  min-height:0;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+  padding-bottom:2px;
+}
+
+/* More breathable controls for touch use. */
+.vols{
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+
+.vol{
+  padding:11px;
+  border-radius:14px;
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.05),
+      rgba(255,255,255,.025)
+    );
+}
+
+.vol label{
+  font-size:9px;
+}
+
+.vol input{
+  min-height:28px;
+}
+
+.reader-col-title{
+  margin:
+    14px
+    0
+    8px;
+
+  font-size:10px;
+}
+
+.reader-colors{
+  gap:8px;
+}
+
+.reader-colors button{
+  height:48px;
+  border-radius:13px;
+  touch-action:manipulation;
+}
+
+.reader-colors button span{
+  height:5px;
+  bottom:5px;
+}
+
+/* Give the page itself a little more visual calm. */
+.reader.show .paper{
+  box-shadow:
+    0 2px 4px rgba(4,12,22,.08),
+    0 18px 48px rgba(4,12,22,.15);
+}
+
+/* Phones: full-width sheet with thumb-friendly spacing. */
+@media (max-width:639px){
+  .reader-tools{
+    max-height:58vh;
+    padding-inline:12px;
+  }
+
+  .vols{
+    grid-template-columns:1fr;
+  }
+
+  .tools-head strong{
+    font-size:13px;
+  }
+
+  .reader.show .rbody{
+    padding-bottom:
+      calc(
+        82px +
+        var(--safe-bottom)
+      );
+  }
+}
