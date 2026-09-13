@@ -61,7 +61,7 @@
        Main stylesheet
        ===================================================== -->
 
-  <link rel="stylesheet" href="style.css?v=3.8">
+  <link rel="stylesheet" href="style.css?v=3.9">
 
 
   <!-- =====================================================
@@ -2922,6 +2922,32 @@
 
       </button>
 
+
+      <button
+        class="rbtn"
+        type="button"
+        data-action="reader-tools"
+        aria-label="ڕێکخستنەکانی خوێنەر"
+        title="ڕێکخستنەکانی خوێنەر"
+      >
+
+        <i class="fa-solid fa-sliders"></i>
+
+      </button>
+
+
+      <button
+        class="rbtn"
+        type="button"
+        data-action="reader-music"
+        aria-label="موزیک"
+        title="موزیک"
+      >
+
+        <i class="fa-solid fa-music"></i>
+
+      </button>
+
     </header>
 
 
@@ -3077,10 +3103,10 @@
     </div>
 
 
-    <div class="tools-primary-controls" aria-label="کۆنترۆڵە سەرەکییەکانی خوێنەر">
+    <div class="tools-quick" aria-label="کۆنترۆڵی خێرای خوێندنەوە">
 
       <button
-        class="tools-control kur"
+        class="rb kur"
         id="readerKurdish"
         type="button"
         data-action="reader-kurdish"
@@ -3091,7 +3117,7 @@
       </button>
 
       <button
-        class="tools-control"
+        class="rb"
         id="viewToggleBtn"
         type="button"
         data-action="toggle-view"
@@ -3102,32 +3128,26 @@
       </button>
 
       <button
-        class="tools-control"
+        class="rb"
         type="button"
         data-action="font-down"
         title="کەمکردنی زووم / فۆنت"
       >
         <i class="fa-solid fa-minus"></i>
-        <span>A−</span>
       </button>
 
-      <div class="tools-zoom" aria-live="polite">
-        <span class="tools-zoom-label">زووم</span>
-        <strong class="zoom-readout" id="zoomReadout">100%</strong>
-      </div>
+      <span class="zoom-readout" id="zoomReadout">100%</span>
 
       <button
-        class="tools-control"
+        class="rb"
         type="button"
         data-action="font-up"
         title="زیادکردنی زووم / فۆنت"
       >
         <i class="fa-solid fa-plus"></i>
-        <span>A+</span>
       </button>
 
     </div>
-
 
     <div id="toolsBody"></div>
 
@@ -3162,9 +3182,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script src="script.js?v=3.5"></script>
-  <script src="reader.js?v=2.6"></script>
-  <script src="app.js?v=2.6"></script>
+  <script src="script.js?v=3.9"></script>
+  <script src="reader.js?v=3.9"></script>
+  <script src="app.js?v=3.9"></script>
 
 </body>
 
