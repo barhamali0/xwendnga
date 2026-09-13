@@ -8427,38 +8427,60 @@ main{
 
 
 /* =========================================================
-   XWENDNGA v4.0 — CLEAN READER FEATURE SEPARATION
+   XWENDNGA v4.0 — READER CLEANUP
+   1) Keep Reader top controls in one horizontal RTL row.
+   2) Keep music and font sizing out of the Settings sheet.
+   Zero Regression: no JS logic changed.
    ========================================================= */
-.reader-top{grid-template-columns:44px minmax(0,1fr) auto;gap:10px;}
-.reader-quick-actions{display:flex;align-items:center;justify-content:flex-end;gap:5px;min-width:0;}
-.reader-action-compact{width:40px!important;height:40px!important;min-width:40px!important;border-radius:12px!important;}
-.reader-tools[data-reader-panel="settings"] .reader-music-panel{display:none!important;}
-.reader-tools[data-reader-panel="music"] .reader-settings-panel{display:none!important;}
-.reader-music-panel,.reader-settings-panel{display:grid;gap:11px;}
-.reader-music-card{padding:13px;border:1px solid rgba(210,229,244,.09);border-radius:18px;background:linear-gradient(145deg,rgba(255,255,255,.055),rgba(255,255,255,.025));}
-.reader-music-card-primary{padding:10px;}
-.reader-music-card-head,.reader-music-section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;}
-.reader-music-card-head>div,.reader-music-section-title>div{min-width:0;display:flex;flex-direction:column;gap:3px;}
-.reader-panel-kicker{font-size:7px;letter-spacing:.12em;color:var(--reader-accent);font-weight:900;}
-.reader-music-card-head strong,.reader-music-section-title strong{font-size:12px;color:#fff;font-weight:900;}
-.reader-music-card-head small,.reader-music-section-title small{font-size:8px;color:var(--reader-copy-muted);}
-.reader-music-badge,.reader-lock-badge{padding:5px 8px;border-radius:999px;background:rgba(255,255,255,.055);color:var(--reader-copy);font-size:8px;font-weight:800;}
-.reader-music-badge{color:var(--gold);}
-.reader-music-section-title{margin-bottom:9px;}
-.reader-track-list{display:grid;gap:7px;}
-.reader-track-row{width:100%;display:grid;grid-template-columns:42px minmax(0,1fr) 30px;align-items:center;gap:9px;padding:7px 8px;border:1px solid rgba(210,229,244,.07);border-radius:14px;background:rgba(255,255,255,.028);color:#fff;text-align:right;}
-.reader-track-art{width:42px;height:42px;display:grid;place-items:center;border-radius:11px;overflow:hidden;background:linear-gradient(135deg,var(--a),var(--b));color:#fff;}
-.reader-track-art img{width:100%;height:100%;object-fit:cover;}
-.reader-track-copy{min-width:0;display:flex;flex-direction:column;gap:3px;}
-.reader-track-copy strong,.reader-track-copy small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.reader-track-copy strong{font-size:9px;font-weight:800;}.reader-track-copy small{font-size:7px;color:var(--reader-copy-muted);}
-.reader-track-play-icon{color:var(--reader-accent);}
-.reader-music-empty{padding:14px;border:1px dashed rgba(210,229,244,.12);border-radius:13px;text-align:center;color:var(--reader-copy-muted);font-size:8px;}
-.reader-volume-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:9px;}
-.reader-volume-mini{padding:8px 9px;border:1px solid rgba(210,229,244,.08);border-radius:13px;background:rgba(255,255,255,.03);}
-.reader-volume-mini label{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px;color:var(--reader-copy);font-size:8px;}
-.reader-volume-mini label span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}.reader-volume-mini input{width:100%;accent-color:var(--reader-accent);}
-.reader-premium-note{display:flex;gap:8px;margin-top:9px;padding:9px 10px;border:1px solid rgba(245,205,104,.18);border-radius:12px;background:rgba(245,205,104,.045);color:#f7e6a7;font-size:8px;line-height:1.5;}
-.reader-saved-words-card{margin-top:0;}
-@media(max-width:639px){.reader-top{grid-template-columns:40px minmax(0,1fr) auto;gap:5px;padding-inline:7px;}.reader-quick-actions{gap:4px;max-width:230px;overflow-x:auto;scrollbar-width:none;}.reader-quick-actions::-webkit-scrollbar{display:none;}.reader-action-compact{width:36px!important;height:36px!important;min-width:36px!important;border-radius:11px!important;}.reader-music-card{padding:11px;border-radius:16px;}.reader-music-card-head strong,.reader-music-section-title strong{font-size:10px;}.reader-music-card-head small,.reader-music-section-title small{font-size:7px;}.reader-volume-grid{grid-template-columns:1fr;}.reader-track-row{grid-template-columns:40px minmax(0,1fr) 30px;}.reader-track-art{width:40px;height:40px;}}
-@media(min-width:900px){.reader-tools[data-reader-panel="music"]{width:min(900px,calc(100vw - 48px));}.reader-music-panel{grid-template-columns:1.1fr .9fr;}.reader-music-card-primary{grid-column:1/-1;}}
+
+.reader-top{
+  display:grid !important;
+  grid-template-columns:44px minmax(0,1fr) 44px 44px !important;
+  grid-template-rows:1fr !important;
+  grid-auto-flow:column !important;
+  align-items:center !important;
+  direction:rtl !important;
+  min-height:58px !important;
+  gap:8px !important;
+  padding-inline:10px !important;
+}
+
+.reader-top .rbtn{
+  position:static !important;
+  width:44px !important;
+  height:44px !important;
+  min-width:44px !important;
+  margin:0 !important;
+}
+
+.reader-top .rtitle{
+  min-width:0 !important;
+  width:100% !important;
+  grid-column:auto !important;
+}
+
+/* Music is handled by its dedicated Reader music area; remove it from settings. */
+.reader-tools .reader-mini-player,
+.reader-tools .reader-volume-card .vol:first-child{
+  display:none !important;
+}
+
+/* Font size is controlled directly in the Reader; keep it out of settings. */
+.reader-tools .reader-font-card{
+  display:none !important;
+}
+
+@media (max-width:560px){
+  .reader-top{
+    grid-template-columns:40px minmax(0,1fr) 40px 40px !important;
+    min-height:54px !important;
+    gap:6px !important;
+    padding-inline:8px !important;
+  }
+
+  .reader-top .rbtn{
+    width:40px !important;
+    height:40px !important;
+    min-width:40px !important;
+  }
+}
