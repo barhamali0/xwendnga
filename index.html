@@ -2908,34 +2908,33 @@
 
       </div>
 
-      <div class="reader-top-actions">
 
-        <button
-          class="rbtn"
-          id="readerSpeak"
-          type="button"
-          data-action="reader-speak"
-          aria-label="خوێندنەوە بە دەنگ"
-          title="خوێندنەوە بە دەنگ"
-        >
+      <button
+        class="rbtn"
+        id="readerSpeak"
+        type="button"
+        data-action="reader-speak"
+        aria-label="خوێندنەوە بە دەنگ"
+        title="خوێندنەوە بە دەنگ"
+      >
 
-          <i class="fa-solid fa-play"></i>
+        <i class="fa-solid fa-play"></i>
 
-        </button>
+      </button>
 
-        <button
-          class="rbtn"
-          type="button"
-          data-action="reader-tools"
-          aria-label="ڕێکخستنەکانی خوێنەر"
-          title="ڕێکخستنەکانی خوێنەر"
-        >
 
-          <i class="fa-solid fa-sliders"></i>
+      <button
+        class="rbtn"
+        type="button"
+        data-action="reader-tools"
+        aria-label="ڕێکخستنەکانی خوێنەر"
+        title="ڕێکخستنەکانی خوێنەر"
+      >
 
-        </button>
+        <i class="fa-solid fa-sliders"></i>
 
-      </div>
+      </button>
+
 
     </header>
 
@@ -2995,11 +2994,19 @@
         aria-label="لاپەڕەی پێشوو"
         title="لاپەڕەی پێشوو"
       >
+
         <i class="fa-solid fa-chevron-right"></i>
+
       </button>
 
-      <div class="pagebox" aria-label="گەڕان بۆ لاپەڕە">
-        <span class="pagebox-label">لاپەڕە</span>
+
+      <div class="pagebox">
+
+        <span>
+          لاپەڕە
+        </span>
+
+
         <input
           id="pageInput"
           type="number"
@@ -3008,9 +3015,14 @@
           inputmode="numeric"
           aria-label="ژمارەی لاپەڕە"
         >
-        <span id="pageTotal">/ 1</span>
-        <small class="pagebox-hint">کرتە بکە بۆ گەڕان بۆ لاپەڕە</small>
+
+
+        <span id="pageTotal">
+          / 1
+        </span>
+
       </div>
+
 
       <button
         class="page-nav"
@@ -3019,8 +3031,11 @@
         aria-label="لاپەڕەی داهاتوو"
         title="لاپەڕەی داهاتوو"
       >
+
         <i class="fa-solid fa-chevron-left"></i>
+
       </button>
+
 
       <button
         class="bookmark-control"
@@ -3031,7 +3046,9 @@
         aria-pressed="false"
         title="پاشەکەوتکردنی شوێنی خوێندنەوە"
       >
+
         <i class="fa-regular fa-bookmark"></i>
+
       </button>
 
     </footer>
@@ -3056,7 +3073,7 @@
     <div class="tools-head">
 
       <strong id="toolsTitle">
-        ڕێکخستنەکانی خوێندنەوە
+        کۆنترۆڵی خوێندنەوە
       </strong>
 
 
@@ -3074,57 +3091,64 @@
     </div>
 
 
-    <div class="tools-primary-controls" aria-label="کۆنترۆڵە سەرەکییەکانی خوێنەر">
+    <div class="reader-mini-player" id="readerMiniPlayer" aria-label="مۆسیقا لە خوێنەرەکەدا">
 
-      <button
-        class="tools-control kur"
-        id="readerKurdish"
-        type="button"
-        data-action="reader-kurdish"
-        title="وەرگێڕانی کوردی"
-      >
-        <i class="fa-solid fa-language"></i>
-        <span>کوردی</span>
-      </button>
-
-      <button
-        class="tools-control"
-        id="viewToggleBtn"
-        type="button"
-        data-action="toggle-view"
-        title="دەق / وێنە"
-      >
-        <i class="fa-solid fa-robot"></i>
-        <span>دەق</span>
-      </button>
-
-      <button
-        class="tools-control"
-        type="button"
-        data-action="font-down"
-        title="کەمکردنی زووم / فۆنت"
-      >
-        <i class="fa-solid fa-minus"></i>
-        <span>A−</span>
-      </button>
-
-      <div class="tools-zoom" aria-live="polite">
-        <span class="tools-zoom-label">زووم</span>
-        <strong class="zoom-readout" id="zoomReadout">100%</strong>
+      <div class="reader-mini-cover" aria-hidden="true">
+        <i class="fa-solid fa-music"></i>
       </div>
 
-      <button
-        class="tools-control"
-        type="button"
-        data-action="font-up"
-        title="زیادکردنی زووم / فۆنت"
-      >
-        <i class="fa-solid fa-plus"></i>
-        <span>A+</span>
-      </button>
+      <div class="reader-mini-info">
+        <strong id="readerMiniMusicName">هیچ موزیکێک هەڵنەبژێردراوە</strong>
+        <span id="readerMiniMusicSub">موزیکی خۆت</span>
+      </div>
+
+      <div class="reader-mini-actions">
+        <button class="reader-mini-btn" type="button" data-action="prev-track" aria-label="مۆسیقی پێشوو" title="پێشوو">
+          <i class="fa-solid fa-backward-step"></i>
+        </button>
+
+        <button class="reader-mini-btn reader-mini-play" type="button" data-action="play-pause" aria-label="لێدان و وەستاندن" title="لێدان و وەستاندن">
+          <i class="fa-solid fa-play"></i>
+        </button>
+
+        <button class="reader-mini-btn" type="button" data-action="next-track" aria-label="مۆسیقی داهاتوو" title="داهاتوو">
+          <i class="fa-solid fa-forward-step"></i>
+        </button>
+      </div>
 
     </div>
 
+    <!-- READER MUSIC HUB — presentation layer for Step 1 -->
+    <section class="reader-music-hub" aria-label="مۆسیقا لە خوێندنەوە">
+
+      <div class="reader-music-hub-head">
+        <div>
+          <strong>🎵 مۆسیقا لە خوێندنەوە</strong>
+          <span>هەڵبژاردن و کۆنترۆڵی دەنگ لە هەمان شوێن</span>
+        </div>
+      </div>
+
+      <div class="reader-music-tabs" role="tablist" aria-label="جۆری مۆسیقا">
+        <button class="reader-music-tab active" type="button" role="tab" aria-selected="true">
+          <i class="fa-solid fa-globe"></i>
+          <span>مۆسیقای گشتی</span>
+        </button>
+        <button class="reader-music-tab reader-music-tab-private" type="button" role="tab" aria-selected="false">
+          <i class="fa-solid fa-lock"></i>
+          <span>مۆسیقای تایبەت</span>
+          <b>تا ٥</b>
+        </button>
+      </div>
+
+      <div class="reader-music-library-note">
+        <i class="fa-solid fa-headphones-simple"></i>
+        <div>
+          <strong>مۆسیقاکانت لە هەمان Reader هەڵبژێرە</strong>
+          <span>مۆسیقای گشتی بۆ هەمووانە؛ مۆسیقای تایبەت بۆ موزیکەکانی خۆتە و تا ٥ موزیک بۆ بەکارهێنەری ئاسایی.</span>
+        </div>
+      </div>
+
+    </section>
 
     <div id="toolsBody"></div>
 
