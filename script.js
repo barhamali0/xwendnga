@@ -596,9 +596,10 @@
     "هەژمارەکەت دروست بوو. ئەگەر پشتڕاستکردنەوەی ئیمەیڵ چالاک بێت، تکایە ئیمەیڵەکەت پشتڕاست بکەوە و پاشان بچۆ ژوورەوە.";
 
   var PREMIUM_PAYMENT_INFO = {
-    fastpay: "ژمارەی FastPay ـەکەت لێرە دابنێ",
-    fib: "ژمارەی FIB ـەکەت لێرە دابنێ",
-    telegram: "@about_Barham"
+    fastpay: "7507187025",
+    fib: "",
+    telegram: "@barham_ali0",
+    amount: "1,000 دینار"
   };
 
   var filter = "all";
@@ -7415,7 +7416,16 @@
     var fields = $("xwAuthFields");
     fields.innerHTML =
       '<div style="display:grid;gap:10px">' +
-      '<div style="padding:13px;border-radius:15px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:#d9e5f1;font-size:10px;line-height:2"><strong>FastPay</strong><br>' + esc(PREMIUM_PAYMENT_INFO.fastpay) + '<br><br><strong>FIB</strong><br>' + esc(PREMIUM_PAYMENT_INFO.fib) + '<br><br>دوای ناردنی پارە، ئیمەیڵی هەژمارەکەت لە Telegram بنێرە.</div>' +
+      '<div style="padding:15px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);color:#d9e5f1;font-size:10px;line-height:2.05">' +
+        '<strong style="display:block;color:#fff;font-size:12px;margin-bottom:4px">چالاککردنی Premium</strong>' +
+        '<span>تەنیا <strong style="color:var(--a);font-size:12px">' + esc(PREMIUM_PAYMENT_INFO.amount) + '</strong> بۆ چالاککردنی Premium.</span>' +
+        '<div style="margin-top:10px;padding:10px 11px;border-radius:13px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06)">' +
+          '<strong style="display:block;color:#fff">FastPay</strong>' +
+          '<span dir="ltr" style="display:block;margin-top:4px;font-size:12px;letter-spacing:.5px;color:#fff">' + esc(PREMIUM_PAYMENT_INFO.fastpay) + '</span>' +
+        '</div>' +
+        '<div style="margin-top:10px;color:#cbd7e4">تۆ ئازادی پارەکە بۆ کام هەژمار دەنێریت.</div>' +
+        '<small style="display:block;margin-top:8px;color:#9fb1c5;font-size:8px;line-height:1.8">تێبینییەکی گرنگ: کاتێک پارەکەت نارد بۆ هەژمارەکە، وێنەی وەسڵەکەش لەگەڵی بنێرە تا بتوانین Premium ـەکەت چالاک بکەین.</small>' +
+      '</div>' +
       '<a href="https://t.me/' + PREMIUM_PAYMENT_INFO.telegram.replace(/^@/, "") + '" target="_blank" rel="noopener noreferrer" class="primary" style="min-height:48px;display:grid;place-items:center">پەیوەندی بە Telegram</a>' +
       '</div>';
   }
