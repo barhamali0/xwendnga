@@ -6373,6 +6373,34 @@
     getMusicVolume:
       getMusicVolume,
 
+    getReaderMusicCatalog:
+      function () {
+        var playable = getPlayableMusic();
+        var currentUserId = authState.user ? String(authState.user.id) : "";
+        var profile = authState.profile || {};
+        var isPremium = authState.isAdmin || authState.role === "premium";
+        var privateLimit = isPremium
+          ? null
+          : (profile.music_limit != null ? Number(profile.music_limit) : 5);
+        var publicItems = [];
+        var privateItems = [];
+
+        playable.forEach(function (track, index) {
+          var ownerId = track && track.ownerId ? String(track.ownerId) : "";
+          var item = {
+            index: index,
+            id: track && track.id != null ? String(track.id) : String(index),
+            name: track && track.name ? track.name : "مۆسیقا",
+            artist: track && track.artist ? track.artist : "مۆسیقا",
+            cover_url: track && track.cover_url ? track.cover_url : ""
+          };
+          if (currentUserId && ownerId === currentUserId) privateItems.push(item);
+          else publicItems.push(item);
+        });
+
+        return { publicItems: publicItems, privateItems: privateItems, privateLimit: privateLimit, isPremium: !!isPremium };
+      },
+
     dbPut:
       dbPut,
 
