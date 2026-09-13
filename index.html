@@ -61,7 +61,7 @@
        Main stylesheet
        ===================================================== -->
 
-  <link rel="stylesheet" href="style.css?v=3.7">
+  <link rel="stylesheet" href="style.css?v=3.8">
 
 
   <!-- =====================================================
@@ -2940,105 +2940,6 @@
     </div>
 
 
-    <!-- Reader controls -->
-
-    <div class="reader-bar">
-
-      <button
-        class="rb kur"
-        id="readerKurdish"
-        type="button"
-        data-action="reader-kurdish"
-        title="وەرگێڕانی کوردی"
-      >
-
-        <i class="fa-solid fa-language"></i>
-
-        <span>
-          کوردی
-        </span>
-
-      </button>
-
-
-      <button
-        class="rb"
-        id="viewToggleBtn"
-        type="button"
-        data-action="toggle-view"
-        title="دەق / وێنە"
-      >
-
-        <i class="fa-solid fa-robot"></i>
-
-        <span>
-          دەق
-        </span>
-
-      </button>
-
-
-      <button
-        class="rb"
-        type="button"
-        data-action="reader-tools"
-        title="ڕێکخستنەکانی خوێنەر"
-      >
-
-        <i class="fa-solid fa-sliders"></i>
-
-      </button>
-
-
-      <button
-        class="rb"
-        type="button"
-        data-action="reader-music"
-        title="موزیک"
-      >
-
-        <i class="fa-solid fa-music"></i>
-
-      </button>
-
-
-      <span class="tool-separator"></span>
-
-
-      <button
-        class="rb"
-        type="button"
-        data-action="font-down"
-        title="کەمکردنی زووم / فۆنت"
-      >
-
-        <i class="fa-solid fa-minus"></i>
-
-      </button>
-
-
-      <span
-        class="zoom-readout"
-        id="zoomReadout"
-      >
-        100%
-      </span>
-
-
-      <button
-        class="rb"
-        type="button"
-        data-action="font-up"
-        title="زیادکردنی زووم / فۆنت"
-      >
-
-        <i class="fa-solid fa-plus"></i>
-
-      </button>
-
-    </div>
-
-
     <!-- Reader body -->
 
     <div
@@ -3171,6 +3072,58 @@
 
         <i class="fa-solid fa-xmark"></i>
 
+      </button>
+
+    </div>
+
+
+    <div class="tools-primary-controls" aria-label="کۆنترۆڵە سەرەکییەکانی خوێنەر">
+
+      <button
+        class="tools-control kur"
+        id="readerKurdish"
+        type="button"
+        data-action="reader-kurdish"
+        title="وەرگێڕانی کوردی"
+      >
+        <i class="fa-solid fa-language"></i>
+        <span>کوردی</span>
+      </button>
+
+      <button
+        class="tools-control"
+        id="viewToggleBtn"
+        type="button"
+        data-action="toggle-view"
+        title="دەق / وێنە"
+      >
+        <i class="fa-solid fa-robot"></i>
+        <span>دەق</span>
+      </button>
+
+      <button
+        class="tools-control"
+        type="button"
+        data-action="font-down"
+        title="کەمکردنی زووم / فۆنت"
+      >
+        <i class="fa-solid fa-minus"></i>
+        <span>A−</span>
+      </button>
+
+      <div class="tools-zoom" aria-live="polite">
+        <span class="tools-zoom-label">زووم</span>
+        <strong class="zoom-readout" id="zoomReadout">100%</strong>
+      </div>
+
+      <button
+        class="tools-control"
+        type="button"
+        data-action="font-up"
+        title="زیادکردنی زووم / فۆنت"
+      >
+        <i class="fa-solid fa-plus"></i>
+        <span>A+</span>
       </button>
 
     </div>
