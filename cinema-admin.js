@@ -133,7 +133,8 @@
       .ca-alert,.ca-ok{padding:11px 13px;border-radius:13px;font-size:.75rem;line-height:1.8}
       .ca-alert{color:#ffdbe2;border:1px solid rgba(255,86,122,.22);background:rgba(255,86,122,.08)}
       .ca-ok{color:#d8ffef;border:1px solid rgba(49,211,154,.2);background:rgba(49,211,154,.07)}
-      @media(max-width:700px){.ca-grid,.ca-sub-grid,.ca-server-grid{grid-template-columns:1fr}.ca-full{grid-column:auto}.ca-head{align-items:stretch;flex-direction:column}}
+      .ca-admin-launch{margin-inline-start:auto}
+      @media(max-width:700px){.ca-grid,.ca-sub-grid,.ca-server-grid{grid-template-columns:1fr}.ca-full{grid-column:auto}.ca-head{align-items:stretch;flex-direction:column}.ca-admin-launch{width:100%;margin-inline-start:0}}
     `;
     document.head.appendChild(s);
   }
@@ -264,7 +265,7 @@
         <div class="ca-panel ca-head">
           <div><h2>${S.editing ? "دەستکاریی ناوەڕۆک" : "زیادکردنی فیلم یان کارتۆن"}</h2>
           <div class="ca-muted">قۆناغی ٥.١ — ناوەڕۆکی یەک ڤیدیۆیی، سێرڤەرە داینامیکەکان و ژێرنووسەکان.</div></div>
-          <button type="button" class="ca-btn" data-list>گەڕانەوە بۆ لیست</button>
+          <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="ca-btn" data-list>گەڕانەوە بۆ لیست</button><button type="button" class="ca-btn" data-close-admin>داخستن</button></div>
         </div>
 
         <form class="ca-panel" data-form>
@@ -312,6 +313,7 @@
     var form=S.root.querySelector("[data-form]");
     form.addEventListener("submit",function(e){e.preventDefault();save()});
     S.root.querySelectorAll("[data-list]").forEach(function(b){b.addEventListener("click",list)});
+    S.root.querySelectorAll("[data-close-admin]").forEach(function(b){b.addEventListener("click",closeAdminPanel)});
     S.root.querySelector("[data-add-server]").addEventListener("click",function(){
       var f=formData();
       f.servers.push({id:null,server_name:"",server_type:"",video_url:"",is_default:f.servers.length===0,sort_order:String(f.servers.length+1),status:"published"});
@@ -369,12 +371,13 @@
   function list() {
     S.editing=null;
     S.root.innerHTML=`<div class="ca-wrap">
-      <div class="ca-panel ca-head"><div><h2>بەڕێوەبردنی سینەما</h2><div class="ca-muted">فیلم و کارتۆن زیاد بکە و سێرڤەر و ژێرنووسەکانیان ڕێکبخە.</div></div><button type="button" class="ca-btn ca-primary" data-new>+ زیادکردنی ناوەڕۆک</button></div>
+      <div class="ca-panel ca-head"><div><h2>بەڕێوەبردنی سینەما</h2><div class="ca-muted">فیلم و کارتۆن زیاد بکە و سێرڤەر و ژێرنووسەکانیان ڕێکبخە.</div></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="ca-btn ca-primary" data-new>+ زیادکردنی ناوەڕۆک</button><button type="button" class="ca-btn" data-close-admin>داخستن</button></div></div>
       <div class="ca-panel"><div class="ca-list">${S.cinemas.length?S.cinemas.map(card).join(""):'<div class="ca-empty">هێشتا هیچ فیلم یان کارتۆنێک نییە.</div>'}</div></div>
     </div>`;
     S.root.querySelector("[data-new]").addEventListener("click",function(){S.editing=null;renderForm(empty())});
     S.root.querySelectorAll("[data-edit]").forEach(function(b){b.addEventListener("click",function(){edit(b.dataset.edit)})});
     S.root.querySelectorAll("[data-delete]").forEach(function(b){b.addEventListener("click",function(){remove(b.dataset.delete)})});
+    S.root.querySelectorAll("[data-close-admin]").forEach(function(b){b.addEventListener("click",closeAdminPanel)});
   }
 
   async function edit(id) {
@@ -450,19 +453,121 @@
     }catch(e){message("سڕینەوە سەرکەوتوو نەبوو: "+(e.message||""),false)}
   }
 
+
+  function getCinemaView() {
+    return document.querySelector(C.view);
+  }
+
+  function ensureAdminButton() {
+    var view = getCinemaView();
+    if (!view) return null;
+
+    var button = view.querySelector("[data-cinema-admin-open]");
+
+    if (!button) {
+      var header = view.querySelector(".section-head");
+
+      button = document.createElement("button");
+      button.type = "button";
+      button.className = "ca-admin-launch";
+      button.setAttribute("data-cinema-admin-open", "");
+      button.textContent = "⚙ بەڕێوەبردنی سینەما";
+
+      button.style.cssText =
+        "min-height:42px;padding:0 14px;border:1px solid rgba(255,255,255,.12);" +
+        "border-radius:13px;color:#fff;background:linear-gradient(135deg,#7c5cff,#27c7ff);" +
+        "cursor:pointer;font:inherit;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.18);";
+
+      if (header) {
+        header.appendChild(button);
+      } else {
+        view.insertBefore(button, view.firstChild);
+      }
+    }
+
+    return button;
+  }
+
+  function openAdminPanel() {
+    if (!S.isAdmin || !S.root) return;
+
+    S.root.style.display = "";
+    var button = ensureAdminButton();
+    if (button) button.setAttribute("aria-expanded", "true");
+
+    window.scrollTo({
+      top: Math.max(
+        0,
+        S.root.getBoundingClientRect().top + window.scrollY - 12
+      ),
+      behavior: "smooth"
+    });
+  }
+
+  function closeAdminPanel() {
+    if (!S.root) return;
+
+    S.root.style.display = "none";
+
+    var button = ensureAdminButton();
+    if (button) button.setAttribute("aria-expanded", "false");
+  }
+
+  function bindAdminLauncher() {
+    var button = ensureAdminButton();
+    if (!button || button.dataset.bound === "true") return;
+
+    button.dataset.bound = "true";
+
+    button.addEventListener("click", function () {
+      if (!S.isAdmin) return;
+
+      if (S.root && S.root.style.display !== "none") {
+        closeAdminPanel();
+      } else {
+        openAdminPanel();
+      }
+    });
+  }
+
   async function boot() {
-    S.root=getRoot(); if(!S.root)return;
+    S.root=getRoot();
+    if(!S.root)return;
+
     styles();
-    S.root.innerHTML='<div class="ca-panel"><div class="ca-note">بەشی بەڕێوەبردنی سینەما خەریکە بار دەبێت...</div></div>';
+    S.root.style.display = "none";
+    bindAdminLauncher();
+
     try{
       if(!(await ensureAdmin())){
-        S.root.innerHTML='<div class="ca-panel"><div class="ca-empty">تەنیا ئەدمین دەتوانێت ئەم بەشە ببینێت.</div></div>';
+        S.isAdmin = false;
+        S.root.innerHTML = "";
+        S.root.style.display = "none";
+
+        var nonAdminButton = document.querySelector("[data-cinema-admin-open]");
+        if(nonAdminButton) nonAdminButton.style.display = "none";
+
         return;
       }
-      await load();list();
+
+      var adminButton = ensureAdminButton();
+      if(adminButton) adminButton.style.display = "";
+
+      S.root.innerHTML='<div class="ca-panel"><div class="ca-note">بەشی بەڕێوەبردنی سینەما خەریکە بار دەبێت...</div></div>';
+      await load();
+      list();
+
+      closeAdminPanel();
+      bindAdminLauncher();
     }catch(e){
       console.error("Cinema admin boot:",e);
+
+      var errorButton = ensureAdminButton();
+      if(errorButton) errorButton.style.display = "";
+
       S.root.innerHTML='<div class="ca-panel"><div class="ca-alert">نەتوانرا بەشی بەڕێوەبردنی سینەما بار بکرێت.<br>'+esc(e.message||"هەڵەیەکی نەناسراو")+'</div></div>';
+
+      S.root.style.display = "none";
     }
   }
 
