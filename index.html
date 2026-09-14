@@ -61,7 +61,7 @@
        Main stylesheet
        ===================================================== -->
 
-  <link rel="stylesheet" href="style.css?v=4.0">
+  <link rel="stylesheet" href="style.css">
 
 
   <!-- =====================================================
@@ -2909,63 +2909,18 @@
       </div>
 
 
-      <div class="reader-top-actions" aria-label="کردارەکانی خوێنەر">
+      <button
+        class="rbtn"
+        id="readerSpeak"
+        type="button"
+        data-action="reader-speak"
+        aria-label="خوێندنەوە بە دەنگ"
+        title="خوێندنەوە بە دەنگ"
+      >
 
-        <button
-          class="rbtn"
-          id="viewToggleBtn"
-          type="button"
-          data-action="toggle-view"
-          aria-label="دەرهێنانی دەق و وێنەی پەڕە"
-          title="دەق / وێنە"
-        >
-          <i class="fa-solid fa-robot"></i>
-        </button>
+        <i class="fa-solid fa-play"></i>
 
-        <button
-          class="rbtn"
-          id="readerKurdish"
-          type="button"
-          data-action="reader-kurdish"
-          aria-label="وەرگێڕانی کوردی"
-          title="وەرگێڕانی کوردی"
-        >
-          <i class="fa-solid fa-language"></i>
-        </button>
-
-        <button
-          class="rbtn"
-          id="readerSpeak"
-          type="button"
-          data-action="reader-speak"
-          aria-label="خوێندنەوە بە دەنگ"
-          title="خوێندنەوە بە دەنگ"
-        >
-          <i class="fa-solid fa-play"></i>
-        </button>
-
-        <button
-          class="rbtn"
-          type="button"
-          data-action="reader-music"
-          aria-label="مۆسیقا"
-          title="مۆسیقا"
-        >
-          <i class="fa-solid fa-music"></i>
-        </button>
-
-        <button
-          class="rbtn"
-          type="button"
-          data-action="reader-tools"
-          aria-label="ڕێکخستنەکانی خوێنەر"
-          title="ڕێکخستنەکانی خوێنەر"
-        >
-          <i class="fa-solid fa-sliders"></i>
-        </button>
-
-      </div>
-
+      </button>
 
     </header>
 
@@ -2981,6 +2936,105 @@
         id="readerProgress"
         style="width:0%"
       ></span>
+
+    </div>
+
+
+    <!-- Reader controls -->
+
+    <div class="reader-bar">
+
+      <button
+        class="rb kur"
+        id="readerKurdish"
+        type="button"
+        data-action="reader-kurdish"
+        title="وەرگێڕانی کوردی"
+      >
+
+        <i class="fa-solid fa-language"></i>
+
+        <span>
+          کوردی
+        </span>
+
+      </button>
+
+
+      <button
+        class="rb"
+        id="viewToggleBtn"
+        type="button"
+        data-action="toggle-view"
+        title="دەق / وێنە"
+      >
+
+        <i class="fa-solid fa-robot"></i>
+
+        <span>
+          دەق
+        </span>
+
+      </button>
+
+
+      <button
+        class="rb"
+        type="button"
+        data-action="reader-tools"
+        title="ڕێکخستنەکانی خوێنەر"
+      >
+
+        <i class="fa-solid fa-sliders"></i>
+
+      </button>
+
+
+      <button
+        class="rb"
+        type="button"
+        data-action="reader-music"
+        title="موزیک"
+      >
+
+        <i class="fa-solid fa-music"></i>
+
+      </button>
+
+
+      <span class="tool-separator"></span>
+
+
+      <button
+        class="rb"
+        type="button"
+        data-action="font-down"
+        title="کەمکردنی زووم / فۆنت"
+      >
+
+        <i class="fa-solid fa-minus"></i>
+
+      </button>
+
+
+      <span
+        class="zoom-readout"
+        id="zoomReadout"
+      >
+        100%
+      </span>
+
+
+      <button
+        class="rb"
+        type="button"
+        data-action="font-up"
+        title="زیادکردنی زووم / فۆنت"
+      >
+
+        <i class="fa-solid fa-plus"></i>
+
+      </button>
 
     </div>
 
@@ -3099,8 +3153,6 @@
     aria-label="کۆنترۆڵی خوێندنەوە"
   >
 
-    <div class="tools-handle" aria-hidden="true"></div>
-
     <div class="tools-head">
 
       <strong id="toolsTitle">
@@ -3121,33 +3173,6 @@
 
     </div>
 
-
-    <div class="reader-mini-player" id="readerMiniPlayer" aria-label="مۆسیقا لە خوێنەرەکەدا">
-
-      <div class="reader-mini-cover" aria-hidden="true">
-        <i class="fa-solid fa-music"></i>
-      </div>
-
-      <div class="reader-mini-info">
-        <strong id="readerMiniMusicName">هیچ موزیکێک هەڵنەبژێردراوە</strong>
-        <span id="readerMiniMusicSub">موزیکی خۆت</span>
-      </div>
-
-      <div class="reader-mini-actions">
-        <button class="reader-mini-btn" type="button" data-action="prev-track" aria-label="مۆسیقی پێشوو" title="پێشوو">
-          <i class="fa-solid fa-backward-step"></i>
-        </button>
-
-        <button class="reader-mini-btn reader-mini-play" type="button" data-action="play-pause" aria-label="لێدان و وەستاندن" title="لێدان و وەستاندن">
-          <i class="fa-solid fa-play"></i>
-        </button>
-
-        <button class="reader-mini-btn" type="button" data-action="next-track" aria-label="مۆسیقی داهاتوو" title="داهاتوو">
-          <i class="fa-solid fa-forward-step"></i>
-        </button>
-      </div>
-
-    </div>
 
     <div id="toolsBody"></div>
 
@@ -3182,9 +3207,9 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-  <script src="script.js?v=4.0"></script>
-  <script src="reader.js?v=4.0"></script>
-  <script src="app.js?v=4.0"></script>
+  <script src="script.js?v=3.5"></script>
+  <script src="reader.js?v=2.6"></script>
+  <script src="app.js?v=2.6"></script>
 
 </body>
 
