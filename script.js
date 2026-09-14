@@ -4464,154 +4464,139 @@
             error
           );
 
+          /*
+           * Gemini fallback:
+           * use the existing translation service immediately.
+           * translateText() already tries Google Translate first
+           * and MyMemory as its secondary fallback.
+           */
           return Promise.all([
             translateText(
               clean,
               "ckb"
-            ).catch(
-              function (
-                fallbackError
-              ) {
-                console.error(
-                  "Dictionary Kurdish fallback:",
-                  fallbackError
-                );
-
-                return "";
-              }
             ),
-
             translateText(
               clean,
               "ar"
-            ).catch(
+            )
+          ])
+            .then(
+              function (
+                fallbackResults
+              ) {
+                if (
+                  requestId !==
+                  wordRequestId
+                ) {
+                  return;
+                }
+
+                var fallbackKu =
+                  String(
+                    fallbackResults[0] ||
+                    ""
+                  ).trim();
+
+                var fallbackAr =
+                  String(
+                    fallbackResults[1] ||
+                    ""
+                  ).trim();
+
+                currentWordMeanings = {
+                  ku: fallbackKu
+                    ? [fallbackKu]
+                    : [],
+
+                  ar: fallbackAr
+                    ? [fallbackAr]
+                    : []
+                };
+
+                if (
+                  modalKu
+                ) {
+                  if (fallbackKu) {
+                    modalKu.innerHTML =
+                      '<div class="meaning-line main">' +
+                      esc(
+                        fallbackKu
+                      ) +
+                      "</div>";
+                  } else {
+                    modalKu.textContent =
+                      "نەتوانرا مانا بهێنرێت";
+                  }
+                }
+
+                if (
+                  modalAr
+                ) {
+                  if (fallbackAr) {
+                    modalAr.innerHTML =
+                      '<div class="meaning-line main">' +
+                      esc(
+                        fallbackAr
+                      ) +
+                      "</div>";
+                  } else {
+                    modalAr.textContent =
+                      "نەتوانرا مانا بهێنرێت";
+                  }
+                }
+
+                if (
+                  !fallbackKu &&
+                  !fallbackAr &&
+                  error &&
+                  error.message ===
+                    "NO_GEMINI_KEY"
+                ) {
+                  toast(
+                    "تکایە کلیلی Gemini لە ڕێکخستنەکان دابنێ"
+                  );
+                }
+              }
+            )
+            .catch(
               function (
                 fallbackError
               ) {
+                if (
+                  requestId !==
+                  wordRequestId
+                ) {
+                  return;
+                }
+
                 console.error(
-                  "Dictionary Arabic fallback:",
+                  "Dictionary translation fallback:",
                   fallbackError
                 );
 
-                return "";
-              }
-            )
-          ]).then(
-            function (
-              fallbackResults
-            ) {
-              if (
-                requestId !==
-                wordRequestId
-              ) {
-                return;
-              }
-
-              var fallbackKu =
-                String(
-                  fallbackResults[0] ||
-                  ""
-                ).trim();
-
-              var fallbackAr =
-                String(
-                  fallbackResults[1] ||
-                  ""
-                ).trim();
-
-              currentWordMeanings = {
-                ku: fallbackKu
-                  ? [fallbackKu]
-                  : [],
-
-                ar: fallbackAr
-                  ? [fallbackAr]
-                  : []
-              };
-
-              if (
-                modalKu
-              ) {
-                modalKu.innerHTML =
-                  currentWordMeanings.ku
-                    .map(
-                      function (
-                        meaning,
-                        index
-                      ) {
-                        return (
-                          '<div class="meaning-line ' +
-                          (
-                            index ===
-                            0
-                              ? "main"
-                              : ""
-                          ) +
-                          '\">' +
-                          esc(
-                            meaning
-                          ) +
-                          "</div>"
-                        );
-                      }
-                    )
-                    .join("");
-
-                if (!fallbackKu) {
+                if (modalKu) {
                   modalKu.textContent =
                     "نەتوانرا مانا بهێنرێت";
                 }
-              }
 
-              if (
-                modalAr
-              ) {
-                modalAr.innerHTML =
-                  currentWordMeanings.ar
-                    .map(
-                      function (
-                        meaning,
-                        index
-                      ) {
-                        return (
-                          '<div class="meaning-line ' +
-                          (
-                            index ===
-                            0
-                              ? "main"
-                              : ""
-                          ) +
-                          '\">' +
-                          esc(
-                            meaning
-                          ) +
-                          "</div>"
-                        );
-                      }
-                    )
-                    .join("");
-
-                if (!fallbackAr) {
+                if (modalAr) {
                   modalAr.textContent =
                     "نەتوانرا مانا بهێنرێت";
                 }
-              }
 
-              if (
-                !fallbackKu &&
-                !fallbackAr &&
-                error &&
-                error.message ===
-                  "NO_GEMINI_KEY"
-              ) {
-                toast(
-                  "تکایە کلیلی Gemini لە ڕێکخستنەکان دابنێ"
-                );
+                if (
+                  error &&
+                  error.message ===
+                    "NO_GEMINI_KEY"
+                ) {
+                  toast(
+                    "تکایە کلیلی Gemini لە ڕێکخستنەکان دابنێ"
+                  );
+                }
               }
-            }
-          );
+            );
         }
-      );
+      )
   }
 
 
