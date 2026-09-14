@@ -274,7 +274,6 @@
     var section = document.createElement("section");
 
     section.id = CONFIG.rootId;
-    section.className = "cinema-catalog-root";
 
     view.innerHTML = "";
     view.appendChild(section);
@@ -290,57 +289,63 @@
 
     root.innerHTML = [
       '<section class="cinema-shell">',
+
+        '<header class="cinema-header">',
+          '<div>',
+            '<div class="cinema-section__link">XWENDNGA • CINEMA</div>',
+            '<h2 class="cinema-header__title">سینەما</h2>',
+            '<p class="cinema-header__subtitle">فیلم، ئەنیمی، زنجیرە و کارتۆن لە یەک شوێن</p>',
+          '</div>',
+          '<div class="cinema-header__actions">',
+            '<button class="cinema-action-btn cinema-action-btn--primary" type="button" data-cinema-featured="true">',
+              '<i class="fa-solid fa-clapperboard"></i>',
+              ' تایبەتەکان',
+            '</button>',
+          '</div>',
+        '</header>',
+
         '<div class="cinema-toolbar">',
-          '<div class="cinema-search-wrap">',
-            '<i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>',
+          '<div class="cinema-search">',
+            '<i class="fa-solid fa-magnifying-glass cinema-search__icon" aria-hidden="true"></i>',
             '<input',
               ' id="cinemaSearchInput"',
-              ' class="cinema-search-input"',
               ' type="search"',
               ' autocomplete="off"',
               ' placeholder="گەڕان بۆ فیلم، ئەنیمی یان زنجیرە..."',
               ' aria-label="گەڕان لە سینەما"',
             '>',
-            '<button',
-              ' id="cinemaSearchClear"',
-              ' class="cinema-search-clear"',
-              ' type="button"',
-              ' aria-label="پاککردنەوەی گەڕان"',
-            '>',
-              '<i class="fa-solid fa-xmark"></i>',
-            '</button>',
           '</div>',
-          '<div class="cinema-sort-wrap">',
-            '<select id="cinemaSort" class="cinema-sort" aria-label="ڕیزکردن">',
-              '<option value="newest">نوێترین</option>',
-              '<option value="oldest">کۆنترین</option>',
-              '<option value="rating">بەرزترین نمرە</option>',
-              '<option value="title">بەپێی ناو</option>',
-            '</select>',
-          '</div>',
+          '<select id="cinemaSort" class="cinema-action-btn" aria-label="ڕیزکردن">',
+            '<option value="newest">نوێترین</option>',
+            '<option value="oldest">کۆنترین</option>',
+            '<option value="rating">بەرزترین نمرە</option>',
+            '<option value="title">بەپێی ناو</option>',
+          '</select>',
         '</div>',
 
-        '<div class="cinema-filter-row" id="cinemaTypeFilters">',
-          '<button class="cinema-filter active" type="button" data-cinema-type="all">هەموو</button>',
-          '<button class="cinema-filter" type="button" data-cinema-type="movie">فیلم</button>',
-          '<button class="cinema-filter" type="button" data-cinema-type="series">زنجیرە</button>',
-          '<button class="cinema-filter" type="button" data-cinema-type="anime">ئەنیمی</button>',
-          '<button class="cinema-filter" type="button" data-cinema-type="cartoon">کارتۆن</button>',
+        '<div class="cinema-filter-group" id="cinemaTypeFilters">',
+          '<button class="cinema-chip is-active" type="button" data-cinema-type="all">هەموو</button>',
+          '<button class="cinema-chip" type="button" data-cinema-type="movie">فیلم</button>',
+          '<button class="cinema-chip" type="button" data-cinema-type="series">زنجیرە</button>',
+          '<button class="cinema-chip" type="button" data-cinema-type="anime">ئەنیمی</button>',
+          '<button class="cinema-chip" type="button" data-cinema-type="cartoon">کارتۆن</button>',
         '</div>',
 
-        '<div class="cinema-filter-row cinema-genre-row" id="cinemaGenreFilters"></div>',
+        '<div class="cinema-filter-group" id="cinemaGenreFilters" aria-label="ژانەرەکان"></div>',
 
         '<section id="cinemaHero" class="cinema-hero" aria-label="فیلمی تایبەت"></section>',
 
-        '<div class="cinema-results-head">',
-          '<div>',
-            '<div class="cinema-kicker">CINEMA</div>',
-            '<h2 class="cinema-section-title">فیلم و ئەنیمی</h2>',
+        '<section class="cinema-section">',
+          '<div class="cinema-section__head">',
+            '<div>',
+              '<h2 class="cinema-section__title">کەتەلۆگی سینەما</h2>',
+              '<p class="cinema-section__hint">هەموو ناوەڕۆکی بڵاوکراوە</p>',
+            '</div>',
+            '<span id="cinemaResultCount" class="cinema-section__link">0</span>',
           '</div>',
-          '<span id="cinemaResultCount" class="cinema-result-count">0</span>',
-        '</div>',
+          '<div id="cinemaGrid" class="cinema-grid" aria-live="polite"></div>',
+        '</section>',
 
-        '<div id="cinemaGrid" class="cinema-grid" aria-live="polite"></div>',
       '</section>'
     ].join("");
 
@@ -353,13 +358,13 @@
     var hero = document.getElementById("cinemaHero");
 
     if (hero) {
-      hero.innerHTML = '<div class="cinema-loading cinema-hero-loading">چاوەڕوانی ناوەڕۆک...</div>';
+      hero.innerHTML = '<div class="cinema-skeleton-grid"><div class="cinema-skeleton-card"></div><div class="cinema-skeleton-card"></div><div class="cinema-skeleton-card"></div></div>';
     }
 
     if (grid) {
       grid.innerHTML = [1, 2, 3, 4, 5, 6]
         .map(function () {
-          return '<article class="cinema-skeleton"></article>';
+          return '<article class="cinema-skeleton-card"></article>';
         })
         .join("");
     }
@@ -379,13 +384,13 @@
     }
 
     grid.innerHTML = [
-      '<div class="cinema-empty cinema-error" style="grid-column:1/-1">',
-        '<div class="cinema-empty-icon"><i class="fa-solid fa-circle-exclamation"></i></div>',
+      '<div class="cinema-section" style="grid-column:1/-1">',
+        '<div class="cinema-section__hint"><i class="fa-solid fa-circle-exclamation"></i></div>',
         '<h3>هێنانی ناوەڕۆک سەرکەوتوو نەبوو</h3>',
         '<p>',
           escapeHtml(message || "هەڵەیەک ڕوویدا."),
         '</p>',
-        '<button id="cinemaRetry" class="cinema-primary-btn" type="button">',
+        '<button id="cinemaRetry" class="cinema-action-btn cinema-action-btn--primary" type="button">',
           '<i class="fa-solid fa-rotate-right"></i>',
           ' دووبارە هەوڵبدەوە',
         '</button>',
@@ -429,56 +434,51 @@
       "";
 
     var genres = safeArray(featured.genres)
-      .slice(0, 3)
-      .map(escapeHtml)
-      .join(" · ");
-
-    var style = backdrop
-      ? ' style="background-image:linear-gradient(90deg,rgba(5,9,17,.96) 0%,rgba(5,9,17,.72) 46%,rgba(5,9,17,.14) 100%),url(\'' +
-        escapeHtml(backdrop.replace(/'/g, "%27")) +
-        '\')"'
-      : "";
+      .slice(0, 3);
 
     hero.innerHTML = [
-      '<article class="cinema-hero-card"', style, '>',
-        '<div class="cinema-hero-overlay">',
-          '<div class="cinema-hero-copy">',
-            '<div class="cinema-hero-meta">',
-              '<span class="cinema-badge">',
-                escapeHtml(typeLabel(featured.type)),
-              '</span>',
-              featured.year
-                ? '<span>' + escapeHtml(featured.year) + '</span>'
-                : "",
-              featured.duration
-                ? '<span>' + escapeHtml(featured.duration) + '</span>'
-                : "",
-              Number.isFinite(Number(featured.rating))
-                ? '<span><i class="fa-solid fa-star"></i> ' + escapeHtml(formatRating(featured.rating)) + '</span>'
-                : "",
-            '</div>',
-            '<h1>', escapeHtml(title), '</h1>',
-            original && normalizeText(original) !== normalizeText(title)
-              ? '<p class="cinema-original-title">' + escapeHtml(original) + '</p>'
+      backdrop
+        ? '<img class="cinema-hero__backdrop" src="' + escapeHtml(backdrop) + '" alt="" aria-hidden="true" loading="eager">'
+        : "",
+      '<div class="cinema-hero__content">',
+        '<div class="cinema-hero__body">',
+          '<div class="cinema-hero__eyebrow">',
+            '<i class="fa-solid fa-clapperboard"></i>',
+            ' ڤیلمی تایبەت',
+          '</div>',
+          '<h1 class="cinema-hero__title">', escapeHtml(title), '</h1>',
+          original && normalizeText(original) !== normalizeText(title)
+            ? '<div class="cinema-hero__description">' + escapeHtml(original) + '</div>'
+            : "",
+          '<div class="cinema-hero__meta">',
+            '<span class="cinema-card__badge">', escapeHtml(typeLabel(featured.type)), '</span>',
+            featured.year ? '<span>' + escapeHtml(featured.year) + '</span>' : "",
+            featured.duration ? '<span>' + escapeHtml(featured.duration) + '</span>' : "",
+            Number.isFinite(Number(featured.rating))
+              ? '<span><i class="fa-solid fa-star"></i> ' + escapeHtml(formatRating(featured.rating)) + '</span>'
               : "",
-            synopsis
-              ? '<p class="cinema-hero-synopsis">' + escapeHtml(synopsis) + '</p>'
-              : "",
-            genres
-              ? '<div class="cinema-hero-genres">' + genres + '</div>'
-              : "",
-            '<div class="cinema-hero-actions">',
-              '<button class="cinema-primary-btn" type="button" data-cinema-open-id="' + escapeHtml(featured.id) + '">',
-                '<i class="fa-solid fa-play"></i>',
-                ' بینە',
-              '</button>',
-              '<button class="cinema-secondary-btn" type="button" data-cinema-open-id="' + escapeHtml(featured.id) + '">',
-                'زانیارییەکان',
-              '</button>',
-            '</div>',
+          '</div>',
+          synopsis
+            ? '<p class="cinema-hero__description">' + escapeHtml(synopsis) + '</p>'
+            : "",
+          genres.length
+            ? '<div class="cinema-hero__meta">' +
+                genres.map(function (genre) {
+                  return '<span>' + escapeHtml(genre) + '</span>';
+                }).join("") +
+              '</div>'
+            : "",
+          '<div class="cinema-hero__actions">',
+            '<button class="cinema-action-btn cinema-action-btn--primary" type="button" data-cinema-open-id="' + escapeHtml(featured.id) + '">',
+              '<i class="fa-solid fa-play"></i>',
+              ' بینە',
+            '</button>',
+            '<button class="cinema-action-btn" type="button" data-cinema-open-id="' + escapeHtml(featured.id) + '">',
+              'زانیارییەکان',
+            '</button>',
           '</div>',
         '</div>',
-      '</article>'
+      '</div>'
     ].join("");
 
     bindOpenButtons(hero);
@@ -495,10 +495,10 @@
     var genres = getUniqueGenres(state.items);
 
     target.innerHTML = [
-      '<button class="cinema-filter cinema-genre-filter active" type="button" data-cinema-genre="all">هەموو ژانەرەکان</button>'
+      '<button class="cinema-chip is-active" type="button" data-cinema-genre="all">هەموو ژانەرەکان</button>'
     ].concat(
       genres.map(function (genre) {
-        return '<button class="cinema-filter cinema-genre-filter" type="button" data-cinema-genre="' +
+        return '<button class="cinema-chip" type="button" data-cinema-genre="' +
           escapeHtml(genre) +
           '">' +
           escapeHtml(genre) +
@@ -521,7 +521,7 @@
         .querySelectorAll("[data-cinema-genre]")
         .forEach(function (item) {
           item.classList.toggle(
-            "active",
+            "is-active",
             item === button
           );
         });
@@ -542,40 +542,38 @@
     var genres = safeArray(item.genres);
 
     var posterHtml = poster
-      ? '<img src="' + escapeHtml(poster) + '" alt="' + escapeHtml(title) + '" loading="lazy">'
-      : '<div class="cinema-poster-fallback"><i class="fa-solid fa-film"></i></div>';
+      ? '<img class="cinema-card__poster" src="' + escapeHtml(poster) + '" alt="' + escapeHtml(title) + '" loading="lazy">'
+      : '<div class="cinema-card__poster" aria-hidden="true"></div>';
 
     return [
       '<article class="cinema-card" data-cinema-card-id="' + escapeHtml(item.id) + '">',
-        '<button class="cinema-card-main" type="button" data-cinema-open-id="' + escapeHtml(item.id) + '">',
-          '<div class="cinema-poster">',
-            posterHtml,
-            '<div class="cinema-poster-shade"></div>',
-            '<div class="cinema-card-top">',
-              '<span class="cinema-type-chip">', escapeHtml(typeLabel(item.type)), '</span>',
-              Number.isFinite(Number(item.rating))
-                ? '<span class="cinema-rating"><i class="fa-solid fa-star"></i> ' + escapeHtml(formatRating(item.rating)) + '</span>'
-                : "",
-            '</div>',
-            '<div class="cinema-card-hover">',
-              '<span class="cinema-play"><i class="fa-solid fa-play"></i></span>',
-              '<div class="cinema-card-hover-meta">',
-                item.year ? '<span>' + escapeHtml(item.year) + '</span>' : "",
-                item.duration ? '<span>' + escapeHtml(item.duration) + '</span>' : "",
-              '</div>',
-              synopsis ? '<p>' + escapeHtml(synopsis) + '</p>' : "",
-            '</div>',
-          '</div>',
-          '<div class="cinema-card-copy">',
-            '<h3>' + escapeHtml(title) + '</h3>',
-            original && normalizeText(original) !== normalizeText(title)
-              ? '<p class="cinema-card-original">' + escapeHtml(original) + '</p>'
+        '<div class="cinema-card__visual">',
+          posterHtml,
+          '<span class="cinema-card__badge"><i class="fa-solid fa-circle-play"></i> ' + escapeHtml(typeLabel(item.type)) + '</span>',
+          Number.isFinite(Number(item.rating))
+            ? '<span class="cinema-card__rating"><i class="fa-solid fa-star"></i> ' + escapeHtml(formatRating(item.rating)) + '</span>'
+            : "",
+          '<button class="cinema-card__play" type="button" data-cinema-open-id="' + escapeHtml(item.id) + '" aria-label="بینینی ' + escapeHtml(title) + '">',
+            '<i class="fa-solid fa-play"></i>',
+          '</button>',
+          '<div class="cinema-card__glass">',
+            '<h3 class="cinema-card__title">' + escapeHtml(title) + '</h3>',
+            Number.isFinite(Number(item.rating))
+              ? '<span class="cinema-card__rating"><i class="fa-solid fa-star"></i> ' + escapeHtml(formatRating(item.rating)) + '</span>'
               : "",
-            genres.length
-              ? '<div class="cinema-card-genres">' + genres.slice(0, 2).map(escapeHtml).join(" · ") + '</div>'
-              : '<div class="cinema-card-genres">سینەما</div>',
           '</div>',
-        '</button>',
+        '</div>',
+        '<div class="cinema-card__body">',
+          '<h3 class="cinema-card__name">' + escapeHtml(title) + '</h3>',
+          '<div class="cinema-card__meta">',
+            item.year ? '<span>' + escapeHtml(item.year) + '</span>' : "",
+            item.duration ? '<span>' + escapeHtml(item.duration) + '</span>' : "",
+            original && normalizeText(original) !== normalizeText(title)
+              ? '<span>' + escapeHtml(original) + '</span>'
+              : "",
+          '</div>',
+          synopsis ? '<p class="cinema-card__description">' + escapeHtml(synopsis) + '</p>' : "",
+        '</div>',
       '</article>'
     ].join("");
   }
@@ -595,8 +593,8 @@
 
     if (!items.length) {
       grid.innerHTML = [
-        '<div class="cinema-empty" style="grid-column:1/-1">',
-          '<div class="cinema-empty-icon"><i class="fa-solid fa-film"></i></div>',
+        '<div class="cinema-section" style="grid-column:1/-1">',
+          '<div class="cinema-section__hint"><i class="fa-solid fa-film"></i></div>',
           '<h3>هیچ ناوەڕۆکێک نەدۆزرایەوە</h3>',
           '<p>وشەی گەڕان یان فلتەرەکان بگۆڕە.</p>',
         '</div>'
@@ -716,7 +714,6 @@
     }
 
     var search = document.getElementById("cinemaSearchInput");
-    var clear = document.getElementById("cinemaSearchClear");
     var sort = document.getElementById("cinemaSort");
     var typeFilters = document.getElementById("cinemaTypeFilters");
 
@@ -727,17 +724,6 @@
       });
     }
 
-    if (clear) {
-      clear.addEventListener("click", function () {
-        if (search) {
-          search.value = "";
-          state.query = "";
-          search.focus();
-        }
-
-        applyFilters();
-      });
-    }
 
     if (sort) {
       sort.addEventListener("change", function () {
@@ -760,7 +746,7 @@
           .querySelectorAll("[data-cinema-type]")
           .forEach(function (item) {
             item.classList.toggle(
-              "active",
+              "is-active",
               item === button
             );
           });
