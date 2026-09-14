@@ -4464,139 +4464,154 @@
             error
           );
 
-          /*
-           * Gemini fallback:
-           * use the existing translation service immediately.
-           * translateText() already tries Google Translate first
-           * and MyMemory as its secondary fallback.
-           */
           return Promise.all([
             translateText(
               clean,
               "ckb"
-            ),
-            translateText(
-              clean,
-              "ar"
-            )
-          ])
-            .then(
-              function (
-                fallbackResults
-              ) {
-                if (
-                  requestId !==
-                  wordRequestId
-                ) {
-                  return;
-                }
-
-                var fallbackKu =
-                  String(
-                    fallbackResults[0] ||
-                    ""
-                  ).trim();
-
-                var fallbackAr =
-                  String(
-                    fallbackResults[1] ||
-                    ""
-                  ).trim();
-
-                currentWordMeanings = {
-                  ku: fallbackKu
-                    ? [fallbackKu]
-                    : [],
-
-                  ar: fallbackAr
-                    ? [fallbackAr]
-                    : []
-                };
-
-                if (
-                  modalKu
-                ) {
-                  if (fallbackKu) {
-                    modalKu.innerHTML =
-                      '<div class="meaning-line main">' +
-                      esc(
-                        fallbackKu
-                      ) +
-                      "</div>";
-                  } else {
-                    modalKu.textContent =
-                      "نەتوانرا مانا بهێنرێت";
-                  }
-                }
-
-                if (
-                  modalAr
-                ) {
-                  if (fallbackAr) {
-                    modalAr.innerHTML =
-                      '<div class="meaning-line main">' +
-                      esc(
-                        fallbackAr
-                      ) +
-                      "</div>";
-                  } else {
-                    modalAr.textContent =
-                      "نەتوانرا مانا بهێنرێت";
-                  }
-                }
-
-                if (
-                  !fallbackKu &&
-                  !fallbackAr &&
-                  error &&
-                  error.message ===
-                    "NO_GEMINI_KEY"
-                ) {
-                  toast(
-                    "تکایە کلیلی Gemini لە ڕێکخستنەکان دابنێ"
-                  );
-                }
-              }
-            )
-            .catch(
+            ).catch(
               function (
                 fallbackError
               ) {
-                if (
-                  requestId !==
-                  wordRequestId
-                ) {
-                  return;
-                }
-
                 console.error(
-                  "Dictionary translation fallback:",
+                  "Dictionary Kurdish fallback:",
                   fallbackError
                 );
 
-                if (modalKu) {
+                return "";
+              }
+            ),
+
+            translateText(
+              clean,
+              "ar"
+            ).catch(
+              function (
+                fallbackError
+              ) {
+                console.error(
+                  "Dictionary Arabic fallback:",
+                  fallbackError
+                );
+
+                return "";
+              }
+            )
+          ]).then(
+            function (
+              fallbackResults
+            ) {
+              if (
+                requestId !==
+                wordRequestId
+              ) {
+                return;
+              }
+
+              var fallbackKu =
+                String(
+                  fallbackResults[0] ||
+                  ""
+                ).trim();
+
+              var fallbackAr =
+                String(
+                  fallbackResults[1] ||
+                  ""
+                ).trim();
+
+              currentWordMeanings = {
+                ku: fallbackKu
+                  ? [fallbackKu]
+                  : [],
+
+                ar: fallbackAr
+                  ? [fallbackAr]
+                  : []
+              };
+
+              if (
+                modalKu
+              ) {
+                modalKu.innerHTML =
+                  currentWordMeanings.ku
+                    .map(
+                      function (
+                        meaning,
+                        index
+                      ) {
+                        return (
+                          '<div class="meaning-line ' +
+                          (
+                            index ===
+                            0
+                              ? "main"
+                              : ""
+                          ) +
+                          '\">' +
+                          esc(
+                            meaning
+                          ) +
+                          "</div>"
+                        );
+                      }
+                    )
+                    .join("");
+
+                if (!fallbackKu) {
                   modalKu.textContent =
                     "نەتوانرا مانا بهێنرێت";
                 }
+              }
 
-                if (modalAr) {
+              if (
+                modalAr
+              ) {
+                modalAr.innerHTML =
+                  currentWordMeanings.ar
+                    .map(
+                      function (
+                        meaning,
+                        index
+                      ) {
+                        return (
+                          '<div class="meaning-line ' +
+                          (
+                            index ===
+                            0
+                              ? "main"
+                              : ""
+                          ) +
+                          '\">' +
+                          esc(
+                            meaning
+                          ) +
+                          "</div>"
+                        );
+                      }
+                    )
+                    .join("");
+
+                if (!fallbackAr) {
                   modalAr.textContent =
                     "نەتوانرا مانا بهێنرێت";
                 }
-
-                if (
-                  error &&
-                  error.message ===
-                    "NO_GEMINI_KEY"
-                ) {
-                  toast(
-                    "تکایە کلیلی Gemini لە ڕێکخستنەکان دابنێ"
-                  );
-                }
               }
-            );
+
+              if (
+                !fallbackKu &&
+                !fallbackAr &&
+                error &&
+                error.message ===
+                  "NO_GEMINI_KEY"
+              ) {
+                toast(
+                  "تکایە کلیلی Gemini لە ڕێکخستنەکان دابنێ"
+                );
+              }
+            }
+          );
         }
-      )
+      );
   }
 
 
@@ -6357,34 +6372,6 @@
 
     getMusicVolume:
       getMusicVolume,
-
-    getReaderMusicCatalog:
-      function () {
-        var playable = getPlayableMusic();
-        var currentUserId = authState.user ? String(authState.user.id) : "";
-        var profile = authState.profile || {};
-        var isPremium = authState.isAdmin || authState.role === "premium";
-        var privateLimit = isPremium
-          ? null
-          : (profile.music_limit != null ? Number(profile.music_limit) : 5);
-        var publicItems = [];
-        var privateItems = [];
-
-        playable.forEach(function (track, index) {
-          var ownerId = track && track.ownerId ? String(track.ownerId) : "";
-          var item = {
-            index: index,
-            id: track && track.id != null ? String(track.id) : String(index),
-            name: track && track.name ? track.name : "مۆسیقا",
-            artist: track && track.artist ? track.artist : "مۆسیقا",
-            cover_url: track && track.cover_url ? track.cover_url : ""
-          };
-          if (currentUserId && ownerId === currentUserId) privateItems.push(item);
-          else publicItems.push(item);
-        });
-
-        return { publicItems: publicItems, privateItems: privateItems, privateLimit: privateLimit, isPremium: !!isPremium };
-      },
 
     dbPut:
       dbPut,
