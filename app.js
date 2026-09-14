@@ -24,8 +24,8 @@
       title: "گەڕان"
     },
 
-    cartoons: {
-      title: "کارتۆن"
+    cinema: {
+      title: "سینەما"
     },
 
     profile: {
