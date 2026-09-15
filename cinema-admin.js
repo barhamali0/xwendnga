@@ -490,7 +490,18 @@
     if (!view) return null;
 
     var actions = view.querySelector(".cinema-header__actions");
-    if (!actions) return null;
+
+    if (!actions) {
+      var header = view.querySelector(".cinema-header");
+      if (!header) return null;
+
+      actions = document.createElement("div");
+      actions.className = "cinema-header__actions";
+      actions.style.cssText =
+        "display:flex;align-items:center;gap:8px;flex-wrap:wrap;";
+
+      header.appendChild(actions);
+    }
 
     var button = actions.querySelector("[data-cinema-admin-open]");
     if (!button) {
