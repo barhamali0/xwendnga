@@ -1,12 +1,4 @@
-/* XWENDNGA — cinema-admin.js | Stage 5.1 FINAL
-   Standalone Cinema Admin CMS
-   - Admin/Owner authentication sync
-   - Document event delegation for dynamic Cinema UI
-   - Admin root lives outside the Cinema view so cinema-ui.js cannot erase it
-   - Dynamic servers
-   - Four subtitle languages with SRT/VTT text upload
-   - Safe catalog refresh after save/delete
-*/
+/* XWENDNGA — cinema-admin.js | Stage 5.1 FINAL FIX */
 (function () {
   "use strict";
 
@@ -52,10 +44,8 @@
 
   function esc(v) {
     return String(v == null ? "" : v)
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;")
-      .replace(/"/g, "&quot;")
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;").replace(/"/g, "&quot;")
       .replace(/'/g, "&#039;");
   }
 
@@ -103,12 +93,6 @@
     return style.display !== "none" && style.visibility !== "hidden";
   }
 
-  /*
-    IMPORTANT:
-    Admin root is attached to <body>, not to the Cinema view.
-    cinema-ui.js uses view.innerHTML = "" while rebuilding the catalog,
-    so the Admin root must live outside that DOM subtree.
-  */
   function getRoot() {
     var root = document.getElementById(C.root);
     if (root) return root;
@@ -131,240 +115,52 @@
     var s = document.createElement("style");
     s.id = "xwCinemaAdminStyles";
     s.textContent = `
-      .cinema-admin-root{
-        width:min(1480px,100%);
-        margin:0 auto;
-        padding:16px;
-        color:#f7f9ff;
-        position:relative;
-        z-index:999;
-      }
+      .cinema-admin-root{width:min(1480px,100%);margin:0 auto;padding:16px;color:#f7f9ff;position:relative;z-index:999;}
       .cinema-admin-root *{box-sizing:border-box}
       .ca-wrap{display:flex;flex-direction:column;gap:16px}
-      .ca-panel{
-        padding:18px;
-        border:1px solid rgba(255,255,255,.11);
-        border-radius:24px;
-        background:rgba(17,25,43,.92);
-        box-shadow:0 24px 70px rgba(0,0,0,.38);
-        backdrop-filter:blur(18px);
-      }
-      .ca-head{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:14px;
-      }
-      .ca-head h2{
-        margin:0;
-        font-size:1.25rem;
-        font-weight:900;
-      }
-      .ca-muted,.ca-note{
-        color:#9aa8bd;
-        font-size:.76rem;
-        line-height:1.8;
-      }
+      .ca-panel{padding:18px;border:1px solid rgba(255,255,255,.11);border-radius:24px;background:rgba(17,25,43,.92);box-shadow:0 24px 70px rgba(0,0,0,.38);backdrop-filter:blur(18px);}
+      .ca-head{display:flex;align-items:center;justify-content:space-between;gap:14px;}
+      .ca-head h2{margin:0;font-size:1.25rem;font-weight:900;}
+      .ca-muted,.ca-note{color:#9aa8bd;font-size:.76rem;line-height:1.8;}
       .ca-head .ca-muted{margin-top:5px}
-      .ca-btn{
-        min-height:40px;
-        padding:0 14px;
-        border:1px solid rgba(255,255,255,.12);
-        border-radius:12px;
-        color:#fff;
-        background:rgba(255,255,255,.05);
-        cursor:pointer;
-        font:inherit;
-        font-weight:800;
-      }
+      .ca-btn{min-height:40px;padding:0 14px;border:1px solid rgba(255,255,255,.12);border-radius:12px;color:#fff;background:rgba(255,255,255,.05);cursor:pointer;font:inherit;font-weight:800;}
       .ca-btn:hover{background:rgba(124,92,255,.2)}
-      .ca-primary{
-        border-color:transparent;
-        background:linear-gradient(135deg,#7c5cff,#27c7ff);
-      }
-      .ca-danger{
-        color:#ffd8df;
-        border-color:rgba(255,86,122,.25);
-        background:rgba(255,86,122,.08);
-      }
-      .ca-grid{
-        display:grid;
-        grid-template-columns:repeat(2,minmax(0,1fr));
-        gap:12px;
-      }
+      .ca-primary{border-color:transparent;background:linear-gradient(135deg,#7c5cff,#27c7ff);}
+      .ca-danger{color:#ffd8df;border-color:rgba(255,86,122,.25);background:rgba(255,86,122,.08);}
+      .ca-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;}
       .ca-field{display:flex;flex-direction:column;gap:6px}
       .ca-full{grid-column:1/-1}
-      .ca-label{
-        font-size:.75rem;
-        color:#cfd6e4;
-        font-weight:800;
-      }
-      .ca-input,.ca-select,.ca-text{
-        width:100%;
-        border:1px solid rgba(255,255,255,.11);
-        border-radius:12px;
-        color:#fff;
-        background:rgba(2,6,14,.65);
-        padding:11px 12px;
-        outline:none;
-        font:inherit;
-      }
-      .ca-text{
-        min-height:100px;
-        resize:vertical;
-        line-height:1.7;
-      }
-      .ca-input:focus,.ca-select:focus,.ca-text:focus{
-        border-color:rgba(124,92,255,.6);
-        box-shadow:0 0 0 3px rgba(124,92,255,.1);
-      }
-      .ca-section{
-        display:flex;
-        flex-direction:column;
-        gap:12px;
-        margin-top:16px;
-        padding:14px;
-        border:1px solid rgba(255,255,255,.08);
-        border-radius:18px;
-        background:rgba(255,255,255,.025);
-      }
-      .ca-section-head{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-        gap:10px;
-      }
+      .ca-label{font-size:.75rem;color:#cfd6e4;font-weight:800;}
+      .ca-input,.ca-select,.ca-text{width:100%;border:1px solid rgba(255,255,255,.11);border-radius:12px;color:#fff;background:rgba(2,6,14,.65);padding:11px 12px;outline:none;font:inherit;}
+      .ca-text{min-height:100px;resize:vertical;line-height:1.7;}
+      .ca-input:focus,.ca-select:focus,.ca-text:focus{border-color:rgba(124,92,255,.6);box-shadow:0 0 0 3px rgba(124,92,255,.1);}
+      .ca-section{display:flex;flex-direction:column;gap:12px;margin-top:16px;padding:14px;border:1px solid rgba(255,255,255,.08);border-radius:18px;background:rgba(255,255,255,.025);}
+      .ca-section-head{display:flex;align-items:center;justify-content:space-between;gap:10px;}
       .ca-section-head strong{font-size:.86rem}
-      .ca-sub-grid{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:10px;
-      }
-      .ca-sub{
-        padding:11px;
-        border:1px solid rgba(255,255,255,.08);
-        border-radius:15px;
-        background:rgba(0,0,0,.13);
-      }
-      .ca-sub strong{
-        display:block;
-        margin-bottom:7px;
-        font-size:.75rem;
-      }
-      .ca-file{
-        width:100%;
-        padding:8px;
-        border:1px dashed rgba(255,255,255,.14);
-        border-radius:10px;
-        color:#bfc9da;
-        background:rgba(255,255,255,.025);
-      }
-      .ca-server{
-        display:flex;
-        flex-direction:column;
-        gap:10px;
-        padding:12px;
-        border:1px solid rgba(255,255,255,.09);
-        border-radius:15px;
-        background:rgba(0,0,0,.14);
-        margin-bottom:10px;
-      }
+      .ca-sub-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+      .ca-sub{padding:11px;border:1px solid rgba(255,255,255,.08);border-radius:15px;background:rgba(0,0,0,.13);}
+      .ca-sub strong{display:block;margin-bottom:7px;font-size:.75rem;}
+      .ca-file{width:100%;padding:8px;border:1px dashed rgba(255,255,255,.14);border-radius:10px;color:#bfc9da;background:rgba(255,255,255,.025);}
+      .ca-server{display:flex;flex-direction:column;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.09);border-radius:15px;background:rgba(0,0,0,.14);margin-bottom:10px;}
       .ca-server:last-child{margin-bottom:0}
-      .ca-server-head{
-        display:flex;
-        align-items:center;
-        justify-content:space-between;
-      }
-      .ca-server-grid{
-        display:grid;
-        grid-template-columns:1fr 1fr;
-        gap:10px;
-      }
-      .ca-check{
-        display:flex;
-        align-items:center;
-        gap:8px;
-        color:#dce3ef;
-        font-size:.75rem;
-        font-weight:800;
-      }
+      .ca-server-head{display:flex;align-items:center;justify-content:space-between;}
+      .ca-server-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+      .ca-check{display:flex;align-items:center;gap:8px;color:#dce3ef;font-size:.75rem;font-weight:800;}
       .ca-check input{accent-color:#7c5cff}
-      .ca-footer{
-        display:flex;
-        justify-content:flex-end;
-        gap:8px;
-        flex-wrap:wrap;
-        margin-top:16px;
-      }
+      .ca-footer{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap;margin-top:16px;}
       .ca-list{display:flex;flex-direction:column;gap:10px}
-      .ca-card{
-        display:grid;
-        grid-template-columns:62px minmax(0,1fr);
-        gap:11px;
-        padding:10px;
-        border:1px solid rgba(255,255,255,.09);
-        border-radius:16px;
-        background:rgba(255,255,255,.025);
-      }
-      .ca-poster{
-        width:62px;
-        height:84px;
-        border-radius:10px;
-        overflow:hidden;
-        background:#050812;
-      }
+      .ca-card{display:grid;grid-template-columns:62px minmax(0,1fr);gap:11px;padding:10px;border:1px solid rgba(255,255,255,.09);border-radius:16px;background:rgba(255,255,255,.025);}
+      .ca-poster{width:62px;height:84px;border-radius:10px;overflow:hidden;background:#050812;}
       .ca-poster img{width:100%;height:100%;object-fit:cover}
-      .ca-title{
-        margin:0;
-        font-size:.85rem;
-        font-weight:900;
-      }
-      .ca-meta{
-        display:flex;
-        flex-wrap:wrap;
-        gap:5px;
-        margin-top:6px;
-        color:#9aa8bd;
-        font-size:.67rem;
-      }
-      .ca-pill{
-        padding:4px 7px;
-        border:1px solid rgba(255,255,255,.08);
-        border-radius:999px;
-        background:rgba(255,255,255,.035);
-      }
-      .ca-actions{
-        display:flex;
-        flex-wrap:wrap;
-        gap:6px;
-        margin-top:9px;
-      }
-      .ca-empty{
-        padding:28px;
-        text-align:center;
-        color:#9aa8bd;
-        border:1px dashed rgba(255,255,255,.1);
-        border-radius:16px;
-      }
-      .ca-alert,.ca-ok{
-        padding:11px 13px;
-        border-radius:13px;
-        font-size:.75rem;
-        line-height:1.8;
-      }
-      .ca-alert{
-        color:#ffdbe2;
-        border:1px solid rgba(255,86,122,.22);
-        background:rgba(255,86,122,.08);
-      }
-      .ca-ok{
-        color:#d8ffef;
-        border:1px solid rgba(49,211,154,.2);
-        background:rgba(49,211,154,.07);
-      }
-      .ca-admin-launch{
-        white-space:nowrap;
-      }
+      .ca-title{margin:0;font-size:.85rem;font-weight:900;}
+      .ca-meta{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px;color:#9aa8bd;font-size:.67rem;}
+      .ca-pill{padding:4px 7px;border:1px solid rgba(255,255,255,.08);border-radius:999px;background:rgba(255,255,255,.035);}
+      .ca-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px;}
+      .ca-empty{padding:28px;text-align:center;color:#9aa8bd;border:1px dashed rgba(255,255,255,.1);border-radius:16px;}
+      .ca-alert,.ca-ok{padding:11px 13px;border-radius:13px;font-size:.75rem;line-height:1.8;}
+      .ca-alert{color:#ffdbe2;border:1px solid rgba(255,86,122,.22);background:rgba(255,86,122,.08);}
+      .ca-ok{color:#d8ffef;border:1px solid rgba(49,211,154,.2);background:rgba(49,211,154,.07);}
+      .ca-admin-launch{white-space:nowrap;}
       @media(max-width:700px){
         .ca-grid,.ca-sub-grid,.ca-server-grid{grid-template-columns:1fr}
         .ca-full{grid-column:auto}
@@ -393,57 +189,29 @@
 
   function empty() {
     return {
-      title_en:"",
-      title_ku:"",
-      type:"movie",
-      poster_url:"",
-      backdrop_url:"",
-      year:"",
-      duration:"",
-      rating:"",
-      genres:"",
-      synopsis_en:"",
-      synopsis_ku:"",
-      tmdb_id:"",
-      status:"published",
-      sub_ku:"",
-      sub_en:"",
-      sub_ar:"",
-      sub_fa:"",
+      title_en:"", title_ku:"", type:"movie", poster_url:"", backdrop_url:"",
+      year:"", duration:"", rating:"", genres:"", synopsis_en:"", synopsis_ku:"",
+      tmdb_id:"", status:"published", sub_ku:"", sub_en:"", sub_ar:"", sub_fa:"",
       servers:[]
     };
   }
 
   function rowForm(row, servers) {
     row = row || {};
-
     return {
-      title_en:row.title_en || "",
-      title_ku:row.title_ku || "",
-      type:row.type || "movie",
-      poster_url:row.poster_url || "",
-      backdrop_url:row.backdrop_url || "",
-      year:row.year == null ? "" : String(row.year),
-      duration:row.duration || "",
+      title_en:row.title_en || "", title_ku:row.title_ku || "", type:row.type || "movie",
+      poster_url:row.poster_url || "", backdrop_url:row.backdrop_url || "",
+      year:row.year == null ? "" : String(row.year), duration:row.duration || "",
       rating:row.rating == null ? "" : String(row.rating),
       genres:Array.isArray(row.genres) ? row.genres.join(", ") : (row.genres || ""),
-      synopsis_en:row.synopsis_en || "",
-      synopsis_ku:row.synopsis_ku || "",
-      tmdb_id:row.tmdb_id == null ? "" : String(row.tmdb_id),
-      status:row.status || "published",
-      sub_ku:row.sub_ku || "",
-      sub_en:row.sub_en || "",
-      sub_ar:row.sub_ar || "",
-      sub_fa:row.sub_fa || "",
+      synopsis_en:row.synopsis_en || "", synopsis_ku:row.synopsis_ku || "",
+      tmdb_id:row.tmdb_id == null ? "" : String(row.tmdb_id), status:row.status || "published",
+      sub_ku:row.sub_ku || "", sub_en:row.sub_en || "", sub_ar:row.sub_ar || "", sub_fa:row.sub_fa || "",
       servers:(servers || []).map(function (s) {
         return {
-          id:s.id || null,
-          server_name:s.server_name || "",
-          server_type:s.server_type || "",
-          video_url:s.video_url || "",
-          is_default:s.is_default === true,
-          sort_order:s.sort_order == null ? "" : String(s.sort_order),
-          status:s.status || "published"
+          id:s.id || null, server_name:s.server_name || "", server_type:s.server_type || "",
+          video_url:s.video_url || "", is_default:s.is_default === true,
+          sort_order:s.sort_order == null ? "" : String(s.sort_order), status:s.status || "published"
         };
       })
     };
@@ -669,7 +437,7 @@
           </div>
 
           <div class="ca-section">
-            <div class="ca-section-head"><strong>٣. ژێرنووسەکان</strong></div>
+            <div class="ca-section-head"><strong>٣. ژێرنووسەکان (SRT)</strong></div>
             <div class="ca-sub-grid">
               ${LANGS.map(function (x) {
                 return subHtml(x[0], x[1], f["sub_" + x[0]]);
@@ -926,51 +694,20 @@
     if (button) button.setAttribute("aria-expanded", "true");
 
     try {
-      S.root.innerHTML =
-        '<div class="ca-panel"><div class="ca-note">خەریکی هێنانی ناوەڕۆکی سینەما...</div></div>';
-
       await load();
       list();
 
-      window.scrollTo({
-        top: Math.max(
-          0,
-          S.root.getBoundingClientRect().top + window.scrollY - 12
-        ),
-        behavior: "smooth"
-      });
+      window.scrollTo(0, 0);
     } catch (e) {
       console.error("Cinema admin open:", e);
 
-      /* Keep the error visible instead of hiding the panel with a vague alert. */
+      S.root.style.display = "none";
+      S.root.setAttribute("aria-hidden", "true");
+
       if (catalog) catalog.style.display = "";
-      S.root.style.display = "";
-      S.root.setAttribute("aria-hidden", "false");
 
-      var msg = e && e.message ? e.message : "هەڵەیەکی نەناسراو ڕوویدا.";
-      var code = e && e.code ? "\nCode: " + e.code : "";
-      var details = e && e.details ? "\n" + e.details : "";
-      var hint = e && e.hint ? "\n" + e.hint : "";
-
-      S.root.innerHTML = `
-        <div class="ca-wrap">
-          <div class="ca-panel ca-alert">
-            <strong>نەتوانرا پانێڵی بەڕێوەبردنی سینەما باربکرێت.</strong>
-            <div style="margin-top:8px;white-space:pre-wrap;direction:ltr;text-align:left">${esc(msg + code + details + hint)}</div>
-            <div style="margin-top:10px">ئەگەر پەیامی <b>permission denied</b> یان <b>RLS</b> دەبینیت، کێشەکە لە پۆلیسی Supabase ـە، نەک لە دوگمەکە.</div>
-            <div class="ca-footer">
-              <button type="button" class="ca-btn" data-close-admin>گەڕانەوە</button>
-              <button type="button" class="ca-btn ca-primary" data-cinema-admin-retry>دووبارە هەوڵبدەوە</button>
-            </div>
-          </div>
-        </div>`;
-
-      var retry = S.root.querySelector("[data-cinema-admin-retry]");
-      if (retry) {
-        retry.addEventListener("click", function () {
-          openAdminPanel();
-        });
-      }
+      var msg = e && e.message ? e.message : JSON.stringify(e);
+      alert("نەتوانرا پانێڵی بەڕێوەبردنی سینەما بکرێتەوە.\nهۆکار: " + msg);
     }
   }
 
@@ -1138,36 +875,14 @@
   async function load() {
     S.db = S.db || client();
 
-    /*
-      Keep the admin read query explicit. This makes failures easier to
-      diagnose and avoids depending on unrelated future columns.
-      RLS still decides which rows the current user may read.
-    */
     var r = await S.db
       .from(C.cinemas)
-      .select([
-        "id",
-        "tmdb_id",
-        "title_en",
-        "title_ku",
-        "type",
-        "poster_url",
-        "backdrop_url",
-        "year",
-        "duration",
-        "rating",
-        "genres",
-        "synopsis_en",
-        "synopsis_ku",
-        "status",
-        "created_at",
-        "updated_at"
-      ].join(","))
+      .select("*")
       .order("created_at", { ascending:false });
 
     if (r.error) throw r.error;
 
-    S.cinemas = Array.isArray(r.data) ? r.data : [];
+    S.cinemas = r.data || [];
   }
 
   async function edit(id) {
@@ -1392,35 +1107,43 @@
   }
 
   function startObserver() {
-    if (S.observerBound) return;
-
-    var view = getView();
-    if (!view) return;
+    if (S.observerBound || !document.body) return;
 
     S.observerBound = true;
 
     var scheduled = false;
 
-    function schedule() {
+    var observer = new MutationObserver(function () {
       if (scheduled) return;
+
       scheduled = true;
 
       window.setTimeout(function () {
         scheduled = false;
 
-        if (isCinemaActive() && S.isAdmin) {
+        if (!isCinemaActive()) {
+          if (S.root && S.root.style.display !== "none") {
+            closeAdminPanel();
+          }
+          return;
+        }
+
+        if (S.isAdmin) {
           ensureAdminButton();
         }
       }, 0);
-    }
+    });
 
-    var observer = new MutationObserver(schedule);
-
-    /* Watch only the Cinema view. This prevents the admin script from
-       reacting to unrelated changes in books, reader, music, profile, etc. */
-    observer.observe(view, {
+    /*
+      childList is required because cinema-ui.js rebuilds its catalog/header.
+      attributes is required so a route change that hides/shows the Cinema view
+      can also update the Admin control.
+    */
+    observer.observe(document.body, {
+      subtree:true,
       childList:true,
-      subtree:true
+      attributes:true,
+      attributeFilter:["style","class","hidden","aria-hidden"]
     });
 
     S.observer = observer;
