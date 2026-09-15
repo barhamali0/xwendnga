@@ -926,6 +926,9 @@
     if (button) button.setAttribute("aria-expanded", "true");
 
     try {
+      S.root.innerHTML =
+        '<div class="ca-panel"><div class="ca-note">خەریکی هێنانی ناوەڕۆکی سینەما...</div></div>';
+
       await load();
       list();
 
@@ -939,12 +942,35 @@
     } catch (e) {
       console.error("Cinema admin open:", e);
 
-      S.root.style.display = "none";
-      S.root.setAttribute("aria-hidden", "true");
-
+      /* Keep the error visible instead of hiding the panel with a vague alert. */
       if (catalog) catalog.style.display = "";
+      S.root.style.display = "";
+      S.root.setAttribute("aria-hidden", "false");
 
-      alert("نەتوانرا پانێڵی بەڕێوەبردنی سینەما بکرێتەوە.");
+      var msg = e && e.message ? e.message : "هەڵەیەکی نەناسراو ڕوویدا.";
+      var code = e && e.code ? "\nCode: " + e.code : "";
+      var details = e && e.details ? "\n" + e.details : "";
+      var hint = e && e.hint ? "\n" + e.hint : "";
+
+      S.root.innerHTML = `
+        <div class="ca-wrap">
+          <div class="ca-panel ca-alert">
+            <strong>نەتوانرا پانێڵی بەڕێوەبردنی سینەما باربکرێت.</strong>
+            <div style="margin-top:8px;white-space:pre-wrap;direction:ltr;text-align:left">${esc(msg + code + details + hint)}</div>
+            <div style="margin-top:10px">ئەگەر پەیامی <b>permission denied</b> یان <b>RLS</b> دەبینیت، کێشەکە لە پۆلیسی Supabase ـە، نەک لە دوگمەکە.</div>
+            <div class="ca-footer">
+              <button type="button" class="ca-btn" data-close-admin>گەڕانەوە</button>
+              <button type="button" class="ca-btn ca-primary" data-cinema-admin-retry>دووبارە هەوڵبدەوە</button>
+            </div>
+          </div>
+        </div>`;
+
+      var retry = S.root.querySelector("[data-cinema-admin-retry]");
+      if (retry) {
+        retry.addEventListener("click", function () {
+          openAdminPanel();
+        });
+      }
     }
   }
 
@@ -1112,14 +1138,36 @@
   async function load() {
     S.db = S.db || client();
 
+    /*
+      Keep the admin read query explicit. This makes failures easier to
+      diagnose and avoids depending on unrelated future columns.
+      RLS still decides which rows the current user may read.
+    */
     var r = await S.db
       .from(C.cinemas)
-      .select("*")
+      .select([
+        "id",
+        "tmdb_id",
+        "title_en",
+        "title_ku",
+        "type",
+        "poster_url",
+        "backdrop_url",
+        "year",
+        "duration",
+        "rating",
+        "genres",
+        "synopsis_en",
+        "synopsis_ku",
+        "status",
+        "created_at",
+        "updated_at"
+      ].join(","))
       .order("created_at", { ascending:false });
 
     if (r.error) throw r.error;
 
-    S.cinemas = r.data || [];
+    S.cinemas = Array.isArray(r.data) ? r.data : [];
   }
 
   async function edit(id) {
@@ -1344,43 +1392,35 @@
   }
 
   function startObserver() {
-    if (S.observerBound || !document.body) return;
+    if (S.observerBound) return;
+
+    var view = getView();
+    if (!view) return;
 
     S.observerBound = true;
 
     var scheduled = false;
 
-    var observer = new MutationObserver(function () {
+    function schedule() {
       if (scheduled) return;
-
       scheduled = true;
 
       window.setTimeout(function () {
         scheduled = false;
 
-        if (!isCinemaActive()) {
-          if (S.root && S.root.style.display !== "none") {
-            closeAdminPanel();
-          }
-          return;
-        }
-
-        if (S.isAdmin) {
+        if (isCinemaActive() && S.isAdmin) {
           ensureAdminButton();
         }
       }, 0);
-    });
+    }
 
-    /*
-      childList is required because cinema-ui.js rebuilds its catalog/header.
-      attributes is required so a route change that hides/shows the Cinema view
-      can also update the Admin control.
-    */
-    observer.observe(document.body, {
-      subtree:true,
+    var observer = new MutationObserver(schedule);
+
+    /* Watch only the Cinema view. This prevents the admin script from
+       reacting to unrelated changes in books, reader, music, profile, etc. */
+    observer.observe(view, {
       childList:true,
-      attributes:true,
-      attributeFilter:["style","class","hidden","aria-hidden"]
+      subtree:true
     });
 
     S.observer = observer;
