@@ -21,7 +21,10 @@
     isAdmin: false,
     editing: null,
     cinemas: [],
-    saving: false
+    saving: false,
+    authBound: false,
+    clickDelegationBound: false,
+    domObserverBound: false
   };
 
   var TYPES = [
@@ -72,15 +75,16 @@
   }
 
   function getRoot() {
-    var view = document.querySelector(C.view);
-    if (!view) return null;
     var root = document.getElementById(C.root);
-    if (!root) {
-      root = document.createElement("div");
-      root.id = C.root;
-      root.className = "cinema-admin-root";
-      view.appendChild(root);
-    }
+    if (root) return root;
+    if (!document.body) return null;
+
+    root = document.createElement("div");
+    root.id = C.root;
+    root.className = "cinema-admin-root";
+    root.style.display = "none";
+    document.body.appendChild(root);
+
     return root;
   }
 
@@ -419,6 +423,14 @@
       }
       await saveServers(id,f.servers);
       await load();
+
+      if (
+        window.XwendngaCinemaUI &&
+        typeof window.XwendngaCinemaUI.load === "function"
+      ) {
+        await window.XwendngaCinemaUI.load();
+      }
+
       message(S.editing?"ناوەڕۆکەکە نوێ کرایەوە.":"ناوەڕۆکەکە زیاد کرا.",true);
       list();
     }catch(e){
@@ -449,7 +461,16 @@
     try{
       var s=await S.db.from(C.servers).delete().eq("cinema_id",id);if(s.error)throw s.error;
       var r=await S.db.from(C.cinemas).delete().eq("id",id);if(r.error)throw r.error;
-      await load();list();message("ناوەڕۆکەکە سڕایەوە.",true);
+      await load();
+
+      if (
+        window.XwendngaCinemaUI &&
+        typeof window.XwendngaCinemaUI.load === "function"
+      ) {
+        await window.XwendngaCinemaUI.load();
+      }
+
+      list();message("ناوەڕۆکەکە سڕایەوە.",true);
     }catch(e){message("سڕینەوە سەرکەوتوو نەبوو: "+(e.message||""),false)}
   }
 
@@ -458,117 +479,212 @@
     return document.querySelector(C.view);
   }
 
+  function setAdminButtonVisibility(visible) {
+    document.querySelectorAll("[data-cinema-admin-open]").forEach(function (button) {
+      button.style.display = visible ? "" : "none";
+    });
+  }
+
   function ensureAdminButton() {
     var view = getCinemaView();
     if (!view) return null;
 
-    var button = view.querySelector("[data-cinema-admin-open]");
+    var actions = view.querySelector(".cinema-header__actions");
+    if (!actions) return null;
 
+    var button = actions.querySelector("[data-cinema-admin-open]");
     if (!button) {
-      var header = view.querySelector(".section-head");
-
       button = document.createElement("button");
       button.type = "button";
-      button.className = "ca-admin-launch";
+      button.className = "cinema-action-btn ca-admin-launch";
       button.setAttribute("data-cinema-admin-open", "");
-      button.textContent = "⚙ بەڕێوەبردنی سینەما";
-
-      button.style.cssText =
-        "min-height:42px;padding:0 14px;border:1px solid rgba(255,255,255,.12);" +
-        "border-radius:13px;color:#fff;background:linear-gradient(135deg,#7c5cff,#27c7ff);" +
-        "cursor:pointer;font:inherit;font-weight:800;box-shadow:0 10px 30px rgba(0,0,0,.18);";
-
-      if (header) {
-        header.appendChild(button);
-      } else {
-        view.insertBefore(button, view.firstChild);
-      }
+      button.setAttribute("aria-expanded", "false");
+      button.innerHTML =
+        '<i class="fa-solid fa-gear" aria-hidden="true"></i> بەڕێوەبردنی سینەما';
+      actions.appendChild(button);
     }
 
+    button.style.display = S.isAdmin ? "" : "none";
     return button;
   }
 
-  function openAdminPanel() {
-    if (!S.isAdmin || !S.root) return;
+  function hideAdminCompletely() {
+    setAdminButtonVisibility(false);
+    if (S.root) {
+      S.root.style.display = "none";
+      S.root.innerHTML = "";
+      S.root.setAttribute("aria-hidden", "true");
+    }
+  }
+
+  async function refreshAdminAuth(session) {
+    try {
+      S.db = S.db || client();
+
+      var currentSession = session;
+      if (!currentSession) {
+        var result = await S.db.auth.getSession();
+        if (result.error) throw result.error;
+        currentSession = result.data && result.data.session;
+      }
+
+      var user = currentSession && currentSession.user;
+      if (!user) {
+        S.isAdmin = false;
+        hideAdminCompletely();
+        return false;
+      }
+
+      var pr = await S.db
+        .from(C.profiles)
+        .select("id,role,is_disabled")
+        .eq("id", user.id)
+        .maybeSingle();
+
+      if (pr.error) throw pr.error;
+
+      S.isAdmin = !!(
+        pr.data &&
+        pr.data.role === "admin" &&
+        pr.data.is_disabled !== true
+      );
+
+      if (S.isAdmin) {
+        ensureAdminButton();
+        setAdminButtonVisibility(true);
+      } else {
+        hideAdminCompletely();
+      }
+
+      return S.isAdmin;
+    } catch (error) {
+      console.error("Cinema admin auth:", error);
+      S.isAdmin = false;
+      hideAdminCompletely();
+      return false;
+    }
+  }
+
+  function bindAuthSync() {
+    if (S.authBound) return;
+    S.authBound = true;
+
+    try {
+      S.db = S.db || client();
+      if (!S.db || !S.db.auth || typeof S.db.auth.onAuthStateChange !== "function") {
+        return;
+      }
+
+      S.db.auth.onAuthStateChange(function (_event, session) {
+        // Defer Supabase reads outside the auth callback.
+        window.setTimeout(function () {
+          refreshAdminAuth(session).then(function () {
+            if (active()) ensureAdminButton();
+          });
+        }, 0);
+      });
+    } catch (error) {
+      console.error("Cinema admin auth listener:", error);
+    }
+  }
+
+  async function openAdminPanel() {
+    var ok = await refreshAdminAuth();
+    if (!ok) {
+      alert("تەنیا ئەدمین دەتوانێت ئەم بەشە بەکاربهێنێت.");
+      return;
+    }
+
+    S.root = S.root || getRoot();
+    if (!S.root) return;
+
+    var catalog = document.getElementById("cinemaCatalog");
+    if (catalog) catalog.style.display = "none";
 
     S.root.style.display = "";
+    S.root.setAttribute("aria-hidden", "false");
+
     var button = ensureAdminButton();
     if (button) button.setAttribute("aria-expanded", "true");
 
-    window.scrollTo({
-      top: Math.max(
-        0,
-        S.root.getBoundingClientRect().top + window.scrollY - 12
-      ),
-      behavior: "smooth"
-    });
+    try {
+      await load();
+      list();
+    } catch (error) {
+      console.error("Cinema admin open:", error);
+      S.root.style.display = "none";
+      S.root.setAttribute("aria-hidden", "true");
+      alert("نەتوانرا پانێڵی بەڕێوەبردنی سینەما بکرێتەوە.");
+    }
   }
 
   function closeAdminPanel() {
-    if (!S.root) return;
+    if (S.root) {
+      S.root.style.display = "none";
+      S.root.setAttribute("aria-hidden", "true");
+    }
 
-    S.root.style.display = "none";
+    var catalog = document.getElementById("cinemaCatalog");
+    if (catalog) catalog.style.display = "";
 
     var button = ensureAdminButton();
     if (button) button.setAttribute("aria-expanded", "false");
   }
 
-  function bindAdminLauncher() {
-    var button = ensureAdminButton();
-    if (!button || button.dataset.bound === "true") return;
+  function bindAdminDelegation() {
+    if (S.clickDelegationBound) return;
+    S.clickDelegationBound = true;
 
-    button.dataset.bound = "true";
+    document.addEventListener("click", function (e) {
+      var openButton = e.target.closest("[data-cinema-admin-open]");
+      if (openButton) {
+        e.preventDefault();
+        e.stopPropagation();
 
-    button.addEventListener("click", function () {
-      if (!S.isAdmin) return;
+        if (S.root && S.root.style.display !== "none") {
+          closeAdminPanel();
+        } else {
+          openAdminPanel();
+        }
+        return;
+      }
 
-      if (S.root && S.root.style.display !== "none") {
+      var closeButton = e.target.closest("[data-close-admin]");
+      if (closeButton) {
+        e.preventDefault();
         closeAdminPanel();
-      } else {
-        openAdminPanel();
       }
     });
   }
 
-  async function boot() {
-    S.root=getRoot();
-    if(!S.root)return;
+  function boot() {
+    S.root = S.root || getRoot();
+    if (!S.root) return;
 
     styles();
-    S.root.style.display = "none";
-    bindAdminLauncher();
+    bindAdminDelegation();
+    bindAuthSync();
 
-    try{
-      if(!(await ensureAdmin())){
-        S.isAdmin = false;
-        S.root.innerHTML = "";
-        S.root.style.display = "none";
-
-        var nonAdminButton = document.querySelector("[data-cinema-admin-open]");
-        if(nonAdminButton) nonAdminButton.style.display = "none";
-
+    refreshAdminAuth().then(function (ok) {
+      if (!ok) {
+        hideAdminCompletely();
         return;
       }
 
-      var adminButton = ensureAdminButton();
-      if(adminButton) adminButton.style.display = "";
-
-      S.root.innerHTML='<div class="ca-panel"><div class="ca-note">بەشی بەڕێوەبردنی سینەما خەریکە بار دەبێت...</div></div>';
-      await load();
-      list();
-
-      closeAdminPanel();
-      bindAdminLauncher();
-    }catch(e){
-      console.error("Cinema admin boot:",e);
-
-      var errorButton = ensureAdminButton();
-      if(errorButton) errorButton.style.display = "";
-
-      S.root.innerHTML='<div class="ca-panel"><div class="ca-alert">نەتوانرا بەشی بەڕێوەبردنی سینەما بار بکرێت.<br>'+esc(e.message||"هەڵەیەکی نەناسراو")+'</div></div>';
-
+      ensureAdminButton();
       S.root.style.display = "none";
-    }
+      S.root.setAttribute("aria-hidden", "true");
+
+      load()
+        .then(function () {
+          list();
+          closeAdminPanel();
+        })
+        .catch(function (error) {
+          console.error("Cinema admin load:", error);
+          hideAdminCompletely();
+        });
+    });
   }
 
   function active() {
@@ -577,11 +693,36 @@
   }
 
   function start() {
-    if(active()){boot();return}
-    var ob=new MutationObserver(function(){
-      if(active()){ob.disconnect();boot()}
+    styles();
+    S.root = S.root || getRoot();
+    bindAdminDelegation();
+    bindAuthSync();
+
+    refreshAdminAuth().then(function () {
+      if (active()) ensureAdminButton();
     });
-    if(document.body)ob.observe(document.body,{subtree:true,attributes:true,attributeFilter:["class","style","hidden","aria-hidden"]});
+
+    if (!S.domObserverBound && document.body) {
+      S.domObserverBound = true;
+
+      var scheduled = false;
+      var observer = new MutationObserver(function () {
+        if (scheduled) return;
+        scheduled = true;
+
+        window.setTimeout(function () {
+          scheduled = false;
+          if (active()) ensureAdminButton();
+        }, 0);
+      });
+
+      observer.observe(document.body, {
+        subtree: true,
+        childList: true
+      });
+
+      S.domObserver = observer;
+    }
   }
 
   window.XwendngaCinemaAdmin={start:start,boot:boot,refresh:function(){return boot()}};
