@@ -22,7 +22,7 @@
   var CONFIG = {
     supabaseUrl: "https://nretwjagqnisyihtuwwn.supabase.co",
     supabasePublishableKey:
-      "sb_publishable_603X2LJm3l-diUOPeQxyPQ_NkrIiD7M",
+      "sb_publishable_603X2LJm3l-diUOPeXqyPQ_NkrIiD7M",
 
     table: "cinemas",
 
