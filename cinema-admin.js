@@ -17,6 +17,7 @@
     url: "https://nretwjagqnisyihtuwwn.supabase.co",
     key: "sb_publishable_603X2LJm3l-diUOPeXqyPQ_NkrIiD7M",
     cinemas: "cinemas",
+    episodes: "cinema_episodes",
     servers: "cinema_servers",
     profiles: "profiles",
     view: '[data-app-view="cinema"]',
@@ -39,7 +40,9 @@
 
   var TYPES = [
     ["movie", "فیلم"],
-    ["cartoon", "کارتۆن"]
+    ["cartoon", "کارتۆن"],
+    ["series", "زنجیرە"],
+    ["anime", "ئەنیمی"]
   ];
 
   var STATUS = [
@@ -111,6 +114,10 @@
     var n = Number(v);
 
     return Number.isFinite(n) ? n : null;
+  }
+
+  function isEpisodeType(type) {
+    return type === "series" || type === "anime";
   }
 
   function client() {
@@ -229,6 +236,8 @@
       .ca-sub strong{display:block;margin-bottom:7px;font-size:.75rem}
       .ca-file{width:100%;padding:8px;border:1px dashed rgba(255,255,255,.14);border-radius:10px;color:#bfc9da;background:rgba(255,255,255,.025)}
       .ca-server{display:flex;flex-direction:column;gap:10px;padding:12px;border:1px solid rgba(255,255,255,.09);border-radius:15px;background:rgba(0,0,0,.14)}
+      .ca-episodes{display:flex;flex-direction:column;gap:12px}
+      .ca-episode{display:flex;flex-direction:column;gap:12px;padding:12px;border:1px solid rgba(255,255,255,.09);border-radius:18px;background:rgba(0,0,0,.12)}
       .ca-server-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
       .ca-server-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
       .ca-check{display:flex;align-items:center;gap:8px;color:#dce3ef;font-size:.75rem;font-weight:800}
@@ -356,7 +365,8 @@
       sub_en:"",
       sub_ar:"",
       sub_fa:"",
-      servers:[]
+      servers:[],
+      episodes:[]
     };
   }
 
@@ -393,7 +403,8 @@
           sort_order:s.sort_order == null ? "" : String(s.sort_order),
           status:s.status || "published"
         };
-      })
+      }),
+      episodes:[]
     };
   }
 
@@ -440,6 +451,58 @@
           is_default:!!(def && def.checked),
           sort_order:order ? order.value || String(i + 1) : String(i + 1),
           status:status ? status.value || "published" : "published"
+        };
+      }
+    );
+
+    f.episodes = Array.prototype.map.call(
+      S.root.querySelectorAll("[data-episode-row]"),
+      function (r, index) {
+        function field(name) {
+          var n = r.querySelector('[data-episode-field="' + name + '"]');
+          return n ? String(n.value || "").trim() : "";
+        }
+
+        var subs = {};
+        LANGS.forEach(function (l) {
+          subs["sub_" + l[0]] = field("sub_" + l[0]);
+        });
+
+        var episodeServers = Array.prototype.map.call(
+          r.querySelectorAll("[data-episode-server-row]"),
+          function (sr, i) {
+            var name = sr.querySelector("[data-episode-server-name]");
+            var type = sr.querySelector("[data-episode-server-type]");
+            var url = sr.querySelector("[data-episode-server-url]");
+            var def = sr.querySelector("[data-episode-server-default]");
+            var order = sr.querySelector("[data-episode-server-order]");
+            var status = sr.querySelector("[data-episode-server-status]");
+
+            return {
+              id:sr.getAttribute("data-id") || null,
+              server_name:name ? name.value || "" : "",
+              server_type:type ? type.value || "" : "",
+              video_url:url ? url.value || "" : "",
+              is_default:!!(def && def.checked),
+              sort_order:order ? order.value || String(i + 1) : String(i + 1),
+              status:status ? status.value || "published" : "published"
+            };
+          }
+        );
+
+        return {
+          id:r.getAttribute("data-episode-id") || null,
+          episode_number:field("episode_number"),
+          title_en:field("title_en"),
+          title_ku:field("title_ku"),
+          duration:field("duration"),
+          sub_ku:subs.sub_ku,
+          sub_en:subs.sub_en,
+          sub_ar:subs.sub_ar,
+          sub_fa:subs.sub_fa,
+          status:field("status") || "published",
+          servers:episodeServers,
+          _index:index
         };
       }
     );
@@ -536,6 +599,140 @@
     `;
   }
 
+  function episodeServerHtml(servers, episodeIndex) {
+    if (!servers.length) {
+      return '<div class="ca-note" data-no-episode-server>هیچ سێرڤەرێکی ئەم ئەڵقەیە نییە.</div>';
+    }
+
+    return servers.map(function (s, i) {
+      return `
+        <div class="ca-server" data-episode-server-row data-id="${esc(s.id || "")}">
+          <div class="ca-server-head">
+            <strong>سێرڤەری ${i + 1}</strong>
+            <button type="button" class="ca-btn ca-danger" data-remove-episode-server data-episode-index="${esc(episodeIndex)}">سڕینەوە</button>
+          </div>
+
+          <div class="ca-server-grid">
+            <label class="ca-field">
+              <span class="ca-label">ناوی سێرڤەر</span>
+              <input class="ca-input" data-episode-server-name value="${esc(s.server_name)}" placeholder="سێرڤەری سەرەکی">
+            </label>
+
+            <label class="ca-field">
+              <span class="ca-label">جۆری سێرڤەر</span>
+              <input class="ca-input" data-episode-server-type value="${esc(s.server_type)}" placeholder="direct">
+            </label>
+
+            <label class="ca-field" style="grid-column:1/-1">
+              <span class="ca-label">لینکی ڤیدیۆ</span>
+              <input class="ca-input" dir="ltr" data-episode-server-url value="${esc(s.video_url)}" placeholder="https://...">
+            </label>
+
+            <label class="ca-field">
+              <span class="ca-label">ڕیزبەندی</span>
+              <input class="ca-input" data-episode-server-order type="number" min="1" value="${esc(s.sort_order || String(i + 1))}">
+            </label>
+
+            <label class="ca-field">
+              <span class="ca-label">دۆخ</span>
+              <select class="ca-select" data-episode-server-status>
+                <option value="published"${s.status === "published" ? " selected" : ""}>بڵاوکراوە</option>
+                <option value="hidden"${s.status === "hidden" ? " selected" : ""}>شاراوە</option>
+              </select>
+            </label>
+          </div>
+
+          <label class="ca-check">
+            <input type="checkbox" data-episode-server-default${s.is_default ? " checked" : ""}>
+            ئەم سێرڤەرە سەرەکی بێت
+          </label>
+        </div>
+      `;
+    }).join("");
+  }
+
+  function episodeHtml(ep, i) {
+    return `
+      <div class="ca-episode" data-episode-row data-episode-id="${esc(ep.id || "")}">
+        <div class="ca-section-head">
+          <strong>ئەڵقە ${esc(ep.episode_number || String(i + 1))}</strong>
+          <button type="button" class="ca-btn ca-danger" data-remove-episode>سڕینەوەی ئەڵقە</button>
+        </div>
+
+        <div class="ca-grid">
+          <label class="ca-field">
+            <span class="ca-label">ژمارەی ئەڵقە</span>
+            <input class="ca-input" data-episode-field="episode_number" type="number" min="1" value="${esc(ep.episode_number || String(i + 1))}">
+          </label>
+
+          <label class="ca-field">
+            <span class="ca-label">ماوە</span>
+            <input class="ca-input" data-episode-field="duration" value="${esc(ep.duration || "")}" placeholder="45 خولەک">
+          </label>
+
+          <label class="ca-field">
+            <span class="ca-label">ناوی کوردی</span>
+            <input class="ca-input" data-episode-field="title_ku" value="${esc(ep.title_ku || "")}">
+          </label>
+
+          <label class="ca-field">
+            <span class="ca-label">ناوی ئینگلیزی</span>
+            <input class="ca-input" dir="ltr" data-episode-field="title_en" value="${esc(ep.title_en || "")}">
+          </label>
+
+          <label class="ca-field">
+            <span class="ca-label">دۆخی بڵاوکردنەوە</span>
+            <select class="ca-select" data-episode-field="status">
+              ${STATUS.map(function (x) {
+                return '<option value="' + esc(x[0]) + '"' +
+                  ((ep.status || "published") === x[0] ? " selected" : "") +
+                  ">" + esc(x[1]) + "</option>";
+              }).join("")}
+            </select>
+          </label>
+        </div>
+
+        <div class="ca-section">
+          <div class="ca-section-head">
+            <strong>سێرڤەرەکانی ئەڵقە</strong>
+            <button type="button" class="ca-btn ca-primary" data-add-episode-server data-episode-index="${esc(i)}">+ سێرڤەر</button>
+          </div>
+          <div data-episode-server-list>${episodeServerHtml(ep.servers || [], i)}</div>
+        </div>
+
+        <div class="ca-section">
+          <div class="ca-section-head"><strong>ژێرنووسەکانی ئەڵقە (SRT/VTT)</strong></div>
+          <div class="ca-sub-grid">
+            ${LANGS.map(function (x) {
+              return '<div class="ca-sub">' +
+                '<strong>' + esc(x[1]) + '</strong>' +
+                '<input class="ca-file" type="file" accept=".srt,.vtt,text/plain" data-episode-sub-file="' + esc(x[0]) + '" data-episode-index="' + esc(i) + '">' +
+                '<textarea class="ca-text" data-episode-field="sub_' + esc(x[0]) + '" placeholder="دەقی SRT/VTT لێرە پەیست بکە...">' + esc(ep['sub_' + x[0]] || '') + '</textarea>' +
+              '</div>';
+            }).join("")}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function episodeManagerHtml(episodes) {
+    return `
+      <div class="ca-section">
+        <div class="ca-section-head">
+          <strong>٢. بەڕێوەبردنی ئەڵقەکان</strong>
+          <button type="button" class="ca-btn ca-primary" data-add-episode>+ زیادکردنی ئەڵقە</button>
+        </div>
+        <div class="ca-note">هەر ئەڵقەیەک سێرڤەر و ژێرنووسی سەربەخۆی خۆی هەیە.</div>
+        <div class="ca-episodes" data-episode-list>
+          ${episodes.length
+            ? episodes.map(episodeHtml).join("")
+            : '<div class="ca-note" data-no-episode>هێشتا هیچ ئەڵقەیەک زیاد نەکراوە.</div>'}
+        </div>
+      </div>
+    `;
+  }
+
   function renderForm(f) {
     if (!S.root) {
       return;
@@ -545,8 +742,8 @@
       <div class="ca-wrap">
         <div class="ca-panel ca-head">
           <div>
-            <h2>${S.editing ? "دەستکاریی ناوەڕۆک" : "زیادکردنی فیلم یان کارتۆن"}</h2>
-            <div class="ca-muted">زانیارییەکانی فیلم، سێرڤەر و ژێرنووسەکان لێرە بەڕێوەبەرە.</div>
+            <h2>${S.editing ? "دەستکاریی ناوەڕۆک" : (isEpisodeType(f.type) ? "زیادکردنی زنجیرە یان ئەنیمی" : "زیادکردنی فیلم یان کارتۆن")}</h2>
+            <div class="ca-muted">${isEpisodeType(f.type) ? "زانیاریی زنجیرەکە و ئەڵقە، سێرڤەر و ژێرنووسەکانیان لێرە بەڕێوەبەرە." : "زانیارییەکانی فیلم، سێرڤەر و ژێرنووسەکان لێرە بەڕێوەبەرە."}</div>
           </div>
 
           <div style="display:flex;gap:8px;flex-wrap:wrap">
@@ -639,6 +836,7 @@
             </div>
           </div>
 
+          ${isEpisodeType(f.type) ? episodeManagerHtml(f.episodes || []) : `
           <div class="ca-section">
             <div class="ca-section-head">
               <strong>٢. سێرڤەرەکانی پەخشی ڤیدیۆ</strong>
@@ -655,7 +853,7 @@
                 return subHtml(x[0], x[1], f["sub_" + x[0]]);
               }).join("")}
             </div>
-          </div>
+          </div>`}
 
           <div class="ca-footer">
             <button type="button" class="ca-btn" data-list>پاشگەزبوونەوە</button>
@@ -676,6 +874,16 @@
     }
 
     var form = S.root.querySelector("[data-form]");
+
+    var typeSelect = S.root.querySelector('[name="type"]');
+    if (typeSelect && !typeSelect.dataset.boundType) {
+      typeSelect.dataset.boundType = "true";
+      typeSelect.addEventListener("change", function () {
+        var draft = formData();
+        draft.type = typeSelect.value;
+        renderForm(draft);
+      });
+    }
 
     if (form && !form.dataset.bound) {
       form.dataset.bound = "true";
@@ -705,6 +913,30 @@
           }
         } catch (e) {
           message("خوێندنەوەی فایلی ژێرنووس سەرکەوتوو نەبوو.", false);
+        }
+      });
+    });
+
+    S.root.querySelectorAll("[data-episode-sub-file]").forEach(function (input) {
+      input.addEventListener("change", async function () {
+        var file = input.files && input.files[0];
+        if (!file) {
+          return;
+        }
+
+        try {
+          var t = await file.text();
+          var index = input.getAttribute("data-episode-index");
+          var lang = input.getAttribute("data-episode-sub-file");
+          var row = S.root.querySelector('[data-episode-row]');
+          var rows = Array.prototype.slice.call(S.root.querySelectorAll("[data-episode-row]"));
+          row = rows[Number(index)];
+          var area = row && row.querySelector('[data-episode-field="sub_' + lang + '"]');
+          if (area) {
+            area.value = t;
+          }
+        } catch (e) {
+          message("خوێندنەوەی فایلی ژێرنووسی ئەڵقە سەرکەوتوو نەبوو.", false);
         }
       });
     });
@@ -1080,9 +1312,59 @@
         throw sr.error;
       }
 
+      var f = rowForm(r.data, sr.data || []);
+
+      if (isEpisodeType(r.data.type)) {
+        var er = await S.db
+          .from(C.episodes)
+          .select("id,cinema_id,episode_number,title_en,title_ku,duration,sub_ku,sub_en,sub_ar,sub_fa,status,created_at,updated_at")
+          .eq("cinema_id", id)
+          .order("episode_number", { ascending:true });
+
+        if (er.error) {
+          throw er.error;
+        }
+
+        f.episodes = await Promise.all((er.data || []).map(async function (ep) {
+          var es = await S.db
+            .from(C.servers)
+            .select("*")
+            .eq("episode_id", ep.id)
+            .order("sort_order", { ascending:true });
+
+          if (es.error) {
+            throw es.error;
+          }
+
+          return {
+            id:ep.id,
+            episode_number:ep.episode_number == null ? "" : String(ep.episode_number),
+            title_en:ep.title_en || "",
+            title_ku:ep.title_ku || "",
+            duration:ep.duration || "",
+            sub_ku:ep.sub_ku || "",
+            sub_en:ep.sub_en || "",
+            sub_ar:ep.sub_ar || "",
+            sub_fa:ep.sub_fa || "",
+            status:ep.status || "published",
+            servers:(es.data || []).map(function (x) {
+              return {
+                id:x.id || null,
+                server_name:x.server_name || "",
+                server_type:x.server_type || "",
+                video_url:x.video_url || "",
+                is_default:x.is_default === true,
+                sort_order:x.sort_order == null ? "" : String(x.sort_order),
+                status:x.status || "published"
+              };
+            })
+          };
+        }));
+      }
+
       S.editing = id;
 
-      renderForm(rowForm(r.data, sr.data || []));
+      renderForm(f);
     } catch (e) {
       console.error("Cinema edit:", e);
       message(
@@ -1176,7 +1458,11 @@
         id = ins.data.id;
       }
 
-      await saveServers(id, f.servers);
+      if (isEpisodeType(f.type)) {
+        await saveEpisodes(id, f.episodes || []);
+      } else {
+        await saveServers(id, f.servers);
+      }
       await load();
 
       if (
@@ -1202,6 +1488,170 @@
       );
     } finally {
       S.saving = false;
+    }
+  }
+
+  async function saveEpisodeServers(cinemaId, episodeId, servers) {
+    var old = await S.db
+      .from(C.servers)
+      .select("id")
+      .eq("cinema_id", cinemaId)
+      .eq("episode_id", episodeId);
+
+    if (old.error) {
+      throw old.error;
+    }
+
+    var active = (servers || []).filter(function (s) {
+      return s.server_name.trim() || s.video_url.trim();
+    });
+
+    if (
+      active.length &&
+      !active.some(function (s) {
+        return s.is_default;
+      })
+    ) {
+      active[0].is_default = true;
+    }
+
+    var ids = active
+      .filter(function (s) { return s.id; })
+      .map(function (s) { return s.id; });
+
+    var toRemove = (old.data || [])
+      .map(function (s) { return s.id; })
+      .filter(function (id) { return ids.indexOf(id) < 0; });
+
+    if (toRemove.length) {
+      var del = await S.db
+        .from(C.servers)
+        .delete()
+        .in("id", toRemove);
+      if (del.error) {
+        throw del.error;
+      }
+    }
+
+    for (var i = 0; i < active.length; i++) {
+      var s = active[i];
+      var payload = {
+        cinema_id:cinemaId,
+        episode_id:episodeId,
+        server_name:s.server_name.trim() || "سێرڤەر",
+        server_type:s.server_type.trim() || "direct",
+        video_url:s.video_url.trim(),
+        is_default:s.is_default === true,
+        sort_order:nint(s.sort_order) || i + 1,
+        status:s.status || "published"
+      };
+
+      var r;
+      if (s.id) {
+        r = await S.db
+          .from(C.servers)
+          .update(payload)
+          .eq("id", s.id)
+          .eq("cinema_id", cinemaId)
+          .eq("episode_id", episodeId);
+      } else {
+        r = await S.db
+          .from(C.servers)
+          .insert(payload);
+      }
+
+      if (r.error) {
+        throw r.error;
+      }
+    }
+  }
+
+  async function saveEpisodes(cinemaId, episodes) {
+    var old = await S.db
+      .from(C.episodes)
+      .select("id")
+      .eq("cinema_id", cinemaId);
+
+    if (old.error) {
+      throw old.error;
+    }
+
+    var active = (episodes || []).filter(function (ep) {
+      return ep.episode_number !== "" || ep.title_ku.trim() || ep.title_en.trim();
+    });
+
+    var ids = active
+      .filter(function (ep) { return ep.id; })
+      .map(function (ep) { return ep.id; });
+
+    var toRemove = (old.data || [])
+      .map(function (ep) { return ep.id; })
+      .filter(function (id) { return ids.indexOf(id) < 0; });
+
+    if (toRemove.length) {
+      var sr = await S.db
+        .from(C.servers)
+        .delete()
+        .in("episode_id", toRemove);
+      if (sr.error) {
+        throw sr.error;
+      }
+
+      var dr = await S.db
+        .from(C.episodes)
+        .delete()
+        .in("id", toRemove)
+        .eq("cinema_id", cinemaId);
+      if (dr.error) {
+        throw dr.error;
+      }
+    }
+
+    for (var i = 0; i < active.length; i++) {
+      var ep = active[i];
+      var payload = {
+        cinema_id:cinemaId,
+        episode_number:nint(ep.episode_number) || i + 1,
+        title_en:ep.title_en.trim() || null,
+        title_ku:ep.title_ku.trim() || null,
+        duration:ep.duration.trim() || null,
+        sub_ku:ep.sub_ku || null,
+        sub_en:ep.sub_en || null,
+        sub_ar:ep.sub_ar || null,
+        sub_fa:ep.sub_fa || null,
+        status:ep.status || "published"
+      };
+
+      var r;
+      var episodeId = ep.id || null;
+
+      if (episodeId) {
+        r = await S.db
+          .from(C.episodes)
+          .update(payload)
+          .eq("id", episodeId)
+          .eq("cinema_id", cinemaId)
+          .select("id")
+          .maybeSingle();
+      } else {
+        r = await S.db
+          .from(C.episodes)
+          .insert(payload)
+          .select("id")
+          .single();
+      }
+
+      if (r.error) {
+        throw r.error;
+      }
+
+      episodeId = r.data && r.data.id ? r.data.id : episodeId;
+
+      if (!episodeId) {
+        throw new Error("ID ـی ئەڵقە نەدۆزرایەوە.");
+      }
+
+      await saveEpisodeServers(cinemaId, episodeId, ep.servers || []);
     }
   }
 
@@ -1303,6 +1753,44 @@
     }
 
     try {
+      var cinema = S.cinemas.find(function (x) {
+        return String(x.id) === String(id);
+      });
+
+      if (cinema && isEpisodeType(cinema.type)) {
+        var er = await S.db
+          .from(C.episodes)
+          .select("id")
+          .eq("cinema_id", id);
+
+        if (er.error) {
+          throw er.error;
+        }
+
+        var episodeIds = (er.data || []).map(function (x) { return x.id; });
+
+        if (episodeIds.length) {
+          var esr = await S.db
+            .from(C.servers)
+            .delete()
+            .in("episode_id", episodeIds);
+
+          if (esr.error) {
+            throw esr.error;
+          }
+
+          var erd = await S.db
+            .from(C.episodes)
+            .delete()
+            .in("id", episodeIds)
+            .eq("cinema_id", id);
+
+          if (erd.error) {
+            throw erd.error;
+          }
+        }
+      }
+
       var sr = await S.db
         .from(C.servers)
         .delete()
@@ -1423,6 +1911,90 @@
         return;
       }
 
+      var addEpisodeButton = target.closest("[data-add-episode]");
+
+      if (addEpisodeButton && S.root && S.root.contains(addEpisodeButton)) {
+        e.preventDefault();
+        var f = formData();
+        f.episodes.push({
+          id:null,
+          episode_number:String(f.episodes.length + 1),
+          title_en:"",
+          title_ku:"",
+          duration:"",
+          sub_ku:"",
+          sub_en:"",
+          sub_ar:"",
+          sub_fa:"",
+          status:"published",
+          servers:[]
+        });
+        renderForm(f);
+        return;
+      }
+
+      var removeEpisodeButton = target.closest("[data-remove-episode]");
+
+      if (removeEpisodeButton && S.root && S.root.contains(removeEpisodeButton)) {
+        e.preventDefault();
+        var form = formData();
+        var rows = Array.prototype.slice.call(S.root.querySelectorAll("[data-episode-row]"));
+        var row = removeEpisodeButton.closest("[data-episode-row]");
+        var index = rows.indexOf(row);
+        if (index >= 0) {
+          form.episodes.splice(index, 1);
+        }
+        renderForm(form);
+        return;
+      }
+
+      var addEpisodeServerButton = target.closest("[data-add-episode-server]");
+
+      if (addEpisodeServerButton && S.root && S.root.contains(addEpisodeServerButton)) {
+        e.preventDefault();
+        var form = formData();
+        var episodeIndex = Number(addEpisodeServerButton.getAttribute("data-episode-index"));
+        var episode = form.episodes[episodeIndex];
+        if (episode) {
+          episode.servers.push({
+            id:null,
+            server_name:"سێرڤەری سەرەکی",
+            server_type:"direct",
+            video_url:"",
+            is_default:episode.servers.length === 0,
+            sort_order:String(episode.servers.length + 1),
+            status:"published"
+          });
+          renderForm(form);
+        }
+        return;
+      }
+
+      var removeEpisodeServerButton = target.closest("[data-remove-episode-server]");
+
+      if (removeEpisodeServerButton && S.root && S.root.contains(removeEpisodeServerButton)) {
+        e.preventDefault();
+        var form = formData();
+        var episodeIndex = Number(removeEpisodeServerButton.getAttribute("data-episode-index"));
+        var episode = form.episodes[episodeIndex];
+        if (episode) {
+          var rows = Array.prototype.slice.call(S.root.querySelectorAll('[data-episode-row]')[episodeIndex].querySelectorAll("[data-episode-server-row]"));
+          var row = removeEpisodeServerButton.closest("[data-episode-server-row]");
+          var index = rows.indexOf(row);
+          if (index >= 0) {
+            episode.servers.splice(index, 1);
+          }
+          if (
+            episode.servers.length &&
+            !episode.servers.some(function (x) { return x.is_default; })
+          ) {
+            episode.servers[0].is_default = true;
+          }
+          renderForm(form);
+        }
+        return;
+      }
+
       var addServerButton = target.closest("[data-add-server]");
 
       if (addServerButton && S.root && S.root.contains(addServerButton)) {
@@ -1494,6 +2066,19 @@
               item.checked = false;
             }
           });
+      }
+
+      if (target.matches("[data-episode-server-default]") && target.checked) {
+        var episodeRow = target.closest("[data-episode-row]");
+        if (episodeRow) {
+          episodeRow
+            .querySelectorAll("[data-episode-server-default]")
+            .forEach(function (item) {
+              if (item !== target) {
+                item.checked = false;
+              }
+            });
+        }
       }
     });
   }
