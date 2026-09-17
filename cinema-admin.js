@@ -1495,7 +1495,6 @@
     var old = await S.db
       .from(C.servers)
       .select("id")
-      .eq("cinema_id", cinemaId)
       .eq("episode_id", episodeId);
 
     if (old.error) {
@@ -1536,7 +1535,7 @@
     for (var i = 0; i < active.length; i++) {
       var s = active[i];
       var payload = {
-        cinema_id:cinemaId,
+        cinema_id:null,
         episode_id:episodeId,
         server_name:s.server_name.trim() || "سێرڤەر",
         server_type:s.server_type.trim() || "direct",
@@ -1552,7 +1551,6 @@
           .from(C.servers)
           .update(payload)
           .eq("id", s.id)
-          .eq("cinema_id", cinemaId)
           .eq("episode_id", episodeId);
       } else {
         r = await S.db
