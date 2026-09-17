@@ -15,7 +15,7 @@
 
   var C = {
     url: "https://nretwjagqnisyihtuwwn.supabase.co",
-    key: "sb_publishable_603X2LJm3l-diUOPeXqyPQ_NkrIiD7M",
+    key: "sb_publishable_603X2LJm3l-diUOPeQxyPQ_NkrIiD7M",
     cinemas: "cinemas",
     servers: "cinema_servers",
     profiles: "profiles",
@@ -38,9 +38,11 @@
   };
 
   var TYPES = [
-    ["movie", "فیلم"],
-    ["cartoon", "کارتۆن"]
-  ];
+  ["movie", "فیلم"],
+  ["series", "زنجیرە"],
+  ["anime", "ئەنیمی"],
+  ["cartoon", "کارتۆن"]
+];
 
   var STATUS = [
     ["draft", "ڕەشنووس"],
