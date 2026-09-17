@@ -3,7 +3,7 @@
    Does not modify script.js or reader.js. */
 (function(){
   'use strict';
-  var C={url:'https://nretwjagqnisyihtuwwn.supabase.co',key:'sb_publishable_603X2LJm3l-diUOPeXqyPQ_NkrIiD7M',cinemas:'cinemas',episodes:'cinema_episodes',servers:'cinema_servers',view:'[data-app-view="cinema"]',root:'cinemaPlayerRoot'};
+  var C={url:'https://nretwjagqnisyihtuwwn.supabase.co',key:'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5yZXR3amFncW5pc3lpaHR1d3duIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODg5OTM0ODksImV4cCI6MjEwNDU2OTQ4OX0.epuKFVaTNV5if19Jg1lJ6GiEszQiB8QCY6KUfIovrQU',cinemas:'cinemas',episodes:'cinema_episodes',servers:'cinema_servers',view:'[data-app-view="cinema"]',root:'cinemaPlayerRoot'};
   var S={client:null,root:null,cinema:null,episodes:[],servers:[],episode:null,server:null,primary:'en',secondary:'ku',pcues:[],scues:[],delay:0,pkey:'',skey:'',loading:false};
   function esc(v){return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
   function client(){if(!window.supabase||typeof window.supabase.createClient!=='function')return null;try{return window.supabase.createClient(C.url,C.key)}catch(e){console.error(e);return null}}
