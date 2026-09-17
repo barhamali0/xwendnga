@@ -21,6 +21,12 @@
 
   var CONFIG = {
     supabaseUrl: "https://nretwjagqnisyihtuwwn.supabase.co",
+
+    /*
+      IMPORTANT:
+      This key must match the working Supabase key used by
+      the main Xwendnga application.
+    */
     supabasePublishableKey:
       "sb_publishable_603X2LJm3l-diUOPeXqyPQ_NkrIiD7M",
 
@@ -29,6 +35,7 @@
     viewSelector: '[data-app-view="cinema"]',
     rootId: "cinemaCatalog"
   };
+
 
   var state = {
     ready: false,
@@ -40,6 +47,7 @@
     genre: "all",
     sort: "newest"
   };
+
 
   var client = null;
   var root = null;
@@ -69,7 +77,10 @@
   function safeArray(value) {
     if (Array.isArray(value)) {
       return value.filter(function (item) {
-        return item != null && String(item).trim() !== "";
+        return (
+          item != null &&
+          String(item).trim() !== ""
+        );
       });
     }
 
@@ -87,26 +98,34 @@
 
 
   function getPoster(item) {
-    return String(item.poster_url || "").trim();
+    return String(
+      item.poster_url || ""
+    ).trim();
   }
 
 
   function getBackdrop(item) {
     return String(
-      item.backdrop_url || item.poster_url || ""
+      item.backdrop_url ||
+      item.poster_url ||
+      ""
     ).trim();
   }
 
 
   function getTitle(item) {
     return String(
-      item.title_ku || item.title_en || "بێ ناونیشان"
+      item.title_ku ||
+      item.title_en ||
+      "بێ ناونیشان"
     ).trim();
   }
 
 
   function getOriginalTitle(item) {
-    return String(item.title_en || "").trim();
+    return String(
+      item.title_en || ""
+    ).trim();
   }
 
 
@@ -118,12 +137,20 @@
       cartoon: "کارتۆن"
     };
 
-    return labels[type] || type || "سینەما";
+    return (
+      labels[type] ||
+      type ||
+      "سینەما"
+    );
   }
 
 
   function formatRating(value) {
-    if (value === null || value === undefined || value === "") {
+    if (
+      value === null ||
+      value === undefined ||
+      value === ""
+    ) {
       return "—";
     }
 
@@ -156,26 +183,55 @@
   }
 
 
+  /*
+    Fallback poster for:
+    1. Missing poster_url
+    2. Empty poster URL
+    3. Broken/unreachable poster URL
+  */
+  function posterFallbackHtml(title) {
+    return (
+      '<div class="cinema-card__poster cinema-card__poster--fallback"' +
+        ' role="img"' +
+        ' aria-label="' +
+          escapeHtml(title || "سینەما") +
+        '">' +
+          '<i class="fa-solid fa-film" aria-hidden="true"></i>' +
+          '<span>سینەما</span>' +
+      '</div>'
+    );
+  }
+
+
   function dispatchOpen(item) {
     try {
       window.dispatchEvent(
-        new CustomEvent("xwendnga:cinema-open", {
-          detail: {
-            item: item
+        new CustomEvent(
+          "xwendnga:cinema-open",
+          {
+            detail: {
+              item: item
+            }
           }
-        })
+        )
       );
     } catch (error) {
       var event;
 
       try {
-        event = document.createEvent("CustomEvent");
+        event = document.createEvent(
+          "CustomEvent"
+        );
+
         event.initCustomEvent(
           "xwendnga:cinema-open",
           true,
           false,
-          { item: item }
+          {
+            item: item
+          }
         );
+
         window.dispatchEvent(event);
       } catch (fallbackError) {
         console.error(
@@ -194,7 +250,8 @@
   function createSupabaseClient() {
     if (
       window.supabase &&
-      typeof window.supabase.createClient === "function"
+      typeof window.supabase.createClient ===
+        "function"
     ) {
       try {
         return window.supabase.createClient(
@@ -215,7 +272,9 @@
 
   async function fetchCinemas() {
     if (!client) {
-      throw new Error("Supabase بەردەست نییە.");
+      throw new Error(
+        "Supabase بەردەست نییە."
+      );
     }
 
     var result = await client
@@ -259,19 +318,27 @@
      ===================================================== */
 
   function ensureRoot() {
-    var view = document.querySelector(CONFIG.viewSelector);
+    var view = document.querySelector(
+      CONFIG.viewSelector
+    );
 
     if (!view) {
       return null;
     }
 
-    var existing = document.getElementById(CONFIG.rootId);
+    var existing =
+      document.getElementById(
+        CONFIG.rootId
+      );
 
     if (existing) {
       return existing;
     }
 
-    var section = document.createElement("section");
+    var section =
+      document.createElement(
+        "section"
+      );
 
     section.id = CONFIG.rootId;
 
@@ -292,21 +359,40 @@
 
         '<header class="cinema-header">',
           '<div>',
-            '<div class="cinema-section__link">XWENDNGA • CINEMA</div>',
-            '<h2 class="cinema-header__title">سینەما</h2>',
-            '<p class="cinema-header__subtitle">فیلم، ئەنیمی، زنجیرە و کارتۆن لە یەک شوێن</p>',
+            '<div class="cinema-section__link">',
+              'XWENDNGA • CINEMA',
+            '</div>',
+
+            '<h2 class="cinema-header__title">',
+              'سینەما',
+            '</h2>',
+
+            '<p class="cinema-header__subtitle">',
+              'فیلم، ئەنیمی، زنجیرە و کارتۆن لە یەک شوێن',
+            '</p>',
           '</div>',
+
           '<div class="cinema-header__actions">',
-            '<button class="cinema-action-btn cinema-action-btn--primary" type="button" data-cinema-featured="true">',
+            '<button',
+              ' class="cinema-action-btn cinema-action-btn--primary"',
+              ' type="button"',
+              ' data-cinema-featured="true"',
+            '>',
               '<i class="fa-solid fa-clapperboard"></i>',
               ' تایبەتەکان',
             '</button>',
           '</div>',
+
         '</header>',
 
         '<div class="cinema-toolbar">',
+
           '<div class="cinema-search">',
-            '<i class="fa-solid fa-magnifying-glass cinema-search__icon" aria-hidden="true"></i>',
+            '<i',
+              ' class="fa-solid fa-magnifying-glass cinema-search__icon"',
+              ' aria-hidden="true"',
+            '></i>',
+
             '<input',
               ' id="cinemaSearchInput"',
               ' type="search"',
@@ -315,35 +401,118 @@
               ' aria-label="گەڕان لە سینەما"',
             '>',
           '</div>',
-          '<select id="cinemaSort" class="cinema-action-btn" aria-label="ڕیزکردن">',
-            '<option value="newest">نوێترین</option>',
-            '<option value="oldest">کۆنترین</option>',
-            '<option value="rating">بەرزترین نمرە</option>',
-            '<option value="title">بەپێی ناو</option>',
+
+          '<select',
+            ' id="cinemaSort"',
+            ' class="cinema-action-btn"',
+            ' aria-label="ڕیزکردن"',
+          '>',
+            '<option value="newest">',
+              'نوێترین',
+            '</option>',
+
+            '<option value="oldest">',
+              'کۆنترین',
+            '</option>',
+
+            '<option value="rating">',
+              'بەرزترین نمرە',
+            '</option>',
+
+            '<option value="title">',
+              'بەپێی ناو',
+            '</option>',
           '</select>',
+
         '</div>',
 
-        '<div class="cinema-filter-group" id="cinemaTypeFilters">',
-          '<button class="cinema-chip is-active" type="button" data-cinema-type="all">هەموو</button>',
-          '<button class="cinema-chip" type="button" data-cinema-type="movie">فیلم</button>',
-          '<button class="cinema-chip" type="button" data-cinema-type="series">زنجیرە</button>',
-          '<button class="cinema-chip" type="button" data-cinema-type="anime">ئەنیمی</button>',
-          '<button class="cinema-chip" type="button" data-cinema-type="cartoon">کارتۆن</button>',
+        '<div',
+          ' class="cinema-filter-group"',
+          ' id="cinemaTypeFilters"',
+        '>',
+          '<button',
+            ' class="cinema-chip is-active"',
+            ' type="button"',
+            ' data-cinema-type="all"',
+          '>',
+            'هەموو',
+          '</button>',
+
+          '<button',
+            ' class="cinema-chip"',
+            ' type="button"',
+            ' data-cinema-type="movie"',
+          '>',
+            'فیلم',
+          '</button>',
+
+          '<button',
+            ' class="cinema-chip"',
+            ' type="button"',
+            ' data-cinema-type="series"',
+          '>',
+            'زنجیرە',
+          '</button>',
+
+          '<button',
+            ' class="cinema-chip"',
+            ' type="button"',
+            ' data-cinema-type="anime"',
+          '>',
+            'ئەنیمی',
+          '</button>',
+
+          '<button',
+            ' class="cinema-chip"',
+            ' type="button"',
+            ' data-cinema-type="cartoon"',
+          '>',
+            'کارتۆن',
+          '</button>',
+
         '</div>',
 
-        '<div class="cinema-filter-group" id="cinemaGenreFilters" aria-label="ژانەرەکان"></div>',
+        '<div',
+          ' class="cinema-filter-group"',
+          ' id="cinemaGenreFilters"',
+          ' aria-label="ژانەرەکان"',
+        '></div>',
 
-        '<section id="cinemaHero" class="cinema-hero" aria-label="فیلمی تایبەت"></section>',
+        '<section',
+          ' id="cinemaHero"',
+          ' class="cinema-hero"',
+          ' aria-label="فیلمی تایبەت"',
+        '></section>',
 
         '<section class="cinema-section">',
+
           '<div class="cinema-section__head">',
+
             '<div>',
-              '<h2 class="cinema-section__title">کەتەلۆگی سینەما</h2>',
-              '<p class="cinema-section__hint">هەموو ناوەڕۆکی بڵاوکراوە</p>',
+              '<h2 class="cinema-section__title">',
+                'کەتەلۆگی سینەما',
+              '</h2>',
+
+              '<p class="cinema-section__hint">',
+                'هەموو ناوەڕۆکی بڵاوکراوە',
+              '</p>',
             '</div>',
-            '<span id="cinemaResultCount" class="cinema-section__link">0</span>',
+
+            '<span',
+              ' id="cinemaResultCount"',
+              ' class="cinema-section__link"',
+            '>',
+              '0',
+            '</span>',
+
           '</div>',
-          '<div id="cinemaGrid" class="cinema-grid" aria-live="polite"></div>',
+
+          '<div',
+            ' id="cinemaGrid"',
+            ' class="cinema-grid"',
+            ' aria-live="polite"',
+          '></div>',
+
         '</section>',
 
       '</section>'
@@ -353,27 +522,62 @@
   }
 
 
+  /* =====================================================
+     LOADING
+     ===================================================== */
+
   function renderLoading() {
-    var grid = document.getElementById("cinemaGrid");
-    var hero = document.getElementById("cinemaHero");
+    var grid =
+      document.getElementById(
+        "cinemaGrid"
+      );
+
+    var hero =
+      document.getElementById(
+        "cinemaHero"
+      );
 
     if (hero) {
-      hero.innerHTML = '<div class="cinema-skeleton-grid"><div class="cinema-skeleton-card"></div><div class="cinema-skeleton-card"></div><div class="cinema-skeleton-card"></div></div>';
+      hero.innerHTML =
+        '<div class="cinema-skeleton-grid">' +
+          '<div class="cinema-skeleton-card"></div>' +
+          '<div class="cinema-skeleton-card"></div>' +
+          '<div class="cinema-skeleton-card"></div>' +
+        '</div>';
     }
 
+    /*
+      IMPORTANT:
+      renderLoading ONLY renders loading skeletons.
+      Poster querySelectorAll code must NOT be here.
+    */
     if (grid) {
-      grid.innerHTML = [1, 2, 3, 4, 5, 6]
-        .map(function () {
-          return '<article class="cinema-skeleton-card"></article>';
-        })
-        .join("");
+      grid.innerHTML =
+        [1, 2, 3, 4, 5, 6]
+          .map(function () {
+            return (
+              '<article class="cinema-skeleton-card"></article>'
+            );
+          })
+          .join("");
     }
   }
 
 
+  /* =====================================================
+     ERROR
+     ===================================================== */
+
   function renderError(message) {
-    var grid = document.getElementById("cinemaGrid");
-    var hero = document.getElementById("cinemaHero");
+    var grid =
+      document.getElementById(
+        "cinemaGrid"
+      );
+
+    var hero =
+      document.getElementById(
+        "cinemaHero"
+      );
 
     if (hero) {
       hero.innerHTML = "";
@@ -384,29 +588,60 @@
     }
 
     grid.innerHTML = [
-      '<div class="cinema-section" style="grid-column:1/-1">',
-        '<div class="cinema-section__hint"><i class="fa-solid fa-circle-exclamation"></i></div>',
-        '<h3>هێنانی ناوەڕۆک سەرکەوتوو نەبوو</h3>',
+      '<div',
+        ' class="cinema-section"',
+        ' style="grid-column:1/-1"',
+      '>',
+        '<div class="cinema-section__hint">',
+          '<i class="fa-solid fa-circle-exclamation"></i>',
+        '</div>',
+
+        '<h3>',
+          'هێنانی ناوەڕۆک سەرکەوتوو نەبوو',
+        '</h3>',
+
         '<p>',
-          escapeHtml(message || "هەڵەیەک ڕوویدا."),
+          escapeHtml(
+            message ||
+            "هەڵەیەک ڕوویدا."
+          ),
         '</p>',
-        '<button id="cinemaRetry" class="cinema-action-btn cinema-action-btn--primary" type="button">',
+
+        '<button',
+          ' id="cinemaRetry"',
+          ' class="cinema-action-btn cinema-action-btn--primary"',
+          ' type="button"',
+        '>',
           '<i class="fa-solid fa-rotate-right"></i>',
           ' دووبارە هەوڵبدەوە',
         '</button>',
+
       '</div>'
     ].join("");
 
-    var retry = document.getElementById("cinemaRetry");
+    var retry =
+      document.getElementById(
+        "cinemaRetry"
+      );
 
     if (retry) {
-      retry.addEventListener("click", load);
+      retry.addEventListener(
+        "click",
+        load
+      );
     }
   }
 
 
+  /* =====================================================
+     HERO
+     ===================================================== */
+
   function renderHero(items) {
-    var hero = document.getElementById("cinemaHero");
+    var hero =
+      document.getElementById(
+        "cinemaHero"
+      );
 
     if (!hero) {
       return;
@@ -420,171 +655,485 @@
     var featured = items
       .slice()
       .sort(function (a, b) {
-        var ratingA = Number(a.rating || 0);
-        var ratingB = Number(b.rating || 0);
+        var ratingA =
+          Number(a.rating || 0);
+
+        var ratingB =
+          Number(b.rating || 0);
+
         return ratingB - ratingA;
       })[0];
 
-    var backdrop = getBackdrop(featured);
-    var title = getTitle(featured);
-    var original = getOriginalTitle(featured);
+    var backdrop =
+      getBackdrop(featured);
+
+    var title =
+      getTitle(featured);
+
+    var original =
+      getOriginalTitle(featured);
+
     var synopsis =
       featured.synopsis_ku ||
       featured.synopsis_en ||
       "";
 
-    var genres = safeArray(featured.genres)
-      .slice(0, 3);
+    var genres =
+      safeArray(featured.genres)
+        .slice(0, 3);
 
     hero.innerHTML = [
+
       backdrop
-        ? '<img class="cinema-hero__backdrop" src="' + escapeHtml(backdrop) + '" alt="" aria-hidden="true" loading="eager">'
+        ? '<img' +
+            ' class="cinema-hero__backdrop"' +
+            ' src="' +
+              escapeHtml(backdrop) +
+            '"' +
+            ' alt=""' +
+            ' aria-hidden="true"' +
+            ' loading="eager"' +
+          '>'
         : "",
+
       '<div class="cinema-hero__content">',
+
         '<div class="cinema-hero__body">',
+
           '<div class="cinema-hero__eyebrow">',
             '<i class="fa-solid fa-clapperboard"></i>',
             ' ڤیلمی تایبەت',
           '</div>',
-          '<h1 class="cinema-hero__title">', escapeHtml(title), '</h1>',
-          original && normalizeText(original) !== normalizeText(title)
-            ? '<div class="cinema-hero__description">' + escapeHtml(original) + '</div>'
-            : "",
-          '<div class="cinema-hero__meta">',
-            '<span class="cinema-card__badge">', escapeHtml(typeLabel(featured.type)), '</span>',
-            featured.year ? '<span>' + escapeHtml(featured.year) + '</span>' : "",
-            featured.duration ? '<span>' + escapeHtml(featured.duration) + '</span>' : "",
-            Number.isFinite(Number(featured.rating))
-              ? '<span><i class="fa-solid fa-star"></i> ' + escapeHtml(formatRating(featured.rating)) + '</span>'
-              : "",
-          '</div>',
-          synopsis
-            ? '<p class="cinema-hero__description">' + escapeHtml(synopsis) + '</p>'
-            : "",
-          genres.length
-            ? '<div class="cinema-hero__meta">' +
-                genres.map(function (genre) {
-                  return '<span>' + escapeHtml(genre) + '</span>';
-                }).join("") +
+
+          '<h1 class="cinema-hero__title">',
+            escapeHtml(title),
+          '</h1>',
+
+          original &&
+          normalizeText(original) !==
+            normalizeText(title)
+            ? '<div class="cinema-hero__description">' +
+                escapeHtml(original) +
               '</div>'
             : "",
+
+          '<div class="cinema-hero__meta">',
+
+            '<span class="cinema-card__badge">',
+              escapeHtml(
+                typeLabel(
+                  featured.type
+                )
+              ),
+            '</span>',
+
+            featured.year
+              ? '<span>' +
+                  escapeHtml(
+                    featured.year
+                  ) +
+                '</span>'
+              : "",
+
+            featured.duration
+              ? '<span>' +
+                  escapeHtml(
+                    featured.duration
+                  ) +
+                '</span>'
+              : "",
+
+            Number.isFinite(
+              Number(featured.rating)
+            )
+              ? '<span>' +
+                  '<i class="fa-solid fa-star"></i> ' +
+                  escapeHtml(
+                    formatRating(
+                      featured.rating
+                    )
+                  ) +
+                '</span>'
+              : "",
+
+          '</div>',
+
+          synopsis
+            ? '<p class="cinema-hero__description">' +
+                escapeHtml(synopsis) +
+              '</p>'
+            : "",
+
+          genres.length
+            ? '<div class="cinema-hero__meta">' +
+                genres
+                  .map(function (genre) {
+                    return (
+                      '<span>' +
+                        escapeHtml(
+                          genre
+                        ) +
+                      '</span>'
+                    );
+                  })
+                  .join("") +
+              '</div>'
+            : "",
+
           '<div class="cinema-hero__actions">',
-            '<button class="cinema-action-btn cinema-action-btn--primary" type="button" data-cinema-open-id="' + escapeHtml(featured.id) + '">',
+
+            '<button',
+              ' class="cinema-action-btn cinema-action-btn--primary"',
+              ' type="button"',
+              ' data-cinema-open-id="' +
+                escapeHtml(
+                  featured.id
+                ) +
+              '"',
+            '>',
               '<i class="fa-solid fa-play"></i>',
               ' بینە',
             '</button>',
-            '<button class="cinema-action-btn" type="button" data-cinema-open-id="' + escapeHtml(featured.id) + '">',
+
+            '<button',
+              ' class="cinema-action-btn"',
+              ' type="button"',
+              ' data-cinema-open-id="' +
+                escapeHtml(
+                  featured.id
+                ) +
+              '"',
+            '>',
               'زانیارییەکان',
             '</button>',
+
           '</div>',
+
         '</div>',
+
       '</div>'
+
     ].join("");
 
     bindOpenButtons(hero);
   }
 
 
+  /* =====================================================
+     GENRES
+     ===================================================== */
+
   function renderGenres() {
-    var target = document.getElementById("cinemaGenreFilters");
+    var target =
+      document.getElementById(
+        "cinemaGenreFilters"
+      );
 
     if (!target) {
       return;
     }
 
-    var genres = getUniqueGenres(state.items);
-
-    target.innerHTML = [
-      '<button class="cinema-chip is-active" type="button" data-cinema-genre="all">هەموو ژانەرەکان</button>'
-    ].concat(
-      genres.map(function (genre) {
-        return '<button class="cinema-chip" type="button" data-cinema-genre="' +
-          escapeHtml(genre) +
-          '">' +
-          escapeHtml(genre) +
-          '</button>';
-      })
-    ).join("");
-
-    target.addEventListener("click", function (event) {
-      var button = event.target.closest("[data-cinema-genre]");
-
-      if (!button) {
-        return;
-      }
-
-      state.genre = String(
-        button.getAttribute("data-cinema-genre") || "all"
+    var genres =
+      getUniqueGenres(
+        state.items
       );
 
-      target
-        .querySelectorAll("[data-cinema-genre]")
-        .forEach(function (item) {
-          item.classList.toggle(
-            "is-active",
-            item === button
+    target.innerHTML = [
+      '<button',
+        ' class="cinema-chip is-active"',
+        ' type="button"',
+        ' data-cinema-genre="all"',
+      '>',
+        'هەموو ژانەرەکان',
+      '</button>'
+    ]
+      .concat(
+        genres.map(function (genre) {
+          return (
+            '<button' +
+              ' class="cinema-chip"' +
+              ' type="button"' +
+              ' data-cinema-genre="' +
+                escapeHtml(genre) +
+              '"' +
+            '>' +
+              escapeHtml(genre) +
+            '</button>'
           );
-        });
+        })
+      )
+      .join("");
 
-      applyFilters();
-    }, { once: true });
+    target.addEventListener(
+      "click",
+      function (event) {
+        var button =
+          event.target.closest(
+            "[data-cinema-genre]"
+          );
+
+        if (!button) {
+          return;
+        }
+
+        state.genre = String(
+          button.getAttribute(
+            "data-cinema-genre"
+          ) || "all"
+        );
+
+        target
+          .querySelectorAll(
+            "[data-cinema-genre]"
+          )
+          .forEach(function (item) {
+            item.classList.toggle(
+              "is-active",
+              item === button
+            );
+          });
+
+        applyFilters();
+      },
+      {
+        once: true
+      }
+    );
   }
 
 
+  /* =====================================================
+     CARDS
+     ===================================================== */
+
   function cardHtml(item) {
-    var poster = getPoster(item);
-    var title = getTitle(item);
-    var original = getOriginalTitle(item);
+    var poster =
+      getPoster(item);
+
+    var title =
+      getTitle(item);
+
+    var original =
+      getOriginalTitle(item);
+
     var synopsis =
       item.synopsis_ku ||
       item.synopsis_en ||
       "";
-    var genres = safeArray(item.genres);
 
-    var posterHtml = poster
-      ? '<img class="cinema-card__poster" src="' + escapeHtml(poster) + '" alt="' + escapeHtml(title) + '" loading="lazy">'
-      : '<div class="cinema-card__poster" aria-hidden="true"></div>';
+    var posterHtml =
+      poster
+        ? '<img' +
+            ' class="cinema-card__poster"' +
+            ' src="' +
+              escapeHtml(poster) +
+            '"' +
+            ' alt="' +
+              escapeHtml(title) +
+            '"' +
+            ' loading="lazy"' +
+          '>'
+        : posterFallbackHtml(
+            title
+          );
 
     return [
-      '<article class="cinema-card" data-cinema-card-id="' + escapeHtml(item.id) + '">',
+
+      '<article',
+        ' class="cinema-card"',
+        ' data-cinema-card-id="' +
+          escapeHtml(item.id) +
+        '"',
+      '>',
+
         '<div class="cinema-card__visual">',
+
           posterHtml,
-          '<span class="cinema-card__badge"><i class="fa-solid fa-circle-play"></i> ' + escapeHtml(typeLabel(item.type)) + '</span>',
-          Number.isFinite(Number(item.rating))
-            ? '<span class="cinema-card__rating"><i class="fa-solid fa-star"></i> ' + escapeHtml(formatRating(item.rating)) + '</span>'
+
+          '<span class="cinema-card__badge">',
+            '<i class="fa-solid fa-circle-play"></i> ',
+            escapeHtml(
+              typeLabel(item.type)
+            ),
+          '</span>',
+
+          Number.isFinite(
+            Number(item.rating)
+          )
+            ? '<span class="cinema-card__rating">' +
+                '<i class="fa-solid fa-star"></i> ' +
+                escapeHtml(
+                  formatRating(
+                    item.rating
+                  )
+                ) +
+              '</span>'
             : "",
-          '<button class="cinema-card__play" type="button" data-cinema-open-id="' + escapeHtml(item.id) + '" aria-label="بینینی ' + escapeHtml(title) + '">',
+
+          '<button',
+            ' class="cinema-card__play"',
+            ' type="button"',
+            ' data-cinema-open-id="' +
+              escapeHtml(item.id) +
+            '"',
+            ' aria-label="بینینی ' +
+              escapeHtml(title) +
+            '"',
+          '>',
             '<i class="fa-solid fa-play"></i>',
           '</button>',
+
           '<div class="cinema-card__glass">',
-            '<h3 class="cinema-card__title">' + escapeHtml(title) + '</h3>',
-            Number.isFinite(Number(item.rating))
-              ? '<span class="cinema-card__rating"><i class="fa-solid fa-star"></i> ' + escapeHtml(formatRating(item.rating)) + '</span>'
+
+            '<h3 class="cinema-card__title">',
+              escapeHtml(title),
+            '</h3>',
+
+            Number.isFinite(
+              Number(item.rating)
+            )
+              ? '<span class="cinema-card__rating">' +
+                  '<i class="fa-solid fa-star"></i> ' +
+                  escapeHtml(
+                    formatRating(
+                      item.rating
+                    )
+                  ) +
+                '</span>'
               : "",
+
           '</div>',
+
         '</div>',
+
         '<div class="cinema-card__body">',
-          '<h3 class="cinema-card__name">' + escapeHtml(title) + '</h3>',
+
+          '<h3 class="cinema-card__name">',
+            escapeHtml(title),
+          '</h3>',
+
           '<div class="cinema-card__meta">',
-            item.year ? '<span>' + escapeHtml(item.year) + '</span>' : "",
-            item.duration ? '<span>' + escapeHtml(item.duration) + '</span>' : "",
-            original && normalizeText(original) !== normalizeText(title)
-              ? '<span>' + escapeHtml(original) + '</span>'
+
+            item.year
+              ? '<span>' +
+                  escapeHtml(
+                    item.year
+                  ) +
+                '</span>'
               : "",
+
+            item.duration
+              ? '<span>' +
+                  escapeHtml(
+                    item.duration
+                  ) +
+                '</span>'
+              : "",
+
+            original &&
+            normalizeText(original) !==
+              normalizeText(title)
+              ? '<span>' +
+                  escapeHtml(
+                    original
+                  ) +
+                '</span>'
+              : "",
+
           '</div>',
-          synopsis ? '<p class="cinema-card__description">' + escapeHtml(synopsis) + '</p>' : "",
+
+          synopsis
+            ? '<p class="cinema-card__description">' +
+                escapeHtml(
+                  synopsis
+                ) +
+              '</p>'
+            : "",
+
         '</div>',
+
       '</article>'
+
     ].join("");
   }
 
 
+  /* =====================================================
+     POSTER FALLBACK BINDING
+     ===================================================== */
+
+  function bindPosterFallbacks(container) {
+    if (!container) {
+      return;
+    }
+
+    container
+      .querySelectorAll(
+        "img.cinema-card__poster"
+      )
+      .forEach(function (img) {
+
+        img.addEventListener(
+          "error",
+          function () {
+            var title =
+              img.getAttribute(
+                "alt"
+              ) || "سینەما";
+
+            var wrapper =
+              document.createElement(
+                "div"
+              );
+
+            wrapper.className =
+              "cinema-card__poster cinema-card__poster--fallback";
+
+            wrapper.setAttribute(
+              "role",
+              "img"
+            );
+
+            wrapper.setAttribute(
+              "aria-label",
+              title
+            );
+
+            wrapper.innerHTML =
+              '<i class="fa-solid fa-film" aria-hidden="true"></i>' +
+              '<span>سینەما</span>';
+
+            img.replaceWith(
+              wrapper
+            );
+          },
+          {
+            once: true
+          }
+        );
+
+      });
+  }
+
+
+  /* =====================================================
+     GRID
+     ===================================================== */
+
   function renderGrid(items) {
-    var grid = document.getElementById("cinemaGrid");
-    var count = document.getElementById("cinemaResultCount");
+    var grid =
+      document.getElementById(
+        "cinemaGrid"
+      );
+
+    var count =
+      document.getElementById(
+        "cinemaResultCount"
+      );
 
     if (count) {
-      count.textContent = String(items.length);
+      count.textContent =
+        String(items.length);
     }
 
     if (!grid) {
@@ -593,17 +1142,46 @@
 
     if (!items.length) {
       grid.innerHTML = [
-        '<div class="cinema-section" style="grid-column:1/-1">',
-          '<div class="cinema-section__hint"><i class="fa-solid fa-film"></i></div>',
-          '<h3>هیچ ناوەڕۆکێک نەدۆزرایەوە</h3>',
-          '<p>وشەی گەڕان یان فلتەرەکان بگۆڕە.</p>',
+        '<div',
+          ' class="cinema-section"',
+          ' style="grid-column:1/-1"',
+        '>',
+          '<div class="cinema-section__hint">',
+            '<i class="fa-solid fa-film"></i>',
+          '</div>',
+
+          '<h3>',
+            'هیچ ناوەڕۆکێک نەدۆزرایەوە',
+          '</h3>',
+
+          '<p>',
+            'وشەی گەڕان یان فلتەرەکان بگۆڕە.',
+          '</p>',
+
         '</div>'
       ].join("");
+
       return;
     }
 
-    grid.innerHTML = items.map(cardHtml).join("");
-    bindOpenButtons(grid);
+    /*
+      1. Cards are created first.
+      2. THEN broken poster URLs are checked.
+      3. This code intentionally belongs here,
+         NOT inside renderLoading().
+    */
+    grid.innerHTML =
+      items
+        .map(cardHtml)
+        .join("");
+
+    bindPosterFallbacks(
+      grid
+    );
+
+    bindOpenButtons(
+      grid
+    );
   }
 
 
@@ -612,72 +1190,143 @@
      ===================================================== */
 
   function sortItems(items) {
-    return items.slice().sort(function (a, b) {
-      if (state.sort === "rating") {
-        return Number(b.rating || 0) - Number(a.rating || 0);
-      }
+    return items
+      .slice()
+      .sort(function (a, b) {
 
-      if (state.sort === "title") {
-        return getTitle(a).localeCompare(getTitle(b), "ku");
-      }
+        if (
+          state.sort ===
+          "rating"
+        ) {
+          return (
+            Number(
+              b.rating || 0
+            ) -
+            Number(
+              a.rating || 0
+            )
+          );
+        }
 
-      var dateA = new Date(a.created_at || 0).getTime();
-      var dateB = new Date(b.created_at || 0).getTime();
+        if (
+          state.sort ===
+          "title"
+        ) {
+          return getTitle(a)
+            .localeCompare(
+              getTitle(b),
+              "ku"
+            );
+        }
 
-      return state.sort === "oldest"
-        ? dateA - dateB
-        : dateB - dateA;
-    });
+        var dateA =
+          new Date(
+            a.created_at || 0
+          ).getTime();
+
+        var dateB =
+          new Date(
+            b.created_at || 0
+          ).getTime();
+
+        return state.sort ===
+          "oldest"
+          ? dateA - dateB
+          : dateB - dateA;
+      });
   }
 
 
   function applyFilters() {
-    var query = normalizeText(state.query);
+    var query =
+      normalizeText(
+        state.query
+      );
 
-    var filtered = state.items.filter(function (item) {
-      var typeMatches =
-        state.type === "all" ||
-        normalizeText(item.type) === normalizeText(state.type);
+    var filtered =
+      state.items.filter(
+        function (item) {
 
-      if (!typeMatches) {
-        return false;
-      }
+          var typeMatches =
+            state.type === "all" ||
+            normalizeText(
+              item.type
+            ) ===
+              normalizeText(
+                state.type
+              );
 
-      var itemGenres = safeArray(item.genres).map(normalizeText);
+          if (!typeMatches) {
+            return false;
+          }
 
-      var genreMatches =
-        state.genre === "all" ||
-        itemGenres.indexOf(normalizeText(state.genre)) >= 0;
+          var itemGenres =
+            safeArray(
+              item.genres
+            ).map(
+              normalizeText
+            );
 
-      if (!genreMatches) {
-        return false;
-      }
+          var genreMatches =
+            state.genre ===
+              "all" ||
+            itemGenres.indexOf(
+              normalizeText(
+                state.genre
+              )
+            ) >= 0;
 
-      if (!query) {
-        return true;
-      }
+          if (!genreMatches) {
+            return false;
+          }
 
-      var haystack = [
-        item.title_ku,
-        item.title_en,
-        item.synopsis_ku,
-        item.synopsis_en,
-        item.original_language,
-        safeArray(item.genres).join(" "),
-        item.year
-      ]
-        .filter(function (value) {
-          return value !== null && value !== undefined;
-        })
-        .join(" ");
+          if (!query) {
+            return true;
+          }
 
-      return normalizeText(haystack).indexOf(query) >= 0;
-    });
+          var haystack = [
+            item.title_ku,
+            item.title_en,
+            item.synopsis_ku,
+            item.synopsis_en,
+            item.original_language,
+            safeArray(
+              item.genres
+            ).join(" "),
+            item.year
+          ]
+            .filter(
+              function (value) {
+                return (
+                  value !== null &&
+                  value !== undefined
+                );
+              }
+            )
+            .join(" ");
 
-    state.filtered = sortItems(filtered);
+          return (
+            normalizeText(
+              haystack
+            ).indexOf(query) >= 0
+          );
+        }
+      );
 
-    renderHero(state.filtered.length ? state.filtered : state.items);
-    renderGrid(state.filtered);
+    state.filtered =
+      sortItems(
+        filtered
+      );
+
+    renderHero(
+      state.filtered.length
+        ? state.filtered
+        : state.items
+    );
+
+    renderGrid(
+      state.filtered
+    );
   }
 
 
@@ -685,25 +1334,48 @@
      EVENTS
      ===================================================== */
 
-  function bindOpenButtons(container) {
+  function bindOpenButtons(
+    container
+  ) {
     if (!container) {
       return;
     }
 
     container
-      .querySelectorAll("[data-cinema-open-id]")
+      .querySelectorAll(
+        "[data-cinema-open-id]"
+      )
       .forEach(function (button) {
-        button.addEventListener("click", function () {
-          var id = button.getAttribute("data-cinema-open-id");
 
-          var item = state.items.find(function (entry) {
-            return String(entry.id) === String(id);
-          });
+        button.addEventListener(
+          "click",
+          function () {
 
-          if (item) {
-            dispatchOpen(item);
+            var id =
+              button.getAttribute(
+                "data-cinema-open-id"
+              );
+
+            var item =
+              state.items.find(
+                function (entry) {
+                  return (
+                    String(
+                      entry.id
+                    ) ===
+                    String(id)
+                  );
+                }
+              );
+
+            if (item) {
+              dispatchOpen(
+                item
+              );
+            }
           }
-        });
+        );
+
       });
   }
 
@@ -713,46 +1385,83 @@
       return;
     }
 
-    var search = document.getElementById("cinemaSearchInput");
-    var sort = document.getElementById("cinemaSort");
-    var typeFilters = document.getElementById("cinemaTypeFilters");
+    var search =
+      document.getElementById(
+        "cinemaSearchInput"
+      );
+
+    var sort =
+      document.getElementById(
+        "cinemaSort"
+      );
+
+    var typeFilters =
+      document.getElementById(
+        "cinemaTypeFilters"
+      );
 
     if (search) {
-      search.addEventListener("input", function () {
-        state.query = search.value || "";
-        applyFilters();
-      });
+      search.addEventListener(
+        "input",
+        function () {
+          state.query =
+            search.value || "";
+
+          applyFilters();
+        }
+      );
     }
 
 
     if (sort) {
-      sort.addEventListener("change", function () {
-        state.sort = sort.value || "newest";
-        applyFilters();
-      });
+      sort.addEventListener(
+        "change",
+        function () {
+          state.sort =
+            sort.value ||
+            "newest";
+
+          applyFilters();
+        }
+      );
     }
 
+
     if (typeFilters) {
-      typeFilters.addEventListener("click", function (event) {
-        var button = event.target.closest("[data-cinema-type]");
+      typeFilters.addEventListener(
+        "click",
+        function (event) {
 
-        if (!button) {
-          return;
-        }
-
-        state.type = button.getAttribute("data-cinema-type") || "all";
-
-        typeFilters
-          .querySelectorAll("[data-cinema-type]")
-          .forEach(function (item) {
-            item.classList.toggle(
-              "is-active",
-              item === button
+          var button =
+            event.target.closest(
+              "[data-cinema-type]"
             );
-          });
 
-        applyFilters();
-      });
+          if (!button) {
+            return;
+          }
+
+          state.type =
+            button.getAttribute(
+              "data-cinema-type"
+            ) || "all";
+
+          typeFilters
+            .querySelectorAll(
+              "[data-cinema-type]"
+            )
+            .forEach(
+              function (item) {
+                item.classList.toggle(
+                  "is-active",
+                  item === button
+                );
+              }
+            );
+
+          applyFilters();
+        }
+      );
     }
   }
 
@@ -762,29 +1471,39 @@
      ===================================================== */
 
   async function load() {
-    if (!root || state.loading) {
+    if (
+      !root ||
+      state.loading
+    ) {
       return;
     }
 
     state.loading = true;
+
     renderLoading();
 
     try {
-      state.items = await fetchCinemas();
+      state.items =
+        await fetchCinemas();
 
       renderGenres();
+
       applyFilters();
+
     } catch (error) {
+
       console.error(
         "Xwendnga cinema catalog error:",
         error
       );
 
       renderError(
-        error && error.message
+        error &&
+        error.message
           ? error.message
           : "هێنانی داتا سەرکەوتوو نەبوو."
       );
+
     } finally {
       state.loading = false;
     }
@@ -796,14 +1515,17 @@
       return;
     }
 
-    root = ensureRoot();
+    root =
+      ensureRoot();
 
     if (!root) {
       return;
     }
 
     state.ready = true;
-    client = createSupabaseClient();
+
+    client =
+      createSupabaseClient();
 
     renderShell();
 
@@ -823,19 +1545,33 @@
 
   window.XwendngaCinemaUI = {
     init: init,
+
     load: load,
+
     refresh: refresh,
+
     getItems: function () {
       return state.items.slice();
     },
-    getFilteredItems: function () {
-      return state.filtered.slice();
-    }
+
+    getFilteredItems:
+      function () {
+        return state.filtered.slice();
+      }
   };
 
 
-  if (document.readyState === "loading") {
-    document.addEventListener("DOMContentLoaded", init, { once: true });
+  if (
+    document.readyState ===
+    "loading"
+  ) {
+    document.addEventListener(
+      "DOMContentLoaded",
+      init,
+      {
+        once: true
+      }
+    );
   } else {
     init();
   }
