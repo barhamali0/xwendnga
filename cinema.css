@@ -1230,18 +1230,3 @@
     transition-duration:.01ms !important;
   }
 }
-
-/* Cinema poster fallback */
-.cinema-card__poster--fallback {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 8px;
-  background: linear-gradient(135deg, #1b1b1b, #303030);
-  color: #aaa;
-  font-size: 14px;
-  text-align: center;
-}
-.cinema-card__poster--fallback i { font-size: 28px; opacity: .65; }
-.cinema-card__poster--fallback span { font-size: 12px; opacity: .75; }
