@@ -7180,19 +7180,17 @@ var CINEMA_SUBTITLE_FONT_FILES = {
 };
 
 function ensureCinemaSubtitleFonts() {
-  if (document.getElementById('cinemaSubtitleFontFaces')) {
-    return;
-  }
+  if (document.getElementById('cinemaSubtitleFontFaces')) return;
 
   var style = document.createElement('style');
   style.id = 'cinemaSubtitleFontFaces';
 
   var rules = [];
   Object.keys(CINEMA_SUBTITLE_FONT_FILES).forEach(function (name) {
-    var family = name.replace(/"/g, '\\"');
     var url = encodeURI(CINEMA_SUBTITLE_FONT_FILES[name]);
+    var format = name === 'Geist-Black' || name === 'ArabeticsLatte-Bold' ? 'opentype' : 'truetype';
     rules.push(
-      '@font-face{font-family:"' + family + '";src:url("' + url + '") format("' + (name === 'Geist-Black' || name === 'ArabeticsLatte-Bold' ? 'opentype' : 'truetype') + '");font-style:normal;font-weight:100 900;font-display:swap;}'
+      '@font-face{font-family:"' + name + '";src:url("' + url + '") format("' + format + '");font-style:normal;font-weight:700;font-display:swap;}'
     );
   });
 
@@ -7202,9 +7200,7 @@ function ensureCinemaSubtitleFonts() {
 
 function clampCinemaSubtitleNumber(value, min, max, fallback) {
   var number = Number(value);
-  if (!Number.isFinite(number)) {
-    number = fallback;
-  }
+  if (!Number.isFinite(number)) number = fallback;
   return Math.max(min, Math.min(max, number));
 }
 
@@ -7214,21 +7210,32 @@ function validCinemaSubtitleColor(value, fallback) {
 }
 
 function validCinemaSubtitleFont(value, fallback) {
-  return Object.prototype.hasOwnProperty.call(CINEMA_SUBTITLE_FONTS, value)
-    ? value
-    : fallback;
+  return Object.prototype.hasOwnProperty.call(CINEMA_SUBTITLE_FONTS, value) ? value : fallback;
 }
 
 function validCinemaSubtitleBackground(value, fallback) {
-  return value === 'none' || value === 'semi' || value === 'dark'
-    ? value
-    : fallback;
+  return value === 'none' || value === 'semi' || value === 'dark' ? value : fallback;
 }
 
 function legacySubtitlePosition(value) {
   if (value === 'top') return 15;
   if (value === 'center') return 50;
   return 80;
+}
+
+function cinemaSubtitlePositionPreset(mode) {
+  if (mode === 'top') return 15;
+  if (mode === 'center') return 50;
+  if (mode === 'bottom') return 80;
+  return null;
+}
+
+function cinemaSubtitlePositionMode(position) {
+  var value = Number(position);
+  if (value === 15) return 'top';
+  if (value === 50) return 'center';
+  if (value === 80) return 'bottom';
+  return 'free';
 }
 
 function cinemaSubtitleLayerDefaults(name) {
@@ -7263,42 +7270,33 @@ function getCinemaSubtitleSettings() {
   }
 
   if (saved.primary && typeof saved.primary === 'object') {
-    var normalized = {
+    return {
       primary: normalizeCinemaSubtitleLayer('primary', saved.primary),
       secondary: normalizeCinemaSubtitleLayer('secondary', saved.secondary)
     };
-
-    if (!saved.secondary || typeof saved.secondary !== 'object') {
-      normalized.secondary = cinemaSubtitleLayerDefaults('secondary');
-    }
-
-    return normalized;
   }
 
-  var legacySize = Number(saved.size) || DEFAULT_SUBTITLE_SETTINGS.primary.size;
-  var legacyColor = validCinemaSubtitleColor(saved.color, DEFAULT_SUBTITLE_SETTINGS.primary.color);
-  var legacyShadow = saved.shadow !== undefined ? !!saved.shadow : true;
-  var legacyOutline = saved.outline !== undefined ? !!saved.outline : false;
-  var legacyPosition = legacySubtitlePosition(saved.position);
+  var legacySize = Number(saved.size);
+  if (!Number.isFinite(legacySize)) legacySize = DEFAULT_SUBTITLE_SETTINGS.primary.size;
 
   var migrated = {
     primary: normalizeCinemaSubtitleLayer('primary', {
       size: legacySize,
-      color: legacyColor,
+      color: validCinemaSubtitleColor(saved.color, DEFAULT_SUBTITLE_SETTINGS.primary.color),
       font: 'Vazirmatn',
-      shadow: legacyShadow,
-      outline: legacyOutline,
+      shadow: saved.shadow !== undefined ? !!saved.shadow : true,
+      outline: saved.outline !== undefined ? !!saved.outline : false,
       background: 'none',
-      position: legacyPosition
+      position: legacySubtitlePosition(saved.position)
     }),
     secondary: normalizeCinemaSubtitleLayer('secondary', {
       size: Math.round(legacySize * 0.75),
-      color: legacyColor,
+      color: validCinemaSubtitleColor(saved.color, DEFAULT_SUBTITLE_SETTINGS.secondary.color),
       font: 'Vazirmatn',
-      shadow: legacyShadow,
-      outline: legacyOutline,
+      shadow: saved.shadow !== undefined ? !!saved.shadow : true,
+      outline: saved.outline !== undefined ? !!saved.outline : false,
       background: 'none',
-      position: legacyPosition
+      position: legacySubtitlePosition(saved.position)
     })
   };
 
@@ -7307,17 +7305,17 @@ function getCinemaSubtitleSettings() {
 }
 
 function saveCinemaSubtitleSettings(settings) {
-  saveJSON('cinemaSubtitleSettings', {
+  var value = {
     primary: normalizeCinemaSubtitleLayer('primary', settings.primary),
     secondary: normalizeCinemaSubtitleLayer('secondary', settings.secondary)
-  });
+  };
+  saveJSON('cinemaSubtitleSettings', value);
+  return value;
 }
 
 function notifyCinemaSubtitleSettingsChanged(settings) {
   try {
-    window.dispatchEvent(new CustomEvent('xwendnga:cinema-subtitle-settings-changed', {
-      detail: settings
-    }));
+    window.dispatchEvent(new CustomEvent('xwendnga:cinema-subtitle-settings-changed', { detail: settings }));
   } catch (e) {
     try {
       var event = document.createEvent('CustomEvent');
@@ -7329,45 +7327,47 @@ function notifyCinemaSubtitleSettingsChanged(settings) {
 
 function cinemaSubtitleShadow(settings) {
   var shadows = [];
-
   if (settings.shadow) {
     shadows.push('0 2px 5px rgba(0,0,0,.86)', '0 1px 2px rgba(0,0,0,.94)');
   }
-
   if (settings.outline) {
-    shadows.push(
-      '-1px -1px 0 #000',
-      '1px -1px 0 #000',
-      '-1px 1px 0 #000',
-      '1px 1px 0 #000'
-    );
+    shadows.push('-1px -1px 0 #000', '1px -1px 0 #000', '-1px 1px 0 #000', '1px 1px 0 #000');
   }
-
   return shadows.length ? shadows.join(', ') : 'none';
 }
 
 function cinemaSubtitleBackground(settings) {
   if (settings.background === 'semi') {
-    return {
-      background: 'rgba(0,0,0,.42)',
-      padding: '.12em .42em',
-      borderRadius: '.30em'
-    };
+    return { background: 'rgba(0,0,0,.42)', padding: '.12em .42em', borderRadius: '.30em' };
   }
-
   if (settings.background === 'dark') {
-    return {
-      background: 'rgba(0,0,0,.72)',
-      padding: '.12em .42em',
-      borderRadius: '.30em'
-    };
+    return { background: 'rgba(0,0,0,.72)', padding: '.12em .42em', borderRadius: '.30em' };
   }
+  return { background: 'transparent', padding: '0', borderRadius: '0' };
+}
 
-  return {
-    background: 'transparent',
-    padding: '0',
-    borderRadius: '0'
+function updateCinemaSubtitleReadouts(settings) {
+  var map = {
+    primary: {
+      size: $('subtitleSizeValue'),
+      color: $('subtitleColorValue'),
+      position: $('subtitlePrimaryPositionValue')
+    },
+    secondary: {
+      size: $('subtitleSecondarySizeValue'),
+      color: $('subtitleSecondaryColorValue'),
+      position: $('subtitleSecondaryPositionValue')
+    }
   };
+
+  ['primary', 'secondary'].forEach(function (name) {
+    var layer = settings[name];
+    var out = map[name];
+    if (!layer || !out) return;
+    if (out.size) out.size.textContent = layer.size + 'px';
+    if (out.color) out.color.textContent = layer.color.toLowerCase();
+    if (out.position) out.position.textContent = layer.position + '%';
+  });
 }
 
 function updateSubtitlePreview(settings) {
@@ -7383,9 +7383,7 @@ function updateSubtitlePreview(settings) {
     secondary: document.getElementById('subtitlePreviewSecondary')
   };
 
-  if (!texts.primary && !texts.secondary) {
-    return;
-  }
+  if (!texts.primary && !texts.secondary) return;
 
   if (preview) {
     preview.style.position = 'relative';
@@ -7403,11 +7401,16 @@ function updateSubtitlePreview(settings) {
     text.style.color = layer.color;
     text.style.fontFamily = CINEMA_SUBTITLE_FONTS[layer.font];
     text.style.textShadow = cinemaSubtitleShadow(layer);
+    text.style.fontWeight = '700';
 
     var background = cinemaSubtitleBackground(layer);
     text.style.background = background.background;
     text.style.padding = background.padding;
     text.style.borderRadius = background.borderRadius;
+
+    if (document.fonts && document.fonts.load) {
+      document.fonts.load(layer.size + 'px "' + layer.font + '"').catch(function () {});
+    }
 
     if (previewLayer) {
       previewLayer.style.position = 'absolute';
@@ -7424,6 +7427,8 @@ function updateSubtitlePreview(settings) {
       previewLayer.style.gap = '4px';
     }
   });
+
+  updateCinemaSubtitleReadouts(settings);
 }
 
 function initCinemaSubtitleControls() {
@@ -7432,34 +7437,40 @@ function initCinemaSubtitleControls() {
   var controls = {
     primary: {
       size: $('subtitleSize'),
+      sizeValue: $('subtitleSizeValue'),
       color: $('subtitleColor'),
+      colorValue: $('subtitleColorValue'),
       font: $('subtitleFont'),
       shadow: $('subtitleShadow'),
       outline: $('subtitleOutline'),
       background: $('subtitleBackground'),
-      position: $('subtitlePrimaryVerticalPosition')
+      position: $('subtitlePrimaryVerticalPosition'),
+      positionValue: $('subtitlePrimaryPositionValue'),
+      positionMode: $('subtitlePrimaryPositionMode')
     },
     secondary: {
       size: $('subtitleSecondarySize'),
+      sizeValue: $('subtitleSecondarySizeValue'),
       color: $('subtitleSecondaryColor'),
+      colorValue: $('subtitleSecondaryColorValue'),
       font: $('subtitleSecondaryFont'),
       shadow: $('subtitleSecondaryShadow'),
       outline: $('subtitleSecondaryOutline'),
       background: $('subtitleSecondaryBackground'),
-      position: $('subtitleSecondaryVerticalPosition')
+      position: $('subtitleSecondaryVerticalPosition'),
+      positionValue: $('subtitleSecondaryPositionValue'),
+      positionMode: $('subtitleSecondaryPositionMode')
     }
   };
 
   var resetBtn1 = $('resetSubtitleSettings');
   var resetBtn2 = $('resetSubtitleDefaults');
-  var legacyPosition = $('subtitlePosition');
   var legacyAnimation = $('subtitleAnimation');
   var settings = getCinemaSubtitleSettings();
 
   function readLayer(name) {
     var current = settings[name];
     var c = controls[name];
-
     return normalizeCinemaSubtitleLayer(name, {
       size: c.size ? Number(c.size.value) : current.size,
       color: c.color ? c.color.value : current.color,
@@ -7471,40 +7482,56 @@ function initCinemaSubtitleControls() {
     });
   }
 
+  function syncLayerControls(name) {
+    var c = controls[name];
+    var layer = settings[name];
+    if (!c || !layer) return;
+
+    if (c.size) c.size.value = String(layer.size);
+    if (c.color) c.color.value = layer.color;
+    if (c.font) c.font.value = layer.font;
+    if (c.shadow) c.shadow.checked = layer.shadow;
+    if (c.outline) c.outline.checked = layer.outline;
+    if (c.background) c.background.value = layer.background;
+    if (c.position) c.position.value = String(layer.position);
+    if (c.positionMode) c.positionMode.value = cinemaSubtitlePositionMode(layer.position);
+    if (c.sizeValue) c.sizeValue.textContent = layer.size + 'px';
+    if (c.colorValue) c.colorValue.textContent = layer.color.toLowerCase();
+    if (c.positionValue) c.positionValue.textContent = layer.position + '%';
+  }
+
   function syncControls() {
-    ['primary', 'secondary'].forEach(function (name) {
-      var c = controls[name];
-      var layer = settings[name];
-      if (!layer) return;
-
-      if (c.size) c.size.value = String(layer.size);
-      if (c.color) c.color.value = layer.color;
-      if (c.font) c.font.value = layer.font;
-      if (c.shadow) c.shadow.checked = layer.shadow;
-      if (c.outline) c.outline.checked = layer.outline;
-      if (c.background) c.background.value = layer.background;
-      if (c.position) c.position.value = String(layer.position);
-    });
-
-    if (legacyPosition) {
-      legacyPosition.value = settings.primary.position >= 70
-        ? 'bottom'
-        : settings.primary.position <= 30
-          ? 'top'
-          : 'center';
-    }
-
-    if (legacyAnimation) {
-      legacyAnimation.value = 'fade';
-    }
+    syncLayerControls('primary');
+    syncLayerControls('secondary');
+    if (legacyAnimation) legacyAnimation.value = 'fade';
+    updateCinemaSubtitleReadouts(settings);
   }
 
   function persist(name) {
     settings[name] = readLayer(name);
-    saveCinemaSubtitleSettings(settings);
-    settings = getCinemaSubtitleSettings();
+    settings = saveCinemaSubtitleSettings(settings);
+    syncLayerControls(name);
     updateSubtitlePreview(settings);
     notifyCinemaSubtitleSettingsChanged(settings);
+  }
+
+  function bindPositionMode(name) {
+    var c = controls[name];
+    if (!c.positionMode || c.positionMode.dataset.boundSubPositionMode) return;
+    c.positionMode.dataset.boundSubPositionMode = 'true';
+    c.positionMode.addEventListener('change', function () {
+      var preset = cinemaSubtitlePositionPreset(c.positionMode.value);
+      if (preset !== null && c.position) {
+        c.position.value = String(preset);
+        persist(name);
+      } else {
+        settings[name] = readLayer(name);
+        settings = saveCinemaSubtitleSettings(settings);
+        syncLayerControls(name);
+        updateSubtitlePreview(settings);
+        notifyCinemaSubtitleSettingsChanged(settings);
+      }
+    });
   }
 
   syncControls();
@@ -7513,22 +7540,24 @@ function initCinemaSubtitleControls() {
   ['primary', 'secondary'].forEach(function (name) {
     var c = controls[name];
     Object.keys(c).forEach(function (key) {
+      if (key === 'sizeValue' || key === 'colorValue' || key === 'positionValue' || key === 'positionMode') return;
       var el = c[key];
       if (!el || el.dataset.boundSubPhase3) return;
       el.dataset.boundSubPhase3 = 'true';
-
       var eventName = el.type === 'range' || el.type === 'color' ? 'input' : 'change';
       el.addEventListener(eventName, function () {
+        if (key === 'position') {
+          if (c.positionMode) c.positionMode.value = 'free';
+        }
         persist(name);
       });
     });
+    bindPositionMode(name);
   });
 
   function resetLayer(name) {
-    var defaults = cinemaSubtitleLayerDefaults(name);
-    settings[name] = defaults;
-    saveCinemaSubtitleSettings(settings);
-    settings = getCinemaSubtitleSettings();
+    settings[name] = cinemaSubtitleLayerDefaults(name);
+    settings = saveCinemaSubtitleSettings(settings);
     syncControls();
     updateSubtitlePreview(settings);
     notifyCinemaSubtitleSettingsChanged(settings);
@@ -7539,18 +7568,15 @@ function initCinemaSubtitleControls() {
 
   if (resetBtn1 && !resetBtn1.dataset.boundResetPhase3) {
     resetBtn1.dataset.boundResetPhase3 = 'true';
-    resetBtn1.addEventListener('click', function () {
-      resetLayer('primary');
-    });
+    resetBtn1.addEventListener('click', function () { resetLayer('primary'); });
   }
 
   if (resetBtn2 && !resetBtn2.dataset.boundResetPhase3) {
     resetBtn2.dataset.boundResetPhase3 = 'true';
-    resetBtn2.addEventListener('click', function () {
-      resetLayer('secondary');
-    });
+    resetBtn2.addEventListener('click', function () { resetLayer('secondary'); });
   }
 }
+
 
 function renderSettingsPage() {
     var page =

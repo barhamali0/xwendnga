@@ -69,6 +69,13 @@
        XWENDNGA TOPBAR / PROFILE / SETTINGS LAYOUT
        ===================================================== -->
 
+  <style id="xwendnga-cinema-subtitle-readout">
+    .settings-subtitle-card .settings-range-value{display:inline-block;min-width:48px;margin-inline-start:6px;color:#fff;font-size:8px;font-weight:800;direction:ltr;text-align:center;}
+    .settings-subtitle-card .settings-control-row > span{display:flex;align-items:center;gap:4px;flex-wrap:wrap;}
+    .settings-subtitle-card .settings-subtitle-layer-head{display:flex;align-items:center;justify-content:space-between;gap:8px;}
+    .settings-subtitle-card .settings-subtitle-layer-head small{color:var(--muted);font-size:7px;}
+  </style>
+
   <style id="xwendnga-layout-overrides">
 
     /* =====================================================
@@ -1995,7 +2002,7 @@
                 <span class="settings-card-icon"><i class="fa-solid fa-closed-captioning"></i></span>
                 <div class="settings-card-title">
                   <strong>ژێرنووسی سینەما</strong>
-                  <small>ڕێکخستنی شێوازی نیشاندانی ژێرنووس لە پلەیەر</small>
+                  <small>ڕێکخستنی سەربەخۆی دوو چینەکە لە پلەیەر</small>
                 </div>
               </div>
             </div>
@@ -2020,12 +2027,12 @@
 
                 <div class="settings-subtitle-controls">
                   <label class="settings-control-row">
-                    <span>قەبارەی ژێرنووس</span>
+                    <span>قەبارەی ژێرنووس <output id="subtitleSizeValue" class="settings-range-value">24px</output></span>
                     <input id="subtitleSize" class="settings-range" type="range" min="12" max="42" step="1" value="24">
                   </label>
 
                   <label class="settings-control-row">
-                    <span>ڕەنگی دەق</span>
+                    <span>ڕەنگی دەق <output id="subtitleColorValue" class="settings-range-value">#ffffff</output></span>
                     <input id="subtitleColor" type="color" value="#ffffff">
                   </label>
 
@@ -2064,17 +2071,18 @@
                   </label>
 
                   <label class="settings-control-row">
-                    <span>شوێنی ئازادیی ستوونی</span>
-                    <input id="subtitlePrimaryVerticalPosition" class="settings-range" type="range" min="5" max="90" step="1" value="80">
+                    <span>شوێنی بنەڕەتی</span>
+                    <select id="subtitlePrimaryPositionMode">
+                      <option value="top">بەرز</option>
+                      <option value="center">ناوەڕاست</option>
+                      <option value="bottom">نزم</option>
+                      <option value="free">ئازاد</option>
+                    </select>
                   </label>
 
-                  <label class="settings-control-row" hidden>
-                    <span>شوێنی بنەڕەتی</span>
-                    <select id="subtitlePosition">
-                      <option value="bottom">نزم</option>
-                      <option value="center">ناوەڕاست</option>
-                      <option value="top">بەرز</option>
-                    </select>
+                  <label class="settings-control-row">
+                    <span>شوێنی ئازادیی ستوونی <output id="subtitlePrimaryPositionValue" class="settings-range-value">80%</output></span>
+                    <input id="subtitlePrimaryVerticalPosition" class="settings-range" type="range" min="5" max="90" step="1" value="80">
                   </label>
 
                   <label class="settings-control-row" hidden>
@@ -2096,12 +2104,12 @@
 
                 <div class="settings-subtitle-controls">
                   <label class="settings-control-row">
-                    <span>قەبارەی ژێرنووس</span>
+                    <span>قەبارەی ژێرنووس <output id="subtitleSecondarySizeValue" class="settings-range-value">18px</output></span>
                     <input id="subtitleSecondarySize" class="settings-range" type="range" min="10" max="38" step="1" value="18">
                   </label>
 
                   <label class="settings-control-row">
-                    <span>ڕەنگی دەق</span>
+                    <span>ڕەنگی دەق <output id="subtitleSecondaryColorValue" class="settings-range-value">#f6dc7c</output></span>
                     <input id="subtitleSecondaryColor" type="color" value="#f6dc7c">
                   </label>
 
@@ -2140,7 +2148,17 @@
                   </label>
 
                   <label class="settings-control-row">
-                    <span>شوێنی ئازادیی ستوونی</span>
+                    <span>شوێنی بنەڕەتی</span>
+                    <select id="subtitleSecondaryPositionMode">
+                      <option value="top">بەرز</option>
+                      <option value="center">ناوەڕاست</option>
+                      <option value="bottom">نزم</option>
+                      <option value="free">ئازاد</option>
+                    </select>
+                  </label>
+
+                  <label class="settings-control-row">
+                    <span>شوێنی ئازادیی ستوونی <output id="subtitleSecondaryPositionValue" class="settings-range-value">70%</output></span>
                     <input id="subtitleSecondaryVerticalPosition" class="settings-range" type="range" min="5" max="90" step="1" value="70">
                   </label>
                 </div>

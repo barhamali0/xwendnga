@@ -50,10 +50,9 @@
     st.id='cinemaSubtitlePlayerFontFaces';
     var rules=[];
     Object.keys(CINEMA_SUBTITLE_FONT_FILES).forEach(function(name){
-      var family=name.replace(/"/g,'\\"');
       var url=encodeURI(CINEMA_SUBTITLE_FONT_FILES[name]);
       var format=(name==='Geist-Black'||name==='ArabeticsLatte-Bold')?'opentype':'truetype';
-      rules.push('@font-face{font-family:"'+family+'";src:url("'+url+'") format("'+format+'");font-style:normal;font-weight:100 900;font-display:swap;}');
+      rules.push('@font-face{font-family:"'+name+'";src:url("'+url+'") format("'+format+'");font-style:normal;font-weight:700;font-display:swap;}');
     });
     st.textContent=rules.join('');
     document.head.appendChild(st);
@@ -67,16 +66,14 @@
     var data=saved&&typeof saved==='object'?saved:{};
 
     function layer(name){
-      var d=defaults[name], x=data[name]&&typeof data[name]==='object'?data[name]:{};
-      var min=name==='secondary'?10:12, max=name==='secondary'?38:42;
-      var size=Number(x.size);
-      if(!Number.isFinite(size))size=d.size;
+      var d=defaults[name],x=data[name]&&typeof data[name]==='object'?data[name]:{};
+      var min=name==='secondary'?10:12,max=name==='secondary'?38:42;
+      var size=Number(x.size);if(!Number.isFinite(size))size=d.size;
       size=Math.round(Math.max(min,Math.min(max,size)));
       var color=/^#[0-9a-fA-F]{6}$/.test(String(x.color||''))?String(x.color):d.color;
       var font=Object.prototype.hasOwnProperty.call(CINEMA_SUBTITLE_FONT_FAMILIES,x.font)?x.font:d.font;
       var background=x.background==='semi'||x.background==='dark'?x.background:'none';
-      var position=Number(x.position);
-      if(!Number.isFinite(position))position=d.position;
+      var position=Number(x.position);if(!Number.isFinite(position))position=d.position;
       position=Math.round(Math.max(5,Math.min(90,position)));
       return {size:size,color:color,font:font,shadow:x.shadow!==undefined?!!x.shadow:d.shadow,outline:x.outline!==undefined?!!x.outline:d.outline,background:background,position:position};
     }
@@ -85,8 +82,7 @@
       return {primary:layer('primary'),secondary:layer('secondary')};
     }
 
-    var oldSize=Number(data.size);
-    if(!Number.isFinite(oldSize))oldSize=24;
+    var oldSize=Number(data.size);if(!Number.isFinite(oldSize))oldSize=24;
     var oldColor=/^#[0-9a-fA-F]{6}$/.test(String(data.color||''))?String(data.color):'#ffffff';
     var oldShadow=data.shadow!==undefined?!!data.shadow:true;
     var oldOutline=data.outline!==undefined?!!data.outline:false;
@@ -99,12 +95,8 @@
 
   function subtitleShadow(settings){
     var shadows=[];
-    if(settings.shadow){
-      shadows.push('0 2px 5px rgba(0,0,0,.86)','0 1px 2px rgba(0,0,0,.94)');
-    }
-    if(settings.outline){
-      shadows.push('-1px -1px 0 #000','1px -1px 0 #000','-1px 1px 0 #000','1px 1px 0 #000');
-    }
+    if(settings.shadow)shadows.push('0 2px 5px rgba(0,0,0,.86)','0 1px 2px rgba(0,0,0,.94)');
+    if(settings.outline)shadows.push('-1px -1px 0 #000','1px -1px 0 #000','-1px 1px 0 #000','1px 1px 0 #000');
     return shadows.length?shadows.join(', '):'none';
   }
 
@@ -152,12 +144,17 @@
         el.style.fontSize=layer.size+'px';
         el.style.color=layer.color;
         el.style.fontFamily=CINEMA_SUBTITLE_FONT_FAMILIES[layer.font]||'sans-serif';
+        el.style.fontWeight='700';
         el.style.textShadow=subtitleShadow(layer);
 
         var background=subtitleBackground(layer);
         el.style.background=background.background;
         el.style.padding=background.padding;
         el.style.borderRadius=background.borderRadius;
+
+        if(document.fonts&&document.fonts.load){
+          document.fonts.load(layer.size+'px "'+layer.font+'"').catch(function(){});
+        }
       });
     }catch(e){console.warn('Subtitle style apply failed:',e)}
   }
