@@ -7582,3 +7582,183 @@ main{
   border:1px solid rgba(255,255,255,.14);
   border-radius:12px;
 }
+
+/* =========================================================
+   Xwendnga Phase 3 — Cinema Subtitle Settings UI
+   Stage 2: style.css only
+   ========================================================= */
+
+.settings-subtitle-card{
+  width:100%;
+  box-sizing:border-box;
+}
+
+.settings-subtitle-preview{
+  width:100%;
+  box-sizing:border-box;
+  min-height:150px;
+  padding:24px 18px;
+  gap:10px;
+}
+
+.settings-subtitle-preview .cinema-subtitle-preview-text{
+  max-width:100%;
+  overflow-wrap:anywhere;
+  word-break:normal;
+  line-height:1.7;
+}
+
+.settings-subtitle-controls{
+  width:100%;
+  box-sizing:border-box;
+  gap:18px;
+}
+
+/* Independent Primary / Secondary subtitle setting groups */
+.subtitle-layer-settings,
+.cinema-subtitle-layer,
+.settings-subtitle-layer{
+  width:100%;
+  box-sizing:border-box;
+  padding:16px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:16px;
+  background:rgba(255,255,255,.025);
+}
+
+.subtitle-layer-settings h4,
+.cinema-subtitle-layer h4,
+.settings-subtitle-layer h4{
+  margin:0 0 14px;
+}
+
+.settings-control-row{
+  width:100%;
+  box-sizing:border-box;
+  min-height:44px;
+}
+
+.settings-control-row > label:first-child{
+  flex:0 0 auto;
+  max-width:100%;
+}
+
+.settings-control-row input[type="range"]{
+  min-width:140px;
+  width:auto;
+  max-width:100%;
+  accent-color:currentColor;
+}
+
+.settings-control-row select{
+  max-width:100%;
+  box-sizing:border-box;
+  font:inherit;
+}
+
+.settings-control-row input[type="color"]{
+  flex:0 0 44px;
+}
+
+/* Phase 3 range controls */
+.settings-subtitle-card input[type="range"]{
+  height:34px;
+  margin:0;
+  cursor:pointer;
+}
+
+.settings-subtitle-card input[type="range"]:focus-visible,
+.settings-subtitle-card select:focus-visible,
+.settings-subtitle-card input[type="color"]:focus-visible{
+  outline:2px solid currentColor;
+  outline-offset:2px;
+}
+
+/* Font note */
+.subtitle-font-note,
+.cinema-subtitle-font-note,
+.settings-subtitle-font-note{
+  display:block;
+  width:100%;
+  margin-top:6px;
+  font-size:.78rem;
+  line-height:1.6;
+  opacity:.68;
+}
+
+/* Background controls */
+.subtitle-background-control,
+.cinema-subtitle-background-control,
+.settings-subtitle-background-control{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* Preview stays a two-line vertical stack */
+.settings-subtitle-preview .subtitle-preview-primary,
+.settings-subtitle-preview .subtitle-preview-secondary,
+.settings-subtitle-preview .cinema-subtitle-preview-primary,
+.settings-subtitle-preview .cinema-subtitle-preview-secondary{
+  width:100%;
+  max-width:100%;
+  text-align:center;
+  box-sizing:border-box;
+}
+
+/* Mobile */
+@media (max-width:700px){
+  .settings-subtitle-card{
+    padding:14px;
+    gap:14px;
+  }
+
+  .settings-subtitle-preview{
+    min-height:140px;
+    padding:20px 12px;
+  }
+
+  .subtitle-layer-settings,
+  .cinema-subtitle-layer,
+  .settings-subtitle-layer{
+    padding:13px;
+  }
+
+  .settings-control-row{
+    align-items:flex-start;
+    gap:8px;
+  }
+
+  .settings-control-row > label:first-child{
+    flex:1 1 100%;
+  }
+
+  .settings-control-row input[type="range"]{
+    flex:1 1 100%;
+    min-width:0;
+    width:100%;
+  }
+
+  .settings-control-row select{
+    width:100%;
+    min-width:0;
+  }
+
+  .settings-control-row input[type="color"]{
+    width:44px;
+    height:44px;
+  }
+
+  .subtitle-font-note,
+  .cinema-subtitle-font-note,
+  .settings-subtitle-font-note{
+    font-size:.74rem;
+  }
+}
+
+@media (min-width:701px){
+  .settings-subtitle-preview{
+    min-height:170px;
+  }
+}
