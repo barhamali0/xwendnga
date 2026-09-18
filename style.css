@@ -7692,7 +7692,7 @@ main{
   border-radius:14px!important;
 }
 .settings-subtitle-preview-layer{
-  inset:0!important;
+  inset:auto!important;
 }
 .settings-subtitle-preview-layer .cinema-subtitle-preview-text{
   display:block!important;
