@@ -7137,445 +7137,77 @@
    CINEMA SUBTITLE SETTINGS (PHASE 3)
    ======================================================= */
 var DEFAULT_SUBTITLE_SETTINGS = {
-  primary: {
-    size: 24,
-    color: '#ffffff',
-    font: 'Vazirmatn',
-    shadow: false,
-    outline: false,
-    background: 'none',
-    position: 80
-  },
-  secondary: {
-    size: 18,
-    color: '#f6dc7c',
-    font: 'Vazirmatn',
-    shadow: true,
-    outline: false,
-    background: 'none',
-    position: 70
-  }
+  primary: {size:24,color:'#ffffff',font:'Vazirmatn',shadow:false,outline:false,background:{enabled:false,color:'#000000',opacity:60},position:80},
+  secondary: {size:18,color:'#f6dc7c',font:'Vazirmatn',shadow:true,outline:false,background:{enabled:false,color:'#000000',opacity:60},position:70}
 };
 
 var CINEMA_SUBTITLE_FONTS = {
-  Vazirmatn: '"Vazirmatn", sans-serif',
-  K24Kurdish: '"K24Kurdish", sans-serif',
-  Noon: '"Noon", sans-serif',
-  Manrope: '"Manrope", sans-serif',
-  'Rudaw-Bold': '"Rudaw-Bold", sans-serif',
-  Rabar_004: '"Rabar_004", sans-serif',
-  RegularRabar_040: '"RegularRabar_040", sans-serif',
-  'ArabeticsLatte-Bold': '"ArabeticsLatte-Bold", sans-serif',
-  'Geist-Black': '"Geist-Black", sans-serif'
+  Vazirmatn:'"Vazirmatn", sans-serif', K24Kurdish:'"K24Kurdish", sans-serif', Noon:'"Noon", sans-serif',
+  Manrope:'"Manrope", sans-serif', 'Rudaw-Bold':'"Rudaw-Bold", sans-serif', Rabar_004:'"Rabar_004", sans-serif',
+  RegularRabar_040:'"RegularRabar_040", sans-serif', 'ArabeticsLatte-Bold':'"ArabeticsLatte-Bold", sans-serif', 'Geist-Black':'"Geist-Black", sans-serif'
 };
-
 var CINEMA_SUBTITLE_FONT_FILES = {
-  K24Kurdish: './K24KurdishBold-Bold.ttf',
-  Noon: './Noon.ttf',
-  'Rudaw-Bold': './rudawbold.ttf',
-  Rabar_004: './Rabar_004.ttf',
-  RegularRabar_040: './Rabar_040.ttf',
-  'ArabeticsLatte-Bold': './Arabetics Latte Bold.otf',
-  'Geist-Black': './Geist-Black-BF6569491cec591.otf'
+  K24Kurdish:'./K24KurdishBold-Bold.ttf', Noon:'./Noon.ttf', 'Rudaw-Bold':'./rudawbold.ttf', Rabar_004:'./Rabar_004.ttf',
+  RegularRabar_040:'./Rabar_040.ttf', 'ArabeticsLatte-Bold':'./Arabetics Latte Bold.otf', 'Geist-Black':'./Geist-Black-BF6569491cec591.otf'
 };
-
-function ensureCinemaSubtitleFonts() {
-  if (document.getElementById('cinemaSubtitleFontFaces')) return;
-
-  var style = document.createElement('style');
-  style.id = 'cinemaSubtitleFontFaces';
-
-  var rules = [];
-  Object.keys(CINEMA_SUBTITLE_FONT_FILES).forEach(function (name) {
-    var url = encodeURI(CINEMA_SUBTITLE_FONT_FILES[name]);
-    var format = name === 'Geist-Black' || name === 'ArabeticsLatte-Bold' ? 'opentype' : 'truetype';
-    rules.push(
-      '@font-face{font-family:"' + name + '";src:url("' + url + '") format("' + format + '");font-style:normal;font-weight:700;font-display:swap;}'
-    );
-  });
-
-  style.textContent = rules.join('');
-  document.head.appendChild(style);
+function ensureCinemaSubtitleFonts(){
+  if(document.getElementById('cinemaSubtitleFontFaces'))return;
+  var style=document.createElement('style');style.id='cinemaSubtitleFontFaces';var rules=[];
+  Object.keys(CINEMA_SUBTITLE_FONT_FILES).forEach(function(name){var url=encodeURI(CINEMA_SUBTITLE_FONT_FILES[name]);var format=name==='Geist-Black'||name==='ArabeticsLatte-Bold'?'opentype':'truetype';rules.push('@font-face{font-family:"'+name+'";src:url("'+url+'") format("'+format+'");font-style:normal;font-weight:700;font-display:swap;}')});
+  style.textContent=rules.join('');document.head.appendChild(style);
 }
-
-function clampCinemaSubtitleNumber(value, min, max, fallback) {
-  var number = Number(value);
-  if (!Number.isFinite(number)) number = fallback;
-  return Math.max(min, Math.min(max, number));
+function clampCinemaSubtitleNumber(v,min,max,fallback){var n=Number(v);if(!Number.isFinite(n))n=fallback;return Math.max(min,Math.min(max,n))}
+function validCinemaSubtitleColor(v,fallback){var c=String(v||'').trim();return /^#[0-9a-fA-F]{6}$/.test(c)?c:fallback}
+function validCinemaSubtitleFont(v,fallback){return Object.prototype.hasOwnProperty.call(CINEMA_SUBTITLE_FONTS,v)?v:fallback}
+function normalizeCinemaSubtitleBackground(v,fallback){
+  if(v&&typeof v==='object')return {enabled:!!v.enabled,color:validCinemaSubtitleColor(v.color,'#000000'),opacity:[40,60,80].indexOf(Number(v.opacity))>=0?Number(v.opacity):60};
+  if(v==='semi'||v==='dark')return {enabled:true,color:'#000000',opacity:v==='dark'?80:60};
+  return Object.assign({},fallback);
 }
-
-function validCinemaSubtitleColor(value, fallback) {
-  var color = String(value || '').trim();
-  return /^#[0-9a-fA-F]{6}$/.test(color) ? color : fallback;
+function normalizeCinemaSubtitleLayer(name,saved){
+  var d=Object.assign({},DEFAULT_SUBTITLE_SETTINGS[name]),x=saved&&typeof saved==='object'?saved:{};
+  var min=name==='secondary'?10:12,max=name==='secondary'?38:42;
+  return {size:Math.round(clampCinemaSubtitleNumber(x.size,min,max,d.size)),color:validCinemaSubtitleColor(x.color,d.color),font:validCinemaSubtitleFont(x.font,d.font),shadow:x.shadow!==undefined?!!x.shadow:d.shadow,outline:x.outline!==undefined?!!x.outline:d.outline,background:normalizeCinemaSubtitleBackground(x.background,d.background),position:Math.round(clampCinemaSubtitleNumber(x.position,5,90,d.position))};
 }
-
-function validCinemaSubtitleFont(value, fallback) {
-  return Object.prototype.hasOwnProperty.call(CINEMA_SUBTITLE_FONTS, value) ? value : fallback;
+function getCinemaSubtitleSettings(){
+  var saved=loadJSON('cinemaSubtitleSettings',null);
+  if(saved&&saved.primary&&typeof saved.primary==='object')return {primary:normalizeCinemaSubtitleLayer('primary',saved.primary),secondary:normalizeCinemaSubtitleLayer('secondary',saved.secondary)};
+  var old=saved&&typeof saved==='object'?saved:{};var oldSize=Number(old.size);if(!Number.isFinite(oldSize))oldSize=24;var oldColor=validCinemaSubtitleColor(old.color,'#ffffff');var oldShadow=old.shadow!==undefined?!!old.shadow:true;var oldOutline=old.outline!==undefined?!!old.outline:false;var pos=old.position==='top'?15:old.position==='center'?50:80;
+  var migrated={primary:normalizeCinemaSubtitleLayer('primary',{size:oldSize,color:oldColor,font:'Vazirmatn',shadow:oldShadow,outline:oldOutline,position:pos}),secondary:normalizeCinemaSubtitleLayer('secondary',{size:oldSize*.75,color:oldColor,font:'Vazirmatn',shadow:oldShadow,outline:oldOutline,position:pos})};
+  saveCinemaSubtitleSettings(migrated);return migrated;
 }
-
-function validCinemaSubtitleBackground(value, fallback) {
-  return value === 'none' || value === 'semi' || value === 'dark' ? value : fallback;
+function saveCinemaSubtitleSettings(settings){var value={primary:normalizeCinemaSubtitleLayer('primary',settings.primary),secondary:normalizeCinemaSubtitleLayer('secondary',settings.secondary)};saveJSON('cinemaSubtitleSettings',value);return value}
+function notifyCinemaSubtitleSettingsChanged(settings){try{window.dispatchEvent(new CustomEvent('xwendnga:cinema-subtitle-settings-changed',{detail:settings}))}catch(e){}}
+function cinemaSubtitleShadow(settings){var a=[];if(settings.shadow)a.push('0 2px 5px rgba(0,0,0,.86)','0 1px 2px rgba(0,0,0,.94)');if(settings.outline)a.push('-1px -1px 0 #000','1px -1px 0 #000','-1px 1px 0 #000','1px 1px 0 #000');return a.length?a.join(', '):'none'}
+function cinemaSubtitleBackground(settings){var b=settings.background||{};return b.enabled?{background:'rgba('+parseInt(String(b.color).slice(1,3),16)+','+parseInt(String(b.color).slice(3,5),16)+','+parseInt(String(b.color).slice(5,7),16)+','+(Number(b.opacity)/100)+')',padding:'.12em .42em',borderRadius:'.30em'}:{background:'transparent',padding:'0',borderRadius:'0'}}
+var CINEMA_SUBTITLE_PREVIEW_TEXTS={ku:'ئەمە نموونەی ژێرنووسە',en:'This is a subtitle sample',fa:'این یک نمونه زیرنویس است',ar:'هذا نموذج لخط الترجمة'};
+var cinemaSubtitlePreviewLang='ku';var cinemaSubtitleActiveLayer='primary';
+function updateCinemaSubtitleReadouts(settings){['primary','secondary'].forEach(function(n){var l=settings[n];var s=$(n==='primary'?'subtitleSizeValue':'subtitleSecondarySizeValue'),c=$(n==='primary'?'subtitleColorValue':'subtitleSecondaryColorValue'),p=$(n==='primary'?'subtitlePrimaryPositionValue':'subtitleSecondaryPositionValue');if(s)s.textContent=l.size+'px';if(c)c.textContent=l.color.toLowerCase();if(p)p.textContent=l.position+'%'})}
+function updateCinemaSubtitleGap(settings){
+  var preview=document.querySelector('.settings-subtitle-preview'),a=document.querySelector('[data-subtitle-preview=\"primary\"]'),b=document.querySelector('[data-subtitle-preview=\"secondary\"]');
+  var gapPct=Math.abs(Number(settings.primary.position)-Number(settings.secondary.position)),gapPx=Math.round(gapPct*1.7),cls=gapPct<6?'danger':gapPct<10?'warn':'safe';
+  if(preview&&a&&b){var ar=a.getBoundingClientRect(),br=b.getBoundingClientRect(),pr=preview.getBoundingClientRect(),actual=0;if(ar.bottom<=br.top)actual=br.top-ar.bottom;else if(br.bottom<=ar.top)actual=ar.top-br.bottom;else actual=Math.min(ar.bottom,br.bottom)-Math.max(ar.top,br.top);var actualPct=pr.height?Math.round((actual/pr.height)*100):gapPct;if(actual>0){gapPct=actualPct;gapPx=Math.round(actual)}else{gapPct=0;gapPx=-Math.round(Math.abs(actual))}cls=actual>0?(gapPct<6?'danger':gapPct<10?'warn':'safe'):'danger'}
+  ['subtitlePrimaryGapBadge','subtitleSecondaryGapBadge'].forEach(function(id){var el=$(id);if(el){el.className='settings-subtitle-gap-badge '+cls;el.textContent='بۆشایی: '+gapPct+'% / ≈ '+gapPx+'px'}});
 }
-
-function legacySubtitlePosition(value) {
-  if (value === 'top') return 15;
-  if (value === 'center') return 50;
-  return 80;
-}
-
-function cinemaSubtitlePositionPreset(mode) {
-  if (mode === 'top') return 15;
-  if (mode === 'center') return 50;
-  if (mode === 'bottom') return 80;
-  return null;
-}
-
-function cinemaSubtitlePositionMode(position) {
-  var value = Number(position);
-  if (value === 15) return 'top';
-  if (value === 50) return 'center';
-  if (value === 80) return 'bottom';
-  return 'free';
-}
-
-function cinemaSubtitleLayerDefaults(name) {
-  return Object.assign({}, DEFAULT_SUBTITLE_SETTINGS[name]);
-}
-
-function normalizeCinemaSubtitleLayer(name, saved) {
-  var defaults = cinemaSubtitleLayerDefaults(name);
-  var source = saved && typeof saved === 'object' ? saved : {};
-  var sizeMin = name === 'secondary' ? 10 : 12;
-  var sizeMax = name === 'secondary' ? 38 : 42;
-
-  return {
-    size: Math.round(clampCinemaSubtitleNumber(source.size, sizeMin, sizeMax, defaults.size)),
-    color: validCinemaSubtitleColor(source.color, defaults.color),
-    font: validCinemaSubtitleFont(source.font, defaults.font),
-    shadow: source.shadow !== undefined ? !!source.shadow : defaults.shadow,
-    outline: source.outline !== undefined ? !!source.outline : defaults.outline,
-    background: validCinemaSubtitleBackground(source.background, defaults.background),
-    position: Math.round(clampCinemaSubtitleNumber(source.position, 5, 90, defaults.position))
-  };
-}
-
-function getCinemaSubtitleSettings() {
-  var saved = loadJSON('cinemaSubtitleSettings', null);
-
-  if (!saved || typeof saved !== 'object') {
-    return {
-      primary: cinemaSubtitleLayerDefaults('primary'),
-      secondary: cinemaSubtitleLayerDefaults('secondary')
-    };
-  }
-
-  if (saved.primary && typeof saved.primary === 'object') {
-    return {
-      primary: normalizeCinemaSubtitleLayer('primary', saved.primary),
-      secondary: normalizeCinemaSubtitleLayer('secondary', saved.secondary)
-    };
-  }
-
-  var legacySize = Number(saved.size);
-  if (!Number.isFinite(legacySize)) legacySize = DEFAULT_SUBTITLE_SETTINGS.primary.size;
-
-  var migrated = {
-    primary: normalizeCinemaSubtitleLayer('primary', {
-      size: legacySize,
-      color: validCinemaSubtitleColor(saved.color, DEFAULT_SUBTITLE_SETTINGS.primary.color),
-      font: 'Vazirmatn',
-      shadow: saved.shadow !== undefined ? !!saved.shadow : true,
-      outline: saved.outline !== undefined ? !!saved.outline : false,
-      background: 'none',
-      position: legacySubtitlePosition(saved.position)
-    }),
-    secondary: normalizeCinemaSubtitleLayer('secondary', {
-      size: Math.round(legacySize * 0.75),
-      color: validCinemaSubtitleColor(saved.color, DEFAULT_SUBTITLE_SETTINGS.secondary.color),
-      font: 'Vazirmatn',
-      shadow: saved.shadow !== undefined ? !!saved.shadow : true,
-      outline: saved.outline !== undefined ? !!saved.outline : false,
-      background: 'none',
-      position: legacySubtitlePosition(saved.position)
-    })
-  };
-
-  saveJSON('cinemaSubtitleSettings', migrated);
-  return migrated;
-}
-
-function saveCinemaSubtitleSettings(settings) {
-  var value = {
-    primary: normalizeCinemaSubtitleLayer('primary', settings.primary),
-    secondary: normalizeCinemaSubtitleLayer('secondary', settings.secondary)
-  };
-  saveJSON('cinemaSubtitleSettings', value);
-  return value;
-}
-
-function notifyCinemaSubtitleSettingsChanged(settings) {
-  try {
-    window.dispatchEvent(new CustomEvent('xwendnga:cinema-subtitle-settings-changed', { detail: settings }));
-  } catch (e) {
-    try {
-      var event = document.createEvent('CustomEvent');
-      event.initCustomEvent('xwendnga:cinema-subtitle-settings-changed', true, false, settings);
-      window.dispatchEvent(event);
-    } catch (_) {}
-  }
-}
-
-function cinemaSubtitleShadow(settings) {
-  var shadows = [];
-  if (settings.shadow) {
-    shadows.push('0 2px 5px rgba(0,0,0,.86)', '0 1px 2px rgba(0,0,0,.94)');
-  }
-  if (settings.outline) {
-    shadows.push('-1px -1px 0 #000', '1px -1px 0 #000', '-1px 1px 0 #000', '1px 1px 0 #000');
-  }
-  return shadows.length ? shadows.join(', ') : 'none';
-}
-
-function cinemaSubtitleBackground(settings) {
-  if (settings.background === 'semi') {
-    return { background: 'rgba(0,0,0,.42)', padding: '.12em .42em', borderRadius: '.30em' };
-  }
-  if (settings.background === 'dark') {
-    return { background: 'rgba(0,0,0,.72)', padding: '.12em .42em', borderRadius: '.30em' };
-  }
-  return { background: 'transparent', padding: '0', borderRadius: '0' };
-}
-
-function updateCinemaSubtitleReadouts(settings) {
-  var map = {
-    primary: {
-      size: $('subtitleSizeValue'),
-      color: $('subtitleColorValue'),
-      position: $('subtitlePrimaryPositionValue')
-    },
-    secondary: {
-      size: $('subtitleSecondarySizeValue'),
-      color: $('subtitleSecondaryColorValue'),
-      position: $('subtitleSecondaryPositionValue')
-    }
-  };
-
-  ['primary', 'secondary'].forEach(function (name) {
-    var layer = settings[name];
-    var out = map[name];
-    if (!layer || !out) return;
-    if (out.size) out.size.textContent = layer.size + 'px';
-    if (out.color) out.color.textContent = layer.color.toLowerCase();
-    if (out.position) out.position.textContent = layer.position + '%';
-  });
-}
-
-function updateSubtitlePreview(settings) {
+function applyCinemaSubtitlePreviewLayer(name,layer,active){var el=document.querySelector('[data-subtitle-preview="'+name+'"]');var text=document.getElementById(name==='primary'?'subtitlePreviewPrimary':'subtitlePreviewSecondary');if(!el||!text)return;var b=cinemaSubtitleBackground(layer);text.style.fontSize=layer.size+'px';text.style.color=layer.color;text.style.fontFamily=CINEMA_SUBTITLE_FONTS[layer.font];text.style.textShadow=cinemaSubtitleShadow(layer);text.style.background=b.background;text.style.padding=b.padding;text.style.borderRadius=b.borderRadius;text.style.fontWeight='700';text.style.opacity=active?'1':'.30';text.style.direction=cinemaSubtitlePreviewLang==='en'?'ltr':'rtl';el.style.top=layer.position+'%';el.style.transform='translate(-50%, -50%)';el.style.left='50%';el.style.position='absolute';el.style.display='block';el.style.maxWidth='94%';el.style.width='max-content'}
+function updateSubtitlePreview(settings){ensureCinemaSubtitleFonts();var p=settings.primary,s=settings.secondary;var pt=$('subtitlePreviewPrimary'),st=$('subtitlePreviewSecondary');if(pt)pt.textContent=CINEMA_SUBTITLE_PREVIEW_TEXTS[cinemaSubtitlePreviewLang];if(st)st.textContent=CINEMA_SUBTITLE_PREVIEW_TEXTS[cinemaSubtitlePreviewLang];if(pt)pt.setAttribute('dir',cinemaSubtitlePreviewLang==='en'?'ltr':'rtl');if(st)st.setAttribute('dir',cinemaSubtitlePreviewLang==='en'?'ltr':'rtl');applyCinemaSubtitlePreviewLayer('primary',p,cinemaSubtitleActiveLayer==='primary');applyCinemaSubtitlePreviewLayer('secondary',s,cinemaSubtitleActiveLayer==='secondary');document.querySelectorAll('[data-subtitle-layer]').forEach(function(layer){var name=layer.getAttribute('data-subtitle-layer'),pos=Number(settings[name].position);layer.querySelectorAll('[data-subtitle-position]').forEach(function(btn){var mode=btn.getAttribute('data-subtitle-position'),v=mode==='top'?15:mode==='center'?50:mode==='bottom'?80:null;btn.classList.toggle('is-active',mode==='free'?v===null:pos===v)})});updateCinemaSubtitleReadouts(settings);updateCinemaSubtitleGap(settings);var note=document.querySelector('.settings-subtitle-preview-font-note span');if(note)note.textContent='نموونەی '+(cinemaSubtitleActiveLayer==='primary'?p.font:s.font)+' ـی ژێرنووس'}
+function cinemaSubtitleSetActiveLayer(name){cinemaSubtitleActiveLayer=name;document.querySelectorAll('[data-subtitle-tab]').forEach(function(b){var on=b.getAttribute('data-subtitle-tab')===name;b.classList.toggle('is-active',on);b.setAttribute('aria-selected',on?'true':'false')});document.querySelectorAll('[data-subtitle-layer]').forEach(function(el){el.classList.toggle('settings-subtitle-layer--active',el.getAttribute('data-subtitle-layer')===name)});updateSubtitlePreview(getCinemaSubtitleSettings())}
+function initCinemaSubtitleControls(){
   ensureCinemaSubtitleFonts();
-
-  var preview = document.querySelector('.settings-subtitle-preview');
-  var layers = {
-    primary: document.querySelector('[data-subtitle-preview="primary"]'),
-    secondary: document.querySelector('[data-subtitle-preview="secondary"]')
-  };
-  var texts = {
-    primary: document.getElementById('subtitlePreviewPrimary'),
-    secondary: document.getElementById('subtitlePreviewSecondary')
-  };
-
-  if (!texts.primary && !texts.secondary) return;
-
-  if (preview) {
-    preview.style.position = 'relative';
-    preview.style.display = 'block';
-    preview.style.overflow = 'hidden';
-  }
-
-  ['primary', 'secondary'].forEach(function (name) {
-    var layer = settings[name];
-    var text = texts[name];
-    var previewLayer = layers[name];
-    if (!layer || !text) return;
-
-    text.style.fontSize = layer.size + 'px';
-    text.style.color = layer.color;
-    text.style.fontFamily = CINEMA_SUBTITLE_FONTS[layer.font];
-    text.style.textShadow = cinemaSubtitleShadow(layer);
-    text.style.fontWeight = '700';
-
-    var background = cinemaSubtitleBackground(layer);
-    text.style.background = background.background;
-    text.style.padding = background.padding;
-    text.style.borderRadius = background.borderRadius;
-
-    if (document.fonts && document.fonts.load) {
-      document.fonts.load(layer.size + 'px "' + layer.font + '"').catch(function () {});
-    }
-
-    if (previewLayer) {
-      previewLayer.style.position = 'absolute';
-      previewLayer.style.left = '50%';
-      previewLayer.style.right = 'auto';
-      previewLayer.style.top = layer.position + '%';
-      previewLayer.style.bottom = 'auto';
-      previewLayer.style.transform = 'translate(-50%, -50%)';
-      previewLayer.style.width = 'max-content';
-      previewLayer.style.maxWidth = '94%';
-      previewLayer.style.textAlign = 'center';
-      previewLayer.style.display = 'grid';
-      previewLayer.style.justifyItems = 'center';
-      previewLayer.style.gap = '4px';
-    }
-  });
-
-  updateCinemaSubtitleReadouts(settings);
+  var controls={primary:{size:$('subtitleSize'),sizeValue:$('subtitleSizeValue'),color:$('subtitleColor'),colorValue:$('subtitleColorValue'),swatch:$('subtitleColorSwatch'),font:$('subtitleFont'),shadow:$('subtitleShadow'),outline:$('subtitleOutline'),bgEnabled:$('subtitleBackgroundEnabled'),bgColor:$('subtitleBackgroundColor'),bgSwatch:$('subtitleBackgroundSwatch'),bgOpacity:$('subtitleBackgroundOpacity'),position:$('subtitlePrimaryVerticalPosition'),positionValue:$('subtitlePrimaryPositionValue')},secondary:{size:$('subtitleSecondarySize'),sizeValue:$('subtitleSecondarySizeValue'),color:$('subtitleSecondaryColor'),colorValue:$('subtitleSecondaryColorValue'),swatch:$('subtitleSecondaryColorSwatch'),font:$('subtitleSecondaryFont'),shadow:$('subtitleSecondaryShadow'),outline:$('subtitleSecondaryOutline'),bgEnabled:$('subtitleSecondaryBackgroundEnabled'),bgColor:$('subtitleSecondaryBackgroundColor'),bgSwatch:$('subtitleSecondaryBackgroundSwatch'),bgOpacity:$('subtitleSecondaryBackgroundOpacity'),position:$('subtitleSecondaryVerticalPosition'),positionValue:$('subtitleSecondaryPositionValue')}};
+  var settings=getCinemaSubtitleSettings();
+  function sync(name){var c=controls[name],l=settings[name];if(!c)return;if(c.size)c.size.value=l.size;if(c.color)c.color.value=l.color;if(c.font)c.font.value=l.font;if(c.shadow)c.shadow.checked=l.shadow;if(c.outline)c.outline.checked=l.outline;if(c.bgEnabled)c.bgEnabled.checked=l.background.enabled;if(c.bgColor)c.bgColor.value=l.background.color;if(c.bgOpacity)c.bgOpacity.value=l.background.opacity;if(c.position)c.position.value=l.position;if(c.sizeValue)c.sizeValue.textContent=l.size+'px';if(c.colorValue)c.colorValue.textContent=l.color.toLowerCase();if(c.positionValue)c.positionValue.textContent=l.position+'%';if(c.swatch)c.swatch.style.background=l.color;if(c.bgSwatch)c.bgSwatch.style.background=l.background.color}
+  function syncAll(){sync('primary');sync('secondary');updateSubtitlePreview(settings)}
+  function read(name){var c=controls[name],l=settings[name];var bg={enabled:c.bgEnabled?c.bgEnabled.checked:l.background.enabled,color:c.bgColor?c.bgColor.value:l.background.color,opacity:c.bgOpacity?Number(c.bgOpacity.value):l.background.opacity};return normalizeCinemaSubtitleLayer(name,{size:c.size?Number(c.size.value):l.size,color:c.color?c.color.value:l.color,font:c.font?c.font.value:l.font,shadow:c.shadow?c.shadow.checked:l.shadow,outline:c.outline?c.outline.checked:l.outline,background:bg,position:c.position?Number(c.position.value):l.position})}
+  function persist(name){settings[name]=read(name);settings=saveCinemaSubtitleSettings(settings);sync(name);updateSubtitlePreview(settings);notifyCinemaSubtitleSettingsChanged(settings)}
+  syncAll();
+  document.querySelectorAll('[data-subtitle-tab]').forEach(function(btn){if(btn.dataset.boundSubTab)return;btn.dataset.boundSubTab='1';btn.addEventListener('click',function(){cinemaSubtitleSetActiveLayer(btn.getAttribute('data-subtitle-tab'))})});
+  document.querySelectorAll('[data-subtitle-preview-lang]').forEach(function(btn){if(btn.dataset.boundSubLang)return;btn.dataset.boundSubLang='1';btn.addEventListener('click',function(){cinemaSubtitlePreviewLang=btn.getAttribute('data-subtitle-preview-lang');document.querySelectorAll('[data-subtitle-preview-lang]').forEach(function(x){x.classList.toggle('is-active',x===btn)});updateSubtitlePreview(settings)})});
+  ['primary','secondary'].forEach(function(name){var c=controls[name];Object.keys(c).forEach(function(k){if(['sizeValue','colorValue','swatch','bgSwatch','positionValue'].indexOf(k)>=0)return;var el=c[k];if(!el||el.dataset.boundSubFinal)return;el.dataset.boundSubFinal='1';el.addEventListener(el.type==='range'||el.type==='color'?'input':'change',function(){persist(name)})});var layer=document.querySelector('[data-subtitle-layer="'+name+'"]');if(layer)layer.querySelectorAll('[data-subtitle-position]').forEach(function(btn){if(btn.dataset.boundSubPreset)return;btn.dataset.boundSubPreset='1';btn.addEventListener('click',function(){var mode=btn.getAttribute('data-subtitle-position'),v=mode==='top'?15:mode==='center'?50:mode==='bottom'?80:Number(c.position.value);if(mode==='free'){c.position.value=String(v)}else{c.position.value=String(v)}persist(name);layer.querySelectorAll('[data-subtitle-position]').forEach(function(x){x.classList.toggle('is-active',x===btn)})})})});
+  var saveBtn=$('saveSubtitleSettings');if(saveBtn&&!saveBtn.dataset.boundSave){saveBtn.dataset.boundSave='1';saveBtn.addEventListener('click',function(){settings=saveCinemaSubtitleSettings(settings);notifyCinemaSubtitleSettingsChanged(settings);toast('ڕێکخستنەکانی ژێرنووس پاشەکەوت کران')})}
+  var r1=$('resetSubtitleSettings'),r2=$('resetSubtitleDefaults');if(r1&&!r1.dataset.boundResetFinal){r1.dataset.boundResetFinal='1';r1.addEventListener('click',function(){settings[cinemaSubtitleActiveLayer]=Object.assign({},DEFAULT_SUBTITLE_SETTINGS[cinemaSubtitleActiveLayer],{background:Object.assign({},DEFAULT_SUBTITLE_SETTINGS[cinemaSubtitleActiveLayer].background)});settings=saveCinemaSubtitleSettings(settings);syncAll();notifyCinemaSubtitleSettingsChanged(settings);toast('ڕێکخستنەکانی ئەم چینە گەڕانەوە سەرەتا')})}if(r2&&!r2.dataset.boundResetFinal){r2.dataset.boundResetFinal='1';r2.addEventListener('click',function(){settings={primary:cinemaSubtitleLayerDefaults('primary'),secondary:cinemaSubtitleLayerDefaults('secondary')};settings=saveCinemaSubtitleSettings(settings);syncAll();notifyCinemaSubtitleSettingsChanged(settings);toast('هەموو ڕێکخستنەکانی ژێرنووس گەڕانەوە سەرەتا')})}
 }
-
-function initCinemaSubtitleControls() {
-  ensureCinemaSubtitleFonts();
-
-  var controls = {
-    primary: {
-      size: $('subtitleSize'),
-      sizeValue: $('subtitleSizeValue'),
-      color: $('subtitleColor'),
-      colorValue: $('subtitleColorValue'),
-      font: $('subtitleFont'),
-      shadow: $('subtitleShadow'),
-      outline: $('subtitleOutline'),
-      background: $('subtitleBackground'),
-      position: $('subtitlePrimaryVerticalPosition'),
-      positionValue: $('subtitlePrimaryPositionValue'),
-      positionMode: $('subtitlePrimaryPositionMode')
-    },
-    secondary: {
-      size: $('subtitleSecondarySize'),
-      sizeValue: $('subtitleSecondarySizeValue'),
-      color: $('subtitleSecondaryColor'),
-      colorValue: $('subtitleSecondaryColorValue'),
-      font: $('subtitleSecondaryFont'),
-      shadow: $('subtitleSecondaryShadow'),
-      outline: $('subtitleSecondaryOutline'),
-      background: $('subtitleSecondaryBackground'),
-      position: $('subtitleSecondaryVerticalPosition'),
-      positionValue: $('subtitleSecondaryPositionValue'),
-      positionMode: $('subtitleSecondaryPositionMode')
-    }
-  };
-
-  var resetBtn1 = $('resetSubtitleSettings');
-  var resetBtn2 = $('resetSubtitleDefaults');
-  var legacyAnimation = $('subtitleAnimation');
-  var settings = getCinemaSubtitleSettings();
-
-  function readLayer(name) {
-    var current = settings[name];
-    var c = controls[name];
-    return normalizeCinemaSubtitleLayer(name, {
-      size: c.size ? Number(c.size.value) : current.size,
-      color: c.color ? c.color.value : current.color,
-      font: c.font ? c.font.value : current.font,
-      shadow: c.shadow ? c.shadow.checked : current.shadow,
-      outline: c.outline ? c.outline.checked : current.outline,
-      background: c.background ? c.background.value : current.background,
-      position: c.position ? Number(c.position.value) : current.position
-    });
-  }
-
-  function syncLayerControls(name) {
-    var c = controls[name];
-    var layer = settings[name];
-    if (!c || !layer) return;
-
-    if (c.size) c.size.value = String(layer.size);
-    if (c.color) c.color.value = layer.color;
-    if (c.font) c.font.value = layer.font;
-    if (c.shadow) c.shadow.checked = layer.shadow;
-    if (c.outline) c.outline.checked = layer.outline;
-    if (c.background) c.background.value = layer.background;
-    if (c.position) c.position.value = String(layer.position);
-    if (c.positionMode) c.positionMode.value = cinemaSubtitlePositionMode(layer.position);
-    if (c.sizeValue) c.sizeValue.textContent = layer.size + 'px';
-    if (c.colorValue) c.colorValue.textContent = layer.color.toLowerCase();
-    if (c.positionValue) c.positionValue.textContent = layer.position + '%';
-  }
-
-  function syncControls() {
-    syncLayerControls('primary');
-    syncLayerControls('secondary');
-    if (legacyAnimation) legacyAnimation.value = 'fade';
-    updateCinemaSubtitleReadouts(settings);
-  }
-
-  function persist(name) {
-    settings[name] = readLayer(name);
-    settings = saveCinemaSubtitleSettings(settings);
-    syncLayerControls(name);
-    updateSubtitlePreview(settings);
-    notifyCinemaSubtitleSettingsChanged(settings);
-  }
-
-  function bindPositionMode(name) {
-    var c = controls[name];
-    if (!c.positionMode || c.positionMode.dataset.boundSubPositionMode) return;
-    c.positionMode.dataset.boundSubPositionMode = 'true';
-    c.positionMode.addEventListener('change', function () {
-      var preset = cinemaSubtitlePositionPreset(c.positionMode.value);
-      if (preset !== null && c.position) {
-        c.position.value = String(preset);
-        persist(name);
-      } else {
-        settings[name] = readLayer(name);
-        settings = saveCinemaSubtitleSettings(settings);
-        syncLayerControls(name);
-        updateSubtitlePreview(settings);
-        notifyCinemaSubtitleSettingsChanged(settings);
-      }
-    });
-  }
-
-  syncControls();
-  updateSubtitlePreview(settings);
-
-  ['primary', 'secondary'].forEach(function (name) {
-    var c = controls[name];
-    Object.keys(c).forEach(function (key) {
-      if (key === 'sizeValue' || key === 'colorValue' || key === 'positionValue' || key === 'positionMode') return;
-      var el = c[key];
-      if (!el || el.dataset.boundSubPhase3) return;
-      el.dataset.boundSubPhase3 = 'true';
-      var eventName = el.type === 'range' || el.type === 'color' ? 'input' : 'change';
-      el.addEventListener(eventName, function () {
-        if (key === 'position') {
-          if (c.positionMode) c.positionMode.value = 'free';
-        }
-        persist(name);
-      });
-    });
-    bindPositionMode(name);
-  });
-
-  function resetLayer(name) {
-    settings[name] = cinemaSubtitleLayerDefaults(name);
-    settings = saveCinemaSubtitleSettings(settings);
-    syncControls();
-    updateSubtitlePreview(settings);
-    notifyCinemaSubtitleSettingsChanged(settings);
-    toast(name === 'primary'
-      ? 'ڕێکخستنەکانی ژێرنووسی سەرەکی گەڕانەوە سەرەتا'
-      : 'ڕێکخستنەکانی ژێرنووسی یارمەتیدەر گەڕانەوە سەرەتا');
-  }
-
-  if (resetBtn1 && !resetBtn1.dataset.boundResetPhase3) {
-    resetBtn1.dataset.boundResetPhase3 = 'true';
-    resetBtn1.addEventListener('click', function () { resetLayer('primary'); });
-  }
-
-  if (resetBtn2 && !resetBtn2.dataset.boundResetPhase3) {
-    resetBtn2.dataset.boundResetPhase3 = 'true';
-    resetBtn2.addEventListener('click', function () { resetLayer('secondary'); });
-  }
-}
+function cinemaSubtitleLayerDefaults(name){return JSON.parse(JSON.stringify(DEFAULT_SUBTITLE_SETTINGS[name]))}
 
 
 function renderSettingsPage() {

@@ -2002,175 +2002,171 @@
                 <span class="settings-card-icon"><i class="fa-solid fa-closed-captioning"></i></span>
                 <div class="settings-card-title">
                   <strong>ژێرنووسی سینەما</strong>
-                  <small>ڕێکخستنی سەربەخۆی دوو چینەکە لە پلەیەر</small>
+                  <small>ڕێکخستنی سەربەخۆی ژێرنووسی سەرەوە و خوارەوە</small>
                 </div>
               </div>
             </div>
 
-            <div class="settings-subtitle-preview" aria-label="پێشبینینی دوو ژێرنووس">
-              <div class="settings-subtitle-preview-layer" data-subtitle-preview="primary">
-                <small>ژێرنووسی سەرەکی</small>
-                <div id="subtitlePreviewPrimary" class="cinema-subtitle-preview-text" dir="rtl">ئەمە نموونەی ژێرنووسی سەرەکییە</div>
-              </div>
-              <div class="settings-subtitle-preview-layer" data-subtitle-preview="secondary">
-                <small>ژێرنووسی یارمەتیدەر</small>
-                <div id="subtitlePreviewSecondary" class="cinema-subtitle-preview-text" dir="ltr">This is the secondary subtitle preview</div>
+            <div class="settings-subtitle-tabs" role="tablist" aria-label="ڕێکخستنی ژێرنووس">
+              <button type="button" class="settings-subtitle-tab is-active" data-subtitle-tab="primary" role="tab" aria-selected="true">ژێرنووسی سەرەوە</button>
+              <button type="button" class="settings-subtitle-tab" data-subtitle-tab="secondary" role="tab" aria-selected="false">ژێرنووسی خوارەوە</button>
+            </div>
+
+            <div class="settings-subtitle-preview-wrap">
+              <div class="settings-subtitle-preview" aria-label="پێشبینینی دوو ژێرنووس">
+                <div class="settings-subtitle-preview-layer" data-subtitle-preview="primary">
+                  <div id="subtitlePreviewPrimary" class="cinema-subtitle-preview-text" dir="rtl">ئەمە نموونەی ژێرنووسە</div>
+                </div>
+                <div class="settings-subtitle-preview-layer" data-subtitle-preview="secondary">
+                  <div id="subtitlePreviewSecondary" class="cinema-subtitle-preview-text" dir="ltr">This is a subtitle sample</div>
+                </div>
+                <div class="settings-subtitle-preview-font-note"><i class="fa-regular fa-eye"></i><span>نموونەی ئەم فۆنتی ژێرنووس</span></div>
               </div>
             </div>
 
-            <div class="settings-subtitle-layers">
-              <div class="settings-subtitle-layer" data-subtitle-layer="primary">
-                <div class="settings-subtitle-layer-head">
-                  <strong>ژێرنووسی سەرەکی</strong>
-                  <small>کۆنترۆڵەکانی #ps</small>
-                </div>
+            <div class="settings-subtitle-language-chips" role="group" aria-label="زمانی پێشبینین">
+              <button type="button" class="settings-subtitle-language-chip is-active" data-subtitle-preview-lang="ku">کوردی</button>
+              <button type="button" class="settings-subtitle-language-chip" data-subtitle-preview-lang="en">English</button>
+              <button type="button" class="settings-subtitle-language-chip" data-subtitle-preview-lang="fa">فارسی</button>
+              <button type="button" class="settings-subtitle-language-chip" data-subtitle-preview-lang="ar">عەرەبی</button>
+            </div>
 
-                <div class="settings-subtitle-controls">
-                  <label class="settings-control-row">
-                    <span>قەبارەی ژێرنووس <output id="subtitleSizeValue" class="settings-range-value">24px</output></span>
-                    <input id="subtitleSize" class="settings-range" type="range" min="12" max="42" step="1" value="24">
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>ڕەنگی دەق <output id="subtitleColorValue" class="settings-range-value">#ffffff</output></span>
-                    <input id="subtitleColor" type="color" value="#ffffff">
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>فۆنت</span>
-                    <select id="subtitleFont">
-                      <option value="Vazirmatn">Vazirmatn</option>
-                      <option value="K24Kurdish">K24Kurdish</option>
-                      <option value="Noon">Noon — ئەم فۆنتە پشتگیری زمانی کوردی ناکات</option>
-                      <option value="Manrope">Manrope</option>
-                      <option value="Rudaw-Bold">Rudaw Bold</option>
-                      <option value="Rabar_004">Rabar 1</option>
-                      <option value="RegularRabar_040">Rabar 2</option>
-                      <option value="ArabeticsLatte-Bold">Arabetics Latte Bold</option>
-                      <option value="Geist-Black">Geist Black</option>
-                    </select>
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>سێبەر</span>
-                    <input id="subtitleShadow" type="checkbox">
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>ئۆتلاین</span>
-                    <input id="subtitleOutline" type="checkbox">
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>پاشبنەمای ژێرنووس</span>
-                    <select id="subtitleBackground">
-                      <option value="none">بێ پاشبنەما</option>
-                      <option value="semi">ڕەشی نیمچە شەفاف</option>
-                      <option value="dark">ڕەشی تۆخ</option>
-                    </select>
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>شوێنی بنەڕەتی</span>
-                    <select id="subtitlePrimaryPositionMode">
-                      <option value="top">بەرز</option>
-                      <option value="center">ناوەڕاست</option>
-                      <option value="bottom">نزم</option>
-                      <option value="free">ئازاد</option>
-                    </select>
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>شوێنی ئازادیی ستوونی <output id="subtitlePrimaryPositionValue" class="settings-range-value">80%</output></span>
-                    <input id="subtitlePrimaryVerticalPosition" class="settings-range" type="range" min="5" max="90" step="1" value="80">
-                  </label>
-
-                  <label class="settings-control-row" hidden>
-                    <span>جۆری ئەنیمەیشن</span>
-                    <select id="subtitleAnimation">
-                      <option value="fade">Fade</option>
-                      <option value="slide">Slide</option>
-                      <option value="none">بێ ئەنیمەیشن</option>
-                    </select>
-                  </label>
-                </div>
+            <div class="settings-subtitle-layer settings-subtitle-layer--active" data-subtitle-layer="primary">
+              <div class="settings-subtitle-layer-head">
+                <strong>ژێرنووسی سەرەوە</strong>
+                <small>#ps</small>
               </div>
-
-              <div class="settings-subtitle-layer" data-subtitle-layer="secondary">
-                <div class="settings-subtitle-layer-head">
-                  <strong>ژێرنووسی یارمەتیدەر</strong>
-                  <small>کۆنترۆڵەکانی #ss</small>
+              <div class="settings-subtitle-controls">
+                <label class="settings-control-row">
+                  <span>قەبارەی فۆنت <output id="subtitleSizeValue" class="settings-range-value">24px</output></span>
+                  <input id="subtitleSize" class="settings-range" type="range" min="12" max="42" step="1" value="24">
+                </label>
+                <label class="settings-control-row">
+                  <span>فۆنت</span>
+                  <select id="subtitleFont">
+                    <option value="Vazirmatn">Vazirmatn</option>
+                    <option value="K24Kurdish">K24Kurdish</option>
+                    <option value="Noon">Noon</option>
+                    <option value="Manrope">Manrope</option>
+                    <option value="Rudaw-Bold">Rudaw Bold</option>
+                    <option value="Rabar_004">Rabar 1</option>
+                    <option value="RegularRabar_040">Rabar 2</option>
+                    <option value="ArabeticsLatte-Bold">Arabetics Latte Bold</option>
+                    <option value="Geist-Black">Geist Black</option>
+                  </select>
+                </label>
+                <label class="settings-control-row">
+                  <span>ڕەنگ <output id="subtitleColorValue" class="settings-range-value">#ffffff</output></span>
+                  <div class="settings-subtitle-color-control">
+                    <span id="subtitleColorSwatch" class="settings-subtitle-color-swatch" aria-hidden="true"></span>
+                    <input id="subtitleColor" type="color" value="#ffffff" aria-label="ڕەنگی ژێرنووس">
+                  </div>
+                </label>
+                <label class="settings-control-row settings-toggle-row">
+                  <span>سێبەر</span><input id="subtitleShadow" type="checkbox" role="switch">
+                </label>
+                <label class="settings-control-row settings-toggle-row">
+                  <span>ئۆتلاین</span><input id="subtitleOutline" type="checkbox" role="switch">
+                </label>
+                <div class="settings-control-row settings-background-row">
+                  <span>پاشبنەما</span>
+                  <div class="settings-subtitle-background-control">
+                    <input id="subtitleBackgroundEnabled" type="checkbox" role="switch">
+                    <span id="subtitleBackgroundSwatch" class="settings-subtitle-color-swatch" aria-hidden="true"></span>
+                    <input id="subtitleBackgroundColor" type="color" value="#000000" aria-label="ڕەنگی پاشبنەمای ژێرنووس">
+                    <select id="subtitleBackgroundOpacity" aria-label="شەفافیەتی پاشبنەما">
+                      <option value="40">40%</option><option value="60" selected>60%</option><option value="80">80%</option>
+                    </select>
+                  </div>
                 </div>
-
-                <div class="settings-subtitle-controls">
-                  <label class="settings-control-row">
-                    <span>قەبارەی ژێرنووس <output id="subtitleSecondarySizeValue" class="settings-range-value">18px</output></span>
-                    <input id="subtitleSecondarySize" class="settings-range" type="range" min="10" max="38" step="1" value="18">
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>ڕەنگی دەق <output id="subtitleSecondaryColorValue" class="settings-range-value">#f6dc7c</output></span>
-                    <input id="subtitleSecondaryColor" type="color" value="#f6dc7c">
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>فۆنت</span>
-                    <select id="subtitleSecondaryFont">
-                      <option value="Vazirmatn">Vazirmatn</option>
-                      <option value="K24Kurdish">K24Kurdish</option>
-                      <option value="Noon">Noon — ئەم فۆنتە پشتگیری زمانی کوردی ناکات</option>
-                      <option value="Manrope">Manrope</option>
-                      <option value="Rudaw-Bold">Rudaw Bold</option>
-                      <option value="Rabar_004">Rabar 1</option>
-                      <option value="RegularRabar_040">Rabar 2</option>
-                      <option value="ArabeticsLatte-Bold">Arabetics Latte Bold</option>
-                      <option value="Geist-Black">Geist Black</option>
-                    </select>
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>سێبەر</span>
-                    <input id="subtitleSecondaryShadow" type="checkbox" checked>
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>ئۆتلاین</span>
-                    <input id="subtitleSecondaryOutline" type="checkbox">
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>پاشبنەمای ژێرنووس</span>
-                    <select id="subtitleSecondaryBackground">
-                      <option value="none">بێ پاشبنەما</option>
-                      <option value="semi">ڕەشی نیمچە شەفاف</option>
-                      <option value="dark">ڕەشی تۆخ</option>
-                    </select>
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>شوێنی بنەڕەتی</span>
-                    <select id="subtitleSecondaryPositionMode">
-                      <option value="top">بەرز</option>
-                      <option value="center">ناوەڕاست</option>
-                      <option value="bottom">نزم</option>
-                      <option value="free">ئازاد</option>
-                    </select>
-                  </label>
-
-                  <label class="settings-control-row">
-                    <span>شوێنی ئازادیی ستوونی <output id="subtitleSecondaryPositionValue" class="settings-range-value">70%</output></span>
-                    <input id="subtitleSecondaryVerticalPosition" class="settings-range" type="range" min="5" max="90" step="1" value="70">
-                  </label>
+                <div class="settings-control-row settings-position-row">
+                  <span>شوێنی ستوونی</span>
+                  <div class="settings-position-presets" role="group">
+                    <button type="button" data-subtitle-position="top">بەرز <small>15%</small></button>
+                    <button type="button" data-subtitle-position="center">ناوەڕاست <small>50%</small></button>
+                    <button type="button" data-subtitle-position="bottom">نزم <small>80%</small></button>
+                    <button type="button" data-subtitle-position="free">ئازاد</button>
+                  </div>
                 </div>
+                <div class="settings-control-row">
+                  <span>شوێنی ئازادیی ستوونی <output id="subtitlePrimaryPositionValue" class="settings-range-value">80%</output></span>
+                  <input id="subtitlePrimaryVerticalPosition" class="settings-range" type="range" min="5" max="90" step="1" value="80">
+                </div>
+                <div id="subtitlePrimaryGapBadge" class="settings-subtitle-gap-badge" aria-live="polite">بۆشایی: — / ≈ —</div>
               </div>
             </div>
 
-            <div class="settings-danger-row">
-              <button id="resetSubtitleSettings" class="ghost" type="button">گەڕاندنەوەی ڕێکخستنەکانی ژێرنووس</button>
-              <button id="resetSubtitleDefaults" class="ghost" type="button">گەڕاندنەوە بۆ سەرەتا</button>
+            <div class="settings-subtitle-layer" data-subtitle-layer="secondary">
+              <div class="settings-subtitle-layer-head">
+                <strong>ژێرنووسی خوارەوە</strong>
+                <small>#ss</small>
+              </div>
+              <div class="settings-subtitle-controls">
+                <label class="settings-control-row">
+                  <span>قەبارەی فۆنت <output id="subtitleSecondarySizeValue" class="settings-range-value">18px</output></span>
+                  <input id="subtitleSecondarySize" class="settings-range" type="range" min="10" max="38" step="1" value="18">
+                </label>
+                <label class="settings-control-row">
+                  <span>فۆنت</span>
+                  <select id="subtitleSecondaryFont">
+                    <option value="Vazirmatn">Vazirmatn</option>
+                    <option value="K24Kurdish">K24Kurdish</option>
+                    <option value="Noon">Noon</option>
+                    <option value="Manrope">Manrope</option>
+                    <option value="Rudaw-Bold">Rudaw Bold</option>
+                    <option value="Rabar_004">Rabar 1</option>
+                    <option value="RegularRabar_040">Rabar 2</option>
+                    <option value="ArabeticsLatte-Bold">Arabetics Latte Bold</option>
+                    <option value="Geist-Black">Geist Black</option>
+                  </select>
+                </label>
+                <label class="settings-control-row">
+                  <span>ڕەنگ <output id="subtitleSecondaryColorValue" class="settings-range-value">#f6dc7c</output></span>
+                  <div class="settings-subtitle-color-control">
+                    <span id="subtitleSecondaryColorSwatch" class="settings-subtitle-color-swatch" aria-hidden="true"></span>
+                    <input id="subtitleSecondaryColor" type="color" value="#f6dc7c" aria-label="ڕەنگی ژێرنووس">
+                  </div>
+                </label>
+                <label class="settings-control-row settings-toggle-row">
+                  <span>سێبەر</span><input id="subtitleSecondaryShadow" type="checkbox" role="switch" checked>
+                </label>
+                <label class="settings-control-row settings-toggle-row">
+                  <span>ئۆتلاین</span><input id="subtitleSecondaryOutline" type="checkbox" role="switch">
+                </label>
+                <div class="settings-control-row settings-background-row">
+                  <span>پاشبنەما</span>
+                  <div class="settings-subtitle-background-control">
+                    <input id="subtitleSecondaryBackgroundEnabled" type="checkbox" role="switch">
+                    <span id="subtitleSecondaryBackgroundSwatch" class="settings-subtitle-color-swatch" aria-hidden="true"></span>
+                    <input id="subtitleSecondaryBackgroundColor" type="color" value="#000000" aria-label="ڕەنگی پاشبنەمای ژێرنووس">
+                    <select id="subtitleSecondaryBackgroundOpacity" aria-label="شەفافیەتی پاشبنەما">
+                      <option value="40">40%</option><option value="60" selected>60%</option><option value="80">80%</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="settings-control-row settings-position-row">
+                  <span>شوێنی ستوونی</span>
+                  <div class="settings-position-presets" role="group">
+                    <button type="button" data-subtitle-position="top">بەرز <small>15%</small></button>
+                    <button type="button" data-subtitle-position="center">ناوەڕاست <small>50%</small></button>
+                    <button type="button" data-subtitle-position="bottom">نزم <small>80%</small></button>
+                    <button type="button" data-subtitle-position="free">ئازاد</button>
+                  </div>
+                </div>
+                <div class="settings-control-row">
+                  <span>شوێنی ئازادیی ستوونی <output id="subtitleSecondaryPositionValue" class="settings-range-value">70%</output></span>
+                  <input id="subtitleSecondaryVerticalPosition" class="settings-range" type="range" min="5" max="90" step="1" value="70">
+                </div>
+                <div id="subtitleSecondaryGapBadge" class="settings-subtitle-gap-badge" aria-live="polite">بۆشایی: — / ≈ —</div>
+              </div>
+            </div>
+
+            <div class="settings-subtitle-actions">
+              <button id="resetSubtitleSettings" class="ghost" type="button">گەڕاندنەوەی ئەم چینە</button>
+              <button id="resetSubtitleDefaults" class="ghost" type="button">گەڕاندنەوەی هەموو ژێرنووسەکان</button>
+              <button id="saveSubtitleSettings" class="settings-primary-action" type="button">✓ پاشەکەوتن</button>
             </div>
           </section>
-
           <section class="settings-card">
             <div class="settings-card-head">
               <div class="settings-card-title-wrap">

@@ -22,148 +22,20 @@
   var langs={en:'ئینگلیزی',ku:'کوردی',ar:'عەرەبی',fa:'فارسی'};
   function opts(sel){return '<option value="off">ناچالاک</option>'+['en','ku','ar','fa'].map(function(x){return '<option value="'+x+'"'+(sel===x?' selected':'')+'>'+langs[x]+'</option>'}).join('')}
 
-  var CINEMA_SUBTITLE_FONT_FAMILIES = {
-    Vazirmatn: '"Vazirmatn", sans-serif',
-    K24Kurdish: '"K24Kurdish", sans-serif',
-    Noon: '"Noon", sans-serif',
-    Manrope: '"Manrope", sans-serif',
-    'Rudaw-Bold': '"Rudaw-Bold", sans-serif',
-    Rabar_004: '"Rabar_004", sans-serif',
-    RegularRabar_040: '"RegularRabar_040", sans-serif',
-    'ArabeticsLatte-Bold': '"ArabeticsLatte-Bold", sans-serif',
-    'Geist-Black': '"Geist-Black", sans-serif'
-  };
-
-  var CINEMA_SUBTITLE_FONT_FILES = {
-    K24Kurdish: './K24KurdishBold-Bold.ttf',
-    Noon: './Noon.ttf',
-    'Rudaw-Bold': './rudawbold.ttf',
-    Rabar_004: './Rabar_004.ttf',
-    RegularRabar_040: './Rabar_040.ttf',
-    'ArabeticsLatte-Bold': './Arabetics Latte Bold.otf',
-    'Geist-Black': './Geist-Black-BF6569491cec591.otf'
-  };
-
-  function ensureSubtitleFontFaces(){
-    if(document.getElementById('cinemaSubtitlePlayerFontFaces'))return;
-    var st=document.createElement('style');
-    st.id='cinemaSubtitlePlayerFontFaces';
-    var rules=[];
-    Object.keys(CINEMA_SUBTITLE_FONT_FILES).forEach(function(name){
-      var url=encodeURI(CINEMA_SUBTITLE_FONT_FILES[name]);
-      var format=(name==='Geist-Black'||name==='ArabeticsLatte-Bold')?'opentype':'truetype';
-      rules.push('@font-face{font-family:"'+name+'";src:url("'+url+'") format("'+format+'");font-style:normal;font-weight:700;font-display:swap;}');
-    });
-    st.textContent=rules.join('');
-    document.head.appendChild(st);
-  }
-
-  function normalizeSubtitleStyleSettings(saved){
-    var defaults={
-      primary:{size:24,color:'#ffffff',font:'Vazirmatn',shadow:false,outline:false,background:'none',position:80},
-      secondary:{size:18,color:'#f6dc7c',font:'Vazirmatn',shadow:true,outline:false,background:'none',position:70}
-    };
-    var data=saved&&typeof saved==='object'?saved:{};
-
-    function layer(name){
-      var d=defaults[name],x=data[name]&&typeof data[name]==='object'?data[name]:{};
-      var min=name==='secondary'?10:12,max=name==='secondary'?38:42;
-      var size=Number(x.size);if(!Number.isFinite(size))size=d.size;
-      size=Math.round(Math.max(min,Math.min(max,size)));
-      var color=/^#[0-9a-fA-F]{6}$/.test(String(x.color||''))?String(x.color):d.color;
-      var font=Object.prototype.hasOwnProperty.call(CINEMA_SUBTITLE_FONT_FAMILIES,x.font)?x.font:d.font;
-      var background=x.background==='semi'||x.background==='dark'?x.background:'none';
-      var position=Number(x.position);if(!Number.isFinite(position))position=d.position;
-      position=Math.round(Math.max(5,Math.min(90,position)));
-      return {size:size,color:color,font:font,shadow:x.shadow!==undefined?!!x.shadow:d.shadow,outline:x.outline!==undefined?!!x.outline:d.outline,background:background,position:position};
-    }
-
-    if(data.primary&&typeof data.primary==='object'){
-      return {primary:layer('primary'),secondary:layer('secondary')};
-    }
-
-    var oldSize=Number(data.size);if(!Number.isFinite(oldSize))oldSize=24;
-    var oldColor=/^#[0-9a-fA-F]{6}$/.test(String(data.color||''))?String(data.color):'#ffffff';
-    var oldShadow=data.shadow!==undefined?!!data.shadow:true;
-    var oldOutline=data.outline!==undefined?!!data.outline:false;
-    var oldPosition=data.position==='top'?15:data.position==='center'?50:80;
-    return {
-      primary:{size:Math.round(Math.max(12,Math.min(42,oldSize))),color:oldColor,font:'Vazirmatn',shadow:oldShadow,outline:oldOutline,background:'none',position:oldPosition},
-      secondary:{size:Math.round(Math.max(10,Math.min(38,oldSize*.75))),color:oldColor,font:'Vazirmatn',shadow:oldShadow,outline:oldOutline,background:'none',position:oldPosition}
-    };
-  }
-
-  function subtitleShadow(settings){
-    var shadows=[];
-    if(settings.shadow)shadows.push('0 2px 5px rgba(0,0,0,.86)','0 1px 2px rgba(0,0,0,.94)');
-    if(settings.outline)shadows.push('-1px -1px 0 #000','1px -1px 0 #000','-1px 1px 0 #000','1px 1px 0 #000');
-    return shadows.length?shadows.join(', '):'none';
-  }
-
-  function subtitleBackground(settings){
-    if(settings.background==='semi')return{background:'rgba(0,0,0,.42)',padding:'.12em .42em',borderRadius:'.30em'};
-    if(settings.background==='dark')return{background:'rgba(0,0,0,.72)',padding:'.12em .42em',borderRadius:'.30em'};
-    return{background:'transparent',padding:'0',borderRadius:'0'};
-  }
-
-  function applySubtitleStyles(){
-    try{
-      ensureSubtitleFontFaces();
-      var saved=localStorage.getItem('cinemaSubtitleSettings');
-      var settings=normalizeSubtitleStyleSettings(saved?JSON.parse(saved):{});
-      var ps=document.getElementById('ps'),ss=document.getElementById('ss');
-      var wrap=document.querySelector('.cinema-subtitles');
-      if(!ps||!ss)return;
-
-      if(wrap){
-        wrap.style.left='0';
-        wrap.style.right='0';
-        wrap.style.top='0';
-        wrap.style.bottom='0';
-        wrap.style.paddingLeft='4%';
-        wrap.style.paddingRight='4%';
-        wrap.style.paddingBottom='calc(var(--cinema-controls-space,68px) + env(safe-area-inset-bottom))';
-        wrap.style.display='block';
-        wrap.style.transform='none';
-      }
-
-      [
-        ['primary',ps],
-        ['secondary',ss]
-      ].forEach(function(item){
-        var name=item[0],el=item[1],layer=settings[name];
-        if(!layer)return;
-
-        el.style.position='absolute';
-        el.style.left='50%';
-        el.style.right='auto';
-        el.style.top=layer.position+'%';
-        el.style.bottom='auto';
-        el.style.margin='0';
-        el.style.transform='translate(-50%, -50%)';
-        el.style.fontSize=layer.size+'px';
-        el.style.color=layer.color;
-        el.style.fontFamily=CINEMA_SUBTITLE_FONT_FAMILIES[layer.font]||'sans-serif';
-        el.style.fontWeight='700';
-        el.style.textShadow=subtitleShadow(layer);
-
-        var background=subtitleBackground(layer);
-        el.style.background=background.background;
-        el.style.padding=background.padding;
-        el.style.borderRadius=background.borderRadius;
-
-        if(document.fonts&&document.fonts.load){
-          document.fonts.load(layer.size+'px "'+layer.font+'"').catch(function(){});
-        }
-      });
-    }catch(e){console.warn('Subtitle style apply failed:',e)}
-  }
+  var CINEMA_SUBTITLE_FONT_FAMILIES={Vazirmatn:'"Vazirmatn", sans-serif',K24Kurdish:'"K24Kurdish", sans-serif',Noon:'"Noon", sans-serif',Manrope:'"Manrope", sans-serif','Rudaw-Bold':'"Rudaw-Bold", sans-serif',Rabar_004:'"Rabar_004", sans-serif',RegularRabar_040:'"RegularRabar_040", sans-serif','ArabeticsLatte-Bold':'"ArabeticsLatte-Bold", sans-serif','Geist-Black':'"Geist-Black", sans-serif'};
+  var CINEMA_SUBTITLE_FONT_FILES={K24Kurdish:'./K24KurdishBold-Bold.ttf',Noon:'./Noon.ttf','Rudaw-Bold':'./rudawbold.ttf',Rabar_004:'./Rabar_004.ttf',RegularRabar_040:'./Rabar_040.ttf','ArabeticsLatte-Bold':'./Arabetics Latte Bold.otf','Geist-Black':'./Geist-Black-BF6569491cec591.otf'};
+  function ensureSubtitleFontFaces(){if(document.getElementById('cinemaSubtitlePlayerFontFaces'))return;var st=document.createElement('style');st.id='cinemaSubtitlePlayerFontFaces';var rules=[];Object.keys(CINEMA_SUBTITLE_FONT_FILES).forEach(function(name){var url=encodeURI(CINEMA_SUBTITLE_FONT_FILES[name]);var format=name==='Geist-Black'||name==='ArabeticsLatte-Bold'?'opentype':'truetype';rules.push('@font-face{font-family:"'+name+'";src:url("'+url+'") format("'+format+'");font-style:normal;font-weight:700;font-display:swap;}')});st.textContent=rules.join('');document.head.appendChild(st)}
+  function playerSubtitleSettings(){var d={primary:{size:24,color:'#ffffff',font:'Vazirmatn',shadow:false,outline:false,background:{enabled:false,color:'#000000',opacity:60},position:80},secondary:{size:18,color:'#f6dc7c',font:'Vazirmatn',shadow:true,outline:false,background:{enabled:false,color:'#000000',opacity:60},position:70}};try{var x=JSON.parse(localStorage.getItem('cinemaSubtitleSettings')||'null')||{};function l(n){var z=x[n]&&typeof x[n]==='object'?x[n]:{},a=d[n],bg=z.background&&typeof z.background==='object'?z.background:(z.background==='semi'?{enabled:true,color:'#000000',opacity:60}:z.background==='dark'?{enabled:true,color:'#000000',opacity:80}:a.background);return{size:Number(z.size)||a.size,color:/^#[0-9a-fA-F]{6}$/.test(z.color||'')?z.color:a.color,font:Object.prototype.hasOwnProperty.call(CINEMA_SUBTITLE_FONT_FAMILIES,z.font)?z.font:a.font,shadow:z.shadow!==undefined?!!z.shadow:a.shadow,outline:z.outline!==undefined?!!z.outline:a.outline,background:{enabled:!!bg.enabled,color:/^#[0-9a-fA-F]{6}$/.test(bg.color||'')?bg.color:'#000000',opacity:[40,60,80].indexOf(Number(bg.opacity))>=0?Number(bg.opacity):60},position:Math.max(5,Math.min(90,Number(z.position)||a.position))}}return{primary:l('primary'),secondary:l('secondary')}}catch(e){return d}}
+  function subtitleShadow(settings){var a=[];if(settings.shadow)a.push('0 2px 5px rgba(0,0,0,.86)','0 1px 2px rgba(0,0,0,.94)');if(settings.outline)a.push('-1px -1px 0 #000','1px -1px 0 #000','-1px 1px 0 #000','1px 1px 0 #000');return a.length?a.join(', '):'none'}
+  function subtitleBackground(settings){var b=settings.background||{};if(!b.enabled)return{background:'transparent',padding:'0',borderRadius:'0'};var c=String(b.color||'#000000');var r=parseInt(c.slice(1,3),16),g=parseInt(c.slice(3,5),16),bl=parseInt(c.slice(5,7),16);return{background:'rgba('+r+','+g+','+bl+','+(Number(b.opacity)/100)+')',padding:'.12em .42em',borderRadius:'.30em'}}
+  function applySubtitleStyles(){try{ensureSubtitleFontFaces();var settings=playerSubtitleSettings(),ps=document.getElementById('ps'),ss=document.getElementById('ss'),wrap=document.querySelector('.cinema-subtitles');if(!ps||!ss)return;if(wrap){wrap.style.left='0';wrap.style.right='0';wrap.style.top='0';wrap.style.bottom='0';wrap.style.paddingLeft='4%';wrap.style.paddingRight='4%';wrap.style.paddingBottom='calc(var(--cinema-controls-space,68px) + env(safe-area-inset-bottom))';wrap.style.display='block';wrap.style.transform='none'}[['primary',ps],['secondary',ss]].forEach(function(item){var l=settings[item[0]],el=item[1],b=subtitleBackground(l);el.style.position='absolute';el.style.left='50%';el.style.right='auto';el.style.top=l.position+'%';el.style.bottom='auto';el.style.margin='0';el.style.transform='translate(-50%, -50%)';el.style.fontSize=l.size+'px';el.style.color=l.color;el.style.fontFamily=CINEMA_SUBTITLE_FONT_FAMILIES[l.font]||'sans-serif';el.style.fontWeight='700';el.style.textShadow=subtitleShadow(l);el.style.background=b.background;el.style.padding=b.padding;el.style.borderRadius=b.borderRadius;if(document.fonts&&document.fonts.load)document.fonts.load(l.size+'px "'+l.font+'"').catch(function(){})});applySubtitleCollisionSafety(settings)}catch(e){console.warn('Subtitle style apply failed:',e)}}
+  function applySubtitleCollisionSafety(settings){var ps=document.getElementById('ps'),ss=document.getElementById('ss');if(!ps||!ss)return;ps.style.transform='translate(-50%, -50%)';ss.style.transform='translate(-50%, -50%)';if(ps.classList.contains('cinema-subtitle--hidden')||ss.classList.contains('cinema-subtitle--hidden'))return;var pr=ps.getBoundingClientRect(),sr=ss.getBoundingClientRect(),gap=8;var overlap=Math.min(pr.bottom,sr.bottom)-Math.max(pr.top,sr.top);if(overlap<=0)return;var vh=(document.getElementById('cinemaVideoPlayer')||document.documentElement).getBoundingClientRect().height||window.innerHeight;var shift=overlap+Math.max(8,vh*.08);var pTop=settings.primary.position,sTop=settings.secondary.position;if(pTop<=sTop){var next=Math.max(5,pTop-shift/vh*100);ps.style.top=next+'%';}else{var next2=Math.min(90,sTop+shift/vh*100);ss.style.top=next2+'%';}var pr2=ps.getBoundingClientRect(),sr2=ss.getBoundingClientRect();if(!(Math.min(pr2.bottom,sr2.bottom)-Math.max(pr2.top,sr2.top)<=0)){if(pTop<=sTop)ps.style.top=Math.max(5,pTop-(shift/vh*100)*1.25)+'%';else ss.style.top=Math.min(90,sTop+(shift/vh*100)*1.25)+'%'}}
 
   function render(){if(!S.root)return;var c=S.cinema||{},eps=S.episodes,sv=S.servers;S.root.innerHTML='<div class="cinema-shell cinema-player-shell"><div class="cinema-detail"><div class="cinema-detail__poster">'+(c.poster_url?'<img src="'+esc(c.poster_url)+'" alt="'+esc(title())+'">':'')+'</div><div class="cinema-detail__body"><button type="button" class="cinema-chip" data-back>← گەڕانەوە</button><h1 class="cinema-detail__title">'+esc(title())+'</h1><div class="cinema-detail__meta">'+(c.year?'<span>'+esc(c.year)+'</span>':'')+(c.duration?'<span>'+esc(c.duration)+'</span>':'')+(c.rating!=null?'<span>★ '+Number(c.rating).toFixed(1)+'</span>':'')+'</div>'+(c.synopsis_ku||c.synopsis_en?'<p class="cinema-detail__synopsis">'+esc(c.synopsis_ku||c.synopsis_en)+'</p>':'')+'</div></div>'+(eps.length?'<div class="cinema-episode-bar"><label for="ep">ئەڵقە</label><select id="ep" class="cinema-subtitle-select">'+eps.map(function(e){return '<option value="'+esc(e.id)+'"'+(S.episode&&e.id===S.episode.id?' selected':'')+'>ئەڵقە '+esc(e.episode_number)+(e.title_ku||e.title_en?' — '+esc(e.title_ku||e.title_en):'')+'</option>'}).join('')+'</select></div>':'')+'<div class="cinema-player" id="cinemaVideoPlayer"><div class="cinema-player__media"><video id="cinemaVideo" playsinline preload="metadata"></video><div class="cinema-subtitles"><div id="ps" class="cinema-subtitle cinema-subtitle--primary"></div><div id="ss" class="cinema-subtitle cinema-subtitle--secondary"></div></div><div class="cinema-player__controls"><button class="cinema-player__control" data-play>▶</button><button class="cinema-player__control" data-back10>↶</button><div class="cinema-player__timeline"><input id="tl" type="range" min="0" max="100" value="0" step=".1"></div><div class="cinema-player__volume"><input id="vol" type="range" min="0" max="1" value="1" step=".01"></div><button class="cinema-player__control" data-full>⛶</button></div></div></div><div class="cinema-server-panel"><span class="cinema-server-panel__label">سێرڤەرەکان</span><div class="cinema-server-list">'+(sv.length?sv.map(function(x){return '<button type="button" class="cinema-server'+(S.server&&x.id===S.server.id?' is-active':'')+'" data-server="'+esc(x.id)+'"><span class="cinema-server__dot"></span><span>'+esc(x.server_name||'سێرڤەر')+'</span></button>'}).join(''):'<span>هیچ سێرڤەرێک بەردەست نییە.</span>')+'</div></div><div class="cinema-subtitle-settings"><div class="cinema-subtitle-settings__row"><div class="cinema-subtitle-settings__item"><label class="cinema-subtitle-settings__label">ژێرنووسی سەرەکی</label><select id="pl" class="cinema-subtitle-select">'+opts(S.primary)+'</select></div><div class="cinema-subtitle-settings__item"><label class="cinema-subtitle-settings__label">ژێرنووسی یارمەتیدەر</label><select id="sl" class="cinema-subtitle-select">'+opts(S.secondary)+'</select></div></div><div class="cinema-subtitle-settings__row"><div class="cinema-subtitle-settings__item"><label class="cinema-subtitle-settings__label">هاوکاتکردن</label><input id="delay" type="range" min="-5" max="5" value="'+S.delay+'" step=".05"><output id="dout">'+(S.delay>0?'+':'')+S.delay.toFixed(2)+'s</output></div><div class="cinema-subtitle-settings__item"><span class="cinema-subtitle-settings__label">ژێرنووس</span><button type="button" class="cinema-chip" data-replay>↺ دووبارەی ئەم دێڕە</button></div></div></div></div>';bind();loadCues();loadVideo();applySubtitleStyles()}
   function active(cues,t){for(var i=0;i<cues.length;i++)if(t>=cues[i].start&&t<cues[i].end)return cues[i];return null}
   function match(cues,target){if(!target)return null;var x=cues.find(function(c){return Math.abs(c.start-target.start)<.01&&Math.abs(c.end-target.end)<.01});if(x)return x;var best=null,score=0;cues.forEach(function(c){var o=Math.min(c.end,target.end)-Math.max(c.start,target.start),s=o/Math.max(.001,target.end-target.start,c.end-c.start);if(s>score){score=s;best=c}});return score>=.35?best:null}
   function words(text){return cleanFmt(text).split(/(\s+)/).map(function(p){if(/^\s+$/.test(p))return esc(p);var w=p.replace(/^[\s"“”‘’«»()[\]{}<>.,!?;:،؛؟…\-—–]+/,'').replace(/[\s"“”‘’«»()[\]{}<>.,!?;:،؛؟…\-—–]+$/,'');return w?'<button type="button" class="cinema-subtitle-word" data-word="'+esc(w)+'">'+esc(p)+'</button>':esc(p)}).join('')}
-  function update(){var v=document.getElementById('cinemaVideo');if(!v)return;var t=(v.currentTime||0)-S.delay,p=active(S.pcues,t),s=active(S.scues,t);if(p&&S.secondary!=='off')s=match(S.scues,p);var pe=document.getElementById('ps'),se=document.getElementById('ss');var rtlLangs=['ku','ar','fa'];if(pe)pe.setAttribute('dir',rtlLangs.indexOf(S.primary)>=0?'rtl':'ltr');if(se)se.setAttribute('dir',rtlLangs.indexOf(S.secondary)>=0?'rtl':'ltr');if(pe)pe.style.direction=rtlLangs.indexOf(S.primary)>=0?'rtl':'ltr';if(se)se.style.direction=rtlLangs.indexOf(S.secondary)>=0?'rtl':'ltr';applySubtitleStyles();var pk=p?p.index:'',sk=s?s.index:'';if(pk!==S.pkey){S.pkey=pk;pe.innerHTML=p?words(p.text):'';pe.classList.toggle('cinema-subtitle--hidden',!p);pe.querySelectorAll('[data-word]').forEach(function(b){b.onclick=function(){openWord(b.getAttribute('data-word'))}})}if(sk!==S.skey){S.skey=sk;se.textContent=s?cleanFmt(s.text):'';se.classList.toggle('cinema-subtitle--hidden',!s)}}
+  function update(){var v=document.getElementById('cinemaVideo');if(!v)return;var t=(v.currentTime||0)-S.delay,p=active(S.pcues,t),s=active(S.scues,t);if(p&&S.secondary!=='off')s=match(S.scues,p);var pe=document.getElementById('ps'),se=document.getElementById('ss');var rtlLangs=['ku','ar','fa'];if(pe)pe.setAttribute('dir',rtlLangs.indexOf(S.primary)>=0?'rtl':'ltr');if(se)se.setAttribute('dir',rtlLangs.indexOf(S.secondary)>=0?'rtl':'ltr');if(pe)pe.style.direction=rtlLangs.indexOf(S.primary)>=0?'rtl':'ltr';if(se)se.style.direction=rtlLangs.indexOf(S.secondary)>=0?'rtl':'ltr';applySubtitleStyles();var pk=p?p.index:'',sk=s?s.index:'';if(pk!==S.pkey){S.pkey=pk;pe.innerHTML=p?words(p.text):'';pe.classList.toggle('cinema-subtitle--hidden',!p);pe.querySelectorAll('[data-word]').forEach(function(b){b.onclick=function(){openWord(b.getAttribute('data-word'))}})}if(sk!==S.skey){S.skey=sk;se.textContent=s?cleanFmt(s.text):'';se.classList.toggle('cinema-subtitle--hidden',!s)}applySubtitleCollisionSafety(playerSubtitleSettings())}
   function ensureDictionaryStyles(){if(document.getElementById('cinemaDictionaryStyles'))return;var st=document.createElement('style');st.id='cinemaDictionaryStyles';st.textContent=`
 .cinema-dictionary-backdrop{position:fixed;inset:0;z-index:99990;display:grid;place-items:center;padding:20px;background:rgba(0,0,0,.58);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)}
 .cinema-dictionary-card{width:min(520px,92vw);color:#f7f9ff;border:1px solid rgba(255,255,255,.14);border-radius:24px;background:linear-gradient(145deg,rgba(22,31,52,.96),rgba(7,11,22,.94));box-shadow:0 28px 90px rgba(0,0,0,.48);padding:20px;font-family:inherit}                        

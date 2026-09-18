@@ -7583,182 +7583,49 @@ main{
   border-radius:12px;
 }
 
-/* =========================================================
-   Xwendnga Phase 3 — Cinema Subtitle Settings UI
-   Stage 2: style.css only
-   ========================================================= */
 
-.settings-subtitle-card{
-  width:100%;
-  box-sizing:border-box;
-}
-
-.settings-subtitle-preview{
-  width:100%;
-  box-sizing:border-box;
-  min-height:150px;
-  padding:24px 18px;
-  gap:10px;
-}
-
-.settings-subtitle-preview .cinema-subtitle-preview-text{
-  max-width:100%;
-  overflow-wrap:anywhere;
-  word-break:normal;
-  line-height:1.7;
-}
-
-.settings-subtitle-controls{
-  width:100%;
-  box-sizing:border-box;
-  gap:18px;
-}
-
-/* Independent Primary / Secondary subtitle setting groups */
-.subtitle-layer-settings,
-.cinema-subtitle-layer,
-.settings-subtitle-layer{
-  width:100%;
-  box-sizing:border-box;
-  padding:16px;
-  border:1px solid rgba(255,255,255,.10);
-  border-radius:16px;
-  background:rgba(255,255,255,.025);
-}
-
-.subtitle-layer-settings h4,
-.cinema-subtitle-layer h4,
-.settings-subtitle-layer h4{
-  margin:0 0 14px;
-}
-
-.settings-control-row{
-  width:100%;
-  box-sizing:border-box;
-  min-height:44px;
-}
-
-.settings-control-row > label:first-child{
-  flex:0 0 auto;
-  max-width:100%;
-}
-
-.settings-control-row input[type="range"]{
-  min-width:140px;
-  width:auto;
-  max-width:100%;
-  accent-color:currentColor;
-}
-
-.settings-control-row select{
-  max-width:100%;
-  box-sizing:border-box;
-  font:inherit;
-}
-
-.settings-control-row input[type="color"]{
-  flex:0 0 44px;
-}
-
-/* Phase 3 range controls */
-.settings-subtitle-card input[type="range"]{
-  height:34px;
-  margin:0;
-  cursor:pointer;
-}
-
-.settings-subtitle-card input[type="range"]:focus-visible,
-.settings-subtitle-card select:focus-visible,
-.settings-subtitle-card input[type="color"]:focus-visible{
-  outline:2px solid currentColor;
-  outline-offset:2px;
-}
-
-/* Font note */
-.subtitle-font-note,
-.cinema-subtitle-font-note,
-.settings-subtitle-font-note{
-  display:block;
-  width:100%;
-  margin-top:6px;
-  font-size:.78rem;
-  line-height:1.6;
-  opacity:.68;
-}
-
-/* Background controls */
-.subtitle-background-control,
-.cinema-subtitle-background-control,
-.settings-subtitle-background-control{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  flex-wrap:wrap;
-}
-
-/* Preview stays a two-line vertical stack */
-.settings-subtitle-preview .subtitle-preview-primary,
-.settings-subtitle-preview .subtitle-preview-secondary,
-.settings-subtitle-preview .cinema-subtitle-preview-primary,
-.settings-subtitle-preview .cinema-subtitle-preview-secondary{
-  width:100%;
-  max-width:100%;
-  text-align:center;
-  box-sizing:border-box;
-}
-
-/* Mobile */
-@media (max-width:700px){
-  .settings-subtitle-card{
-    padding:14px;
-    gap:14px;
-  }
-
-  .settings-subtitle-preview{
-    min-height:140px;
-    padding:20px 12px;
-  }
-
-  .subtitle-layer-settings,
-  .cinema-subtitle-layer,
-  .settings-subtitle-layer{
-    padding:13px;
-  }
-
-  .settings-control-row{
-    align-items:flex-start;
-    gap:8px;
-  }
-
-  .settings-control-row > label:first-child{
-    flex:1 1 100%;
-  }
-
-  .settings-control-row input[type="range"]{
-    flex:1 1 100%;
-    min-width:0;
-    width:100%;
-  }
-
-  .settings-control-row select{
-    width:100%;
-    min-width:0;
-  }
-
-  .settings-control-row input[type="color"]{
-    width:44px;
-    height:44px;
-  }
-
-  .subtitle-font-note,
-  .cinema-subtitle-font-note,
-  .settings-subtitle-font-note{
-    font-size:.74rem;
-  }
-}
-
-@media (min-width:701px){
-  .settings-subtitle-preview{
-    min-height:170px;
-  }
-}
+/* Xwendnga — Cinema Subtitle Settings Final UI */
+.settings-subtitle-card{overflow:visible!important}
+.settings-subtitle-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border:1px solid rgba(73,133,255,.28);border-radius:16px;background:#07152b;position:sticky;top:0;z-index:55}
+.settings-subtitle-tab{min-height:46px;border:0;border-radius:12px;background:transparent;color:#b9c8e4;font:inherit;font-weight:800;cursor:pointer;transition:.25s ease}
+.settings-subtitle-tab.is-active{color:#fff;background:linear-gradient(135deg,#2387ff,#1763e8);box-shadow:0 6px 20px rgba(20,110,255,.28)}
+.settings-subtitle-preview-wrap{position:relative}
+.settings-subtitle-preview{position:sticky!important;top:10px;z-index:50;width:100%;aspect-ratio:16/9;min-height:0!important;padding:0!important;border-radius:18px;overflow:hidden!important;background:#0a1830 url('./clouds.jpg') center/cover no-repeat!important;border:1px solid rgba(255,255,255,.16)!important;box-shadow:0 18px 45px rgba(0,0,0,.28),inset 0 0 0 999px rgba(4,15,32,.10)!important}
+.settings-subtitle-preview:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.03),rgba(0,0,0,.10) 55%,rgba(0,0,0,.28));pointer-events:none}
+.settings-subtitle-preview-layer{position:absolute;inset:0;z-index:2;pointer-events:none}
+.settings-subtitle-preview-layer .cinema-subtitle-preview-text{white-space:normal;line-height:1.35;text-align:center;overflow-wrap:anywhere}
+.settings-subtitle-preview-font-note{position:absolute;z-index:4;left:50%;bottom:12px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;max-width:calc(100% - 28px);padding:8px 14px;border-radius:999px;background:rgba(6,20,43,.72);border:1px solid rgba(255,255,255,.16);color:#eaf2ff;font-size:.76rem;white-space:nowrap}
+.settings-subtitle-language-chips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.settings-subtitle-language-chip{min-height:42px;border:1px solid rgba(73,133,255,.22);border-radius:13px;background:#07152b;color:#d8e4f8;font:inherit;font-weight:700;cursor:pointer;transition:.2s ease}
+.settings-subtitle-language-chip.is-active{background:#0c5de7;border-color:#36a0ff;color:#fff;box-shadow:0 6px 18px rgba(20,110,255,.22)}
+.settings-subtitle-layer{display:none!important;margin-top:14px}
+.settings-subtitle-layer.settings-subtitle-layer--active{display:block!important;animation:subtitleLayerIn .24s ease}
+@keyframes subtitleLayerIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.settings-subtitle-layer-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;color:#f5f8ff}
+.settings-subtitle-layer-head small{color:#8294b4;direction:ltr}
+.settings-subtitle-controls{gap:0!important;border:1px solid rgba(73,133,255,.20);border-radius:18px;background:rgba(5,18,38,.62);overflow:hidden}
+.settings-subtitle-controls .settings-control-row{min-height:58px;padding:10px 14px;border-bottom:1px solid rgba(95,132,183,.13);width:auto}
+.settings-subtitle-controls .settings-control-row:last-child{border-bottom:0}
+.settings-control-row>span{font-weight:700}
+.settings-control-row select{background:#0a1c37!important;color:#eef5ff!important;border:1px solid rgba(73,133,255,.30)!important;border-radius:12px!important;min-height:42px;padding:0 12px!important}
+.settings-subtitle-color-control,.settings-subtitle-background-control{display:flex;align-items:center;gap:8px;direction:ltr}
+.settings-subtitle-color-control input[type=color],.settings-subtitle-background-control input[type=color]{width:42px;height:42px;padding:3px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:#07152b}
+.settings-subtitle-color-swatch{width:28px;height:28px;border-radius:50%;border:2px solid rgba(255,255,255,.78);box-shadow:0 3px 10px rgba(0,0,0,.28);display:inline-block;flex:0 0 auto}
+.settings-toggle-row input[type=checkbox],.settings-background-row input[type=checkbox]{appearance:none;-webkit-appearance:none;width:48px;height:28px;border:0;border-radius:999px;background:#233654;position:relative;cursor:pointer;transition:.2s ease;flex:0 0 auto}
+.settings-toggle-row input[type=checkbox]:before,.settings-background-row input[type=checkbox]:before{content:"";position:absolute;top:4px;left:4px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s ease;box-shadow:0 2px 6px rgba(0,0,0,.28)}
+.settings-toggle-row input[type=checkbox]:checked,.settings-background-row input[type=checkbox]:checked{background:#1681ff}
+.settings-toggle-row input[type=checkbox]:checked:before,.settings-background-row input[type=checkbox]:checked:before{transform:translateX(20px)}
+.settings-position-row{display:block!important;padding-bottom:14px!important}
+.settings-position-presets{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:10px}
+.settings-position-presets button{min-height:50px;border:1px solid rgba(73,133,255,.25);border-radius:12px;background:#0a1c37;color:#d9e5fa;font:inherit;font-weight:700;cursor:pointer}
+.settings-position-presets button small{display:block;color:#8fa4c7;margin-top:2px}
+.settings-position-presets button.is-active{background:#197df4;border-color:#3da2ff;color:#fff;box-shadow:0 5px 16px rgba(25,125,244,.24)}
+.settings-subtitle-gap-badge{margin:10px 14px 14px;padding:9px 12px;border-radius:10px;background:rgba(255,255,255,.045);border:1px solid rgba(255,255,255,.08);text-align:center;font-weight:700;font-size:.82rem}
+.settings-subtitle-gap-badge.safe{color:#78e5a3;border-color:rgba(72,211,126,.25)}
+.settings-subtitle-gap-badge.warn{color:#ffd36b;border-color:rgba(255,194,67,.30)}
+.settings-subtitle-gap-badge.danger{color:#ff7e86;border-color:rgba(255,75,91,.32)}
+.settings-subtitle-actions{display:flex;gap:10px;align-items:stretch;margin-top:14px;flex-wrap:wrap}
+.settings-subtitle-actions button{min-height:46px;border-radius:13px;padding:0 16px;cursor:pointer;font:inherit;font-weight:800}
+.settings-primary-action{margin-left:auto;border:0;background:linear-gradient(135deg,#2387ff,#1763e8);color:#fff;box-shadow:0 8px 22px rgba(20,110,255,.22)}
+@media(max-width:700px){.settings-subtitle-tabs{top:10px}.settings-subtitle-language-chips{grid-template-columns:repeat(2,1fr)}.settings-subtitle-preview{top:10px;border-radius:15px}.settings-position-presets{grid-template-columns:repeat(2,1fr)}.settings-subtitle-actions{display:grid;grid-template-columns:1fr 1fr}.settings-primary-action{margin-left:0;grid-column:1/-1}.settings-subtitle-controls .settings-control-row{gap:9px}.settings-subtitle-controls .settings-control-row>span{width:100%}.settings-subtitle-controls .settings-control-row input[type=range],.settings-subtitle-controls .settings-control-row select{width:100%;max-width:none}.settings-subtitle-background-control{width:100%;flex-wrap:wrap}.settings-subtitle-background-control select{flex:1;min-width:90px}.settings-subtitle-preview-font-note{font-size:.68rem;bottom:8px;padding:6px 10px}}
+@media(min-width:701px){.settings-subtitle-preview{max-width:820px;margin-inline:auto}.settings-subtitle-language-chips{max-width:820px;margin-inline:auto;margin-top:12px}.settings-subtitle-layer{max-width:820px;margin-inline:auto;margin-top:14px}}
