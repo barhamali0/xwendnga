@@ -7133,7 +7133,114 @@
         : "پەیوەست نییە";
   }
 
-  function renderSettingsPage() {
+  /* =======================================================
+   CINEMA SUBTITLE SETTINGS (PHASE 2)
+   ======================================================= */
+var DEFAULT_SUBTITLE_SETTINGS = {
+  size: 24,
+  color: '#ffffff',
+  shadow: true,
+  outline: false,
+  position: 'bottom',
+  animation: 'fade'
+};
+
+function getCinemaSubtitleSettings() {
+  var saved = loadJSON('cinemaSubtitleSettings', null);
+  if (!saved || typeof saved !== 'object') {
+    return Object.assign({}, DEFAULT_SUBTITLE_SETTINGS);
+  }
+  return {
+    size: Number(saved.size) || DEFAULT_SUBTITLE_SETTINGS.size,
+    color: saved.color || DEFAULT_SUBTITLE_SETTINGS.color,
+    shadow: saved.shadow !== undefined ? !!saved.shadow : DEFAULT_SUBTITLE_SETTINGS.shadow,
+    outline: saved.outline !== undefined ? !!saved.outline : DEFAULT_SUBTITLE_SETTINGS.outline,
+    position: saved.position || DEFAULT_SUBTITLE_SETTINGS.position,
+    animation: saved.animation || DEFAULT_SUBTITLE_SETTINGS.animation
+  };
+}
+
+function updateSubtitlePreview(settings) {
+  var previewTexts = document.querySelectorAll('.cinema-subtitle-preview-text');
+  if (!previewTexts.length) return;
+
+  previewTexts.forEach(function (el) {
+    el.style.fontSize = settings.size + 'px';
+    el.style.color = settings.color;
+
+    var textShadows = [];
+    if (settings.shadow) {
+      textShadows.push('0 2px 5px rgba(0,0,0,.86)', '0 1px 2px rgba(0,0,0,.94)');
+    }
+    if (settings.outline) {
+      textShadows.push('-1px -1px 0 #000', '1px -1px 0 #000', '-1px 1px 0 #000', '1px 1px 0 #000');
+    }
+    el.style.textShadow = textShadows.length ? textShadows.join(', ') : 'none';
+  });
+}
+
+function initCinemaSubtitleControls() {
+  var sizeInput = $('subtitleSize');
+  var colorInput = $('subtitleColor');
+  var shadowInput = $('subtitleShadow');
+  var outlineInput = $('subtitleOutline');
+  var posSelect = $('subtitlePosition');
+  var animSelect = $('subtitleAnimation');
+  var resetBtn1 = $('resetSubtitleSettings');
+  var resetBtn2 = $('resetSubtitleDefaults');
+
+  var settings = getCinemaSubtitleSettings();
+
+  if (sizeInput) sizeInput.value = String(settings.size);
+  if (colorInput) colorInput.value = settings.color;
+  if (shadowInput) shadowInput.checked = settings.shadow;
+  if (outlineInput) outlineInput.checked = settings.outline;
+  if (posSelect) posSelect.value = settings.position;
+  if (animSelect) animSelect.value = settings.animation;
+
+  updateSubtitlePreview(settings);
+
+  function onSettingChange() {
+    var updated = {
+      size: sizeInput ? Number(sizeInput.value) || 24 : 24,
+      color: colorInput ? colorInput.value : '#ffffff',
+      shadow: shadowInput ? shadowInput.checked : true,
+      outline: outlineInput ? outlineInput.checked : false,
+      position: posSelect ? posSelect.value : 'bottom',
+      animation: animSelect ? animSelect.value : 'fade'
+    };
+    saveJSON('cinemaSubtitleSettings', updated);
+    updateSubtitlePreview(updated);
+  }
+
+  [sizeInput, colorInput, shadowInput, outlineInput, posSelect, animSelect].forEach(function (el) {
+    if (!el || el.dataset.boundSub) return;
+    el.dataset.boundSub = 'true';
+    el.addEventListener(el.type === 'range' || el.type === 'color' ? 'input' : 'change', onSettingChange);
+  });
+
+  function resetToDefaults() {
+    var defaults = Object.assign({}, DEFAULT_SUBTITLE_SETTINGS);
+    saveJSON('cinemaSubtitleSettings', defaults);
+    if (sizeInput) sizeInput.value = String(defaults.size);
+    if (colorInput) colorInput.value = defaults.color;
+    if (shadowInput) shadowInput.checked = defaults.shadow;
+    if (outlineInput) outlineInput.checked = defaults.outline;
+    if (posSelect) posSelect.value = defaults.position;
+    if (animSelect) animSelect.value = defaults.animation;
+    updateSubtitlePreview(defaults);
+    toast('ڕێکخستنەکانی ژێرنووس گەڕانەوە سەرەتا');
+  }
+
+  [resetBtn1, resetBtn2].forEach(function (btn) {
+    if (!btn || btn.dataset.boundReset) return;
+    btn.dataset.boundReset = 'true';
+    btn.addEventListener('click', resetToDefaults);
+  });
+}
+
+
+function renderSettingsPage() {
     var page =
       document.querySelector(
         "[data-app-view='settings']"
@@ -7280,7 +7387,9 @@
     renderReaderThemes();
     updateThemeBadges();
     updateSettingsGeminiStatus();
-  }
+  
+
+  initCinemaSubtitleControls();}
 
   function updateAuthUI() {
     var ownerButtons = document.querySelectorAll("[data-action='owner-panel']");
