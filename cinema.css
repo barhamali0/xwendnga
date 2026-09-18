@@ -672,6 +672,7 @@
    ========================================================= */
 
 .cinema-player{
+  --cinema-controls-space:68px;
   position:relative;
   overflow:hidden;
   border:1px solid var(--cinema-line);
@@ -693,18 +694,49 @@
   width:100%;
   height:100%;
   border:0;
+  background:#000;
+  object-fit:contain;
+}
+
+.cinema-player[data-video-orientation="landscape"] .cinema-player__media,
+.cinema-player[data-video-orientation="square"] .cinema-player__media{
+  aspect-ratio:var(--cinema-video-ratio,16 / 9);
+}
+
+.cinema-player[data-video-orientation="portrait"] .cinema-player__media{
+  height:min(72svh,620px);
+  aspect-ratio:auto;
 }
 
 .cinema-player__controls{
   position:absolute;
   inset-inline:0;
   inset-block-end:0;
-  z-index:4;
+  z-index:7;
   display:flex;
   align-items:center;
   gap:8px;
-  padding:10px 12px;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
   background:linear-gradient(180deg,transparent,rgba(0,0,0,.84));
+}
+
+.cinema-player:fullscreen,
+.cinema-player:-webkit-full-screen{
+  width:100vw;
+  height:100vh;
+  height:100dvh;
+  max-width:none;
+  max-height:none;
+  border:0;
+  border-radius:0;
+  --cinema-controls-space:78px;
+}
+
+.cinema-player:fullscreen .cinema-player__media,
+.cinema-player:-webkit-full-screen .cinema-player__media{
+  width:100%;
+  height:100%;
+  aspect-ratio:auto;
 }
 
 .cinema-player__control{
@@ -742,8 +774,8 @@
 .cinema-subtitles{
   position:absolute;
   inset-inline:4%;
-  inset-block-end:clamp(52px,8vh,92px);
-  z-index:5;
+  inset-block-end:calc(var(--cinema-controls-space,68px) + env(safe-area-inset-bottom));
+  z-index:6;
   display:flex;
   flex-direction:column;
   align-items:center;
@@ -755,10 +787,13 @@
 
 .cinema-subtitle{
   max-width:min(92%,1000px);
-  padding:.12em .42em;
-  border-radius:.30em;
+  padding:0;
+  border:0;
+  border-radius:0;
   text-wrap:balance;
-  text-shadow:0 2px 8px rgba(0,0,0,.94),0 1px 2px rgba(0,0,0,.95);
+  background:transparent;
+  box-shadow:none;
+  text-shadow:0 2px 5px rgba(0,0,0,.86),0 1px 2px rgba(0,0,0,.94);
   line-height:1.42;
   font-weight:700;
 }
@@ -766,13 +801,11 @@
 .cinema-subtitle--primary{
   color:#fff;
   font-size:clamp(1rem,2.35vw,1.72rem);
-  background:rgba(0,0,0,.17);
 }
 
 .cinema-subtitle--secondary{
   color:#f6dc7c;
   font-size:clamp(.82rem,1.82vw,1.30rem);
-  background:rgba(0,0,0,.13);
 }
 
 .cinema-subtitle--hidden{
@@ -780,25 +813,37 @@
 }
 
 .cinema-subtitle--boxed{
-  background:rgba(0,0,0,.52);
-  box-shadow:0 4px 18px rgba(0,0,0,.22);
+  background:transparent;
+  box-shadow:none;
 }
 
 .cinema-subtitle-word{
   display:inline-block;
+  appearance:none;
+  -webkit-appearance:none;
   margin-inline:.05em;
+  padding:0;
+  border:0;
+  border-radius:0;
   color:inherit;
+  background:transparent;
+  box-shadow:none;
+  font:inherit;
+  line-height:inherit;
   text-decoration:none;
   pointer-events:auto;
   cursor:pointer;
-  border-radius:.25em;
-  transition:background .16s ease,color .16s ease;
+  transition:color .16s ease,text-shadow .16s ease,text-decoration-color .16s ease;
 }
 
 .cinema-subtitle-word:hover,
 .cinema-subtitle-word:focus-visible{
-  background:rgba(124,92,255,.28);
   color:#fff;
+  background:transparent;
+  text-shadow:0 2px 6px rgba(0,0,0,.92),0 0 1px rgba(255,255,255,.35);
+  text-decoration:underline;
+  text-decoration-thickness:1px;
+  text-underline-offset:3px;
 }
 
 /* =========================================================
@@ -1170,9 +1215,13 @@
     justify-content:center;
   }
 
+  .cinema-player{
+    --cinema-controls-space:68px;
+  }
+
   .cinema-subtitles{
     inset-inline:3%;
-    inset-block-end:clamp(56px,10vh,78px);
+    inset-block-end:calc(var(--cinema-controls-space,68px) + env(safe-area-inset-bottom));
   }
 
   .cinema-subtitle--primary{
@@ -1197,8 +1246,12 @@
     min-height:82vh;
   }
 
+  .cinema-player{
+    --cinema-controls-space:64px;
+  }
+
   .cinema-subtitles{
-    inset-block-end:clamp(48px,11vh,74px);
+    inset-block-end:calc(var(--cinema-controls-space,64px) + env(safe-area-inset-bottom));
   }
 
   .cinema-subtitle--primary{
