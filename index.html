@@ -2000,49 +2000,151 @@
               </div>
             </div>
 
-            <div class="settings-subtitle-preview" aria-label="پێشبینینی ژێرنووس">
-              <div class="cinema-subtitle-preview-text" dir="rtl">ئەمە نموونەی ژێرنووسی کوردییە</div>
-              <div class="cinema-subtitle-preview-text" dir="ltr">This is an English subtitle preview</div>
+            <div class="settings-subtitle-preview" aria-label="پێشبینینی دوو ژێرنووس">
+              <div class="settings-subtitle-preview-layer" data-subtitle-preview="primary">
+                <small>ژێرنووسی سەرەکی</small>
+                <div id="subtitlePreviewPrimary" class="cinema-subtitle-preview-text" dir="rtl">ئەمە نموونەی ژێرنووسی سەرەکییە</div>
+              </div>
+              <div class="settings-subtitle-preview-layer" data-subtitle-preview="secondary">
+                <small>ژێرنووسی یارمەتیدەر</small>
+                <div id="subtitlePreviewSecondary" class="cinema-subtitle-preview-text" dir="ltr">This is the secondary subtitle preview</div>
+              </div>
             </div>
 
-            <div class="settings-subtitle-controls">
-              <label class="settings-control-row">
-                <span>قەبارەی ژێرنووس</span>
-                <input id="subtitleSize" class="settings-range" type="range" min="12" max="42" step="1" value="24">
-              </label>
+            <div class="settings-subtitle-layers">
+              <div class="settings-subtitle-layer" data-subtitle-layer="primary">
+                <div class="settings-subtitle-layer-head">
+                  <strong>ژێرنووسی سەرەکی</strong>
+                  <small>کۆنترۆڵەکانی #ps</small>
+                </div>
 
-              <label class="settings-control-row">
-                <span>ڕەنگی دەق</span>
-                <input id="subtitleColor" type="color" value="#ffffff">
-              </label>
+                <div class="settings-subtitle-controls">
+                  <label class="settings-control-row">
+                    <span>قەبارەی ژێرنووس</span>
+                    <input id="subtitleSize" class="settings-range" type="range" min="12" max="42" step="1" value="24">
+                  </label>
 
-              <label class="settings-control-row">
-                <span>سێبەر</span>
-                <input id="subtitleShadow" type="checkbox">
-              </label>
+                  <label class="settings-control-row">
+                    <span>ڕەنگی دەق</span>
+                    <input id="subtitleColor" type="color" value="#ffffff">
+                  </label>
 
-              <label class="settings-control-row">
-                <span>ئۆتلاین</span>
-                <input id="subtitleOutline" type="checkbox">
-              </label>
+                  <label class="settings-control-row">
+                    <span>فۆنت</span>
+                    <select id="subtitleFont">
+                      <option value="Vazirmatn">Vazirmatn</option>
+                      <option value="K24Kurdish">K24Kurdish</option>
+                      <option value="Noon">Noon — ئەم فۆنتە پشتگیری زمانی کوردی ناکات</option>
+                      <option value="Manrope">Manrope</option>
+                      <option value="Rudaw-Bold">Rudaw Bold</option>
+                      <option value="Rabar_004">Rabar 1</option>
+                      <option value="RegularRabar_040">Rabar 2</option>
+                      <option value="ArabeticsLatte-Bold">Arabetics Latte Bold</option>
+                      <option value="Geist-Black">Geist Black</option>
+                    </select>
+                  </label>
 
-              <label class="settings-control-row">
-                <span>شوێنی ژێرنووس</span>
-                <select id="subtitlePosition">
-                  <option value="bottom">نزم</option>
-                  <option value="center">ناوەڕاست</option>
-                  <option value="top">بەرز</option>
-                </select>
-              </label>
+                  <label class="settings-control-row">
+                    <span>سێبەر</span>
+                    <input id="subtitleShadow" type="checkbox">
+                  </label>
 
-              <label class="settings-control-row">
-                <span>جۆری ئەنیمەیشن</span>
-                <select id="subtitleAnimation">
-                  <option value="fade">Fade</option>
-                  <option value="slide">Slide</option>
-                  <option value="none">بێ ئەنیمەیشن</option>
-                </select>
-              </label>
+                  <label class="settings-control-row">
+                    <span>ئۆتلاین</span>
+                    <input id="subtitleOutline" type="checkbox">
+                  </label>
+
+                  <label class="settings-control-row">
+                    <span>پاشبنەمای ژێرنووس</span>
+                    <select id="subtitleBackground">
+                      <option value="none">بێ پاشبنەما</option>
+                      <option value="semi">ڕەشی نیمچە شەفاف</option>
+                      <option value="dark">ڕەشی تۆخ</option>
+                    </select>
+                  </label>
+
+                  <label class="settings-control-row">
+                    <span>شوێنی ئازادیی ستوونی</span>
+                    <input id="subtitlePrimaryVerticalPosition" class="settings-range" type="range" min="5" max="90" step="1" value="80">
+                  </label>
+
+                  <label class="settings-control-row" hidden>
+                    <span>شوێنی بنەڕەتی</span>
+                    <select id="subtitlePosition">
+                      <option value="bottom">نزم</option>
+                      <option value="center">ناوەڕاست</option>
+                      <option value="top">بەرز</option>
+                    </select>
+                  </label>
+
+                  <label class="settings-control-row" hidden>
+                    <span>جۆری ئەنیمەیشن</span>
+                    <select id="subtitleAnimation">
+                      <option value="fade">Fade</option>
+                      <option value="slide">Slide</option>
+                      <option value="none">بێ ئەنیمەیشن</option>
+                    </select>
+                  </label>
+                </div>
+              </div>
+
+              <div class="settings-subtitle-layer" data-subtitle-layer="secondary">
+                <div class="settings-subtitle-layer-head">
+                  <strong>ژێرنووسی یارمەتیدەر</strong>
+                  <small>کۆنترۆڵەکانی #ss</small>
+                </div>
+
+                <div class="settings-subtitle-controls">
+                  <label class="settings-control-row">
+                    <span>قەبارەی ژێرنووس</span>
+                    <input id="subtitleSecondarySize" class="settings-range" type="range" min="10" max="38" step="1" value="18">
+                  </label>
+
+                  <label class="settings-control-row">
+                    <span>ڕەنگی دەق</span>
+                    <input id="subtitleSecondaryColor" type="color" value="#f6dc7c">
+                  </label>
+
+                  <label class="settings-control-row">
+                    <span>فۆنت</span>
+                    <select id="subtitleSecondaryFont">
+                      <option value="Vazirmatn">Vazirmatn</option>
+                      <option value="K24Kurdish">K24Kurdish</option>
+                      <option value="Noon">Noon — ئەم فۆنتە پشتگیری زمانی کوردی ناکات</option>
+                      <option value="Manrope">Manrope</option>
+                      <option value="Rudaw-Bold">Rudaw Bold</option>
+                      <option value="Rabar_004">Rabar 1</option>
+                      <option value="RegularRabar_040">Rabar 2</option>
+                      <option value="ArabeticsLatte-Bold">Arabetics Latte Bold</option>
+                      <option value="Geist-Black">Geist Black</option>
+                    </select>
+                  </label>
+
+                  <label class="settings-control-row">
+                    <span>سێبەر</span>
+                    <input id="subtitleSecondaryShadow" type="checkbox" checked>
+                  </label>
+
+                  <label class="settings-control-row">
+                    <span>ئۆتلاین</span>
+                    <input id="subtitleSecondaryOutline" type="checkbox">
+                  </label>
+
+                  <label class="settings-control-row">
+                    <span>پاشبنەمای ژێرنووس</span>
+                    <select id="subtitleSecondaryBackground">
+                      <option value="none">بێ پاشبنەما</option>
+                      <option value="semi">ڕەشی نیمچە شەفاف</option>
+                      <option value="dark">ڕەشی تۆخ</option>
+                    </select>
+                  </label>
+
+                  <label class="settings-control-row">
+                    <span>شوێنی ئازادیی ستوونی</span>
+                    <input id="subtitleSecondaryVerticalPosition" class="settings-range" type="range" min="5" max="90" step="1" value="70">
+                  </label>
+                </div>
+              </div>
             </div>
 
             <div class="settings-danger-row">
