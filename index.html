@@ -1989,6 +1989,68 @@
             </div>
           </section>
 
+          <section class="settings-card settings-subtitle-card">
+            <div class="settings-card-head">
+              <div class="settings-card-title-wrap">
+                <span class="settings-card-icon"><i class="fa-solid fa-closed-captioning"></i></span>
+                <div class="settings-card-title">
+                  <strong>ژێرنووسی سینەما</strong>
+                  <small>ڕێکخستنی شێوازی نیشاندانی ژێرنووس لە پلەیەر</small>
+                </div>
+              </div>
+            </div>
+
+            <div class="settings-subtitle-preview" aria-label="پێشبینینی ژێرنووس">
+              <div class="cinema-subtitle-preview-text" dir="rtl">ئەمە نموونەی ژێرنووسی کوردییە</div>
+              <div class="cinema-subtitle-preview-text" dir="ltr">This is an English subtitle preview</div>
+            </div>
+
+            <div class="settings-subtitle-controls">
+              <label class="settings-control-row">
+                <span>قەبارەی ژێرنووس</span>
+                <input id="subtitleSize" class="settings-range" type="range" min="12" max="42" step="1" value="24">
+              </label>
+
+              <label class="settings-control-row">
+                <span>ڕەنگی دەق</span>
+                <input id="subtitleColor" type="color" value="#ffffff">
+              </label>
+
+              <label class="settings-control-row">
+                <span>سێبەر</span>
+                <input id="subtitleShadow" type="checkbox">
+              </label>
+
+              <label class="settings-control-row">
+                <span>ئۆتلاین</span>
+                <input id="subtitleOutline" type="checkbox">
+              </label>
+
+              <label class="settings-control-row">
+                <span>شوێنی ژێرنووس</span>
+                <select id="subtitlePosition">
+                  <option value="bottom">نزم</option>
+                  <option value="center">ناوەڕاست</option>
+                  <option value="top">بەرز</option>
+                </select>
+              </label>
+
+              <label class="settings-control-row">
+                <span>جۆری ئەنیمەیشن</span>
+                <select id="subtitleAnimation">
+                  <option value="fade">Fade</option>
+                  <option value="slide">Slide</option>
+                  <option value="none">بێ ئەنیمەیشن</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="settings-danger-row">
+              <button id="resetSubtitleSettings" class="ghost" type="button">گەڕاندنەوەی ڕێکخستنەکانی ژێرنووس</button>
+              <button id="resetSubtitleDefaults" class="ghost" type="button">گەڕاندنەوە بۆ سەرەتا</button>
+            </div>
+          </section>
+
           <section class="settings-card">
             <div class="settings-card-head">
               <div class="settings-card-title-wrap">
