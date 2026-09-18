@@ -7693,6 +7693,9 @@ main{
 }
 .settings-subtitle-preview-layer{
   inset:auto!important;
+  left:50%!important;
+  right:auto!important;
+  bottom:auto!important;
 }
 .settings-subtitle-preview-layer .cinema-subtitle-preview-text{
   display:block!important;
