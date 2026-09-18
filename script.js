@@ -7180,7 +7180,7 @@ function saveCinemaSubtitleSettings(settings){var value={primary:normalizeCinema
 function notifyCinemaSubtitleSettingsChanged(settings){try{window.dispatchEvent(new CustomEvent('xwendnga:cinema-subtitle-settings-changed',{detail:settings}))}catch(e){}}
 function cinemaSubtitleShadow(settings){var a=[];if(settings.shadow)a.push('0 2px 5px rgba(0,0,0,.86)','0 1px 2px rgba(0,0,0,.94)');if(settings.outline)a.push('-1px -1px 0 #000','1px -1px 0 #000','-1px 1px 0 #000','1px 1px 0 #000');return a.length?a.join(', '):'none'}
 function cinemaSubtitleBackground(settings){var b=settings.background||{};return b.enabled?{background:'rgba('+parseInt(String(b.color).slice(1,3),16)+','+parseInt(String(b.color).slice(3,5),16)+','+parseInt(String(b.color).slice(5,7),16)+','+(Number(b.opacity)/100)+')',padding:'.12em .42em',borderRadius:'.30em'}:{background:'transparent',padding:'0',borderRadius:'0'}}
-var CINEMA_SUBTITLE_PREVIEW_TEXTS={ku:'ئەمە نموونەی ژێرنووسە',en:'This is a subtitle sample',fa:'این یک نمونه زیرنویس است',ar:'هذا نموذج لخط الترجمة'};
+var CINEMA_SUBTITLE_PREVIEW_TEXTS={ku:'نموونەی ژێرنووسی ڕاستەوخۆ',en:'Live subtitle sample',fa:'نمونهٔ زیرنویس زنده',ar:'نموذج للترجمة المباشرة'};
 var cinemaSubtitlePreviewLang='ku';var cinemaSubtitleActiveLayer='primary';
 function updateCinemaSubtitleReadouts(settings){['primary','secondary'].forEach(function(n){var l=settings[n];var s=$(n==='primary'?'subtitleSizeValue':'subtitleSecondarySizeValue'),c=$(n==='primary'?'subtitleColorValue':'subtitleSecondaryColorValue'),p=$(n==='primary'?'subtitlePrimaryPositionValue':'subtitleSecondaryPositionValue');if(s)s.textContent=l.size+'px';if(c)c.textContent=l.color.toLowerCase();if(p)p.textContent=l.position+'%'})}
 function updateCinemaSubtitleGap(settings){
