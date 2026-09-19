@@ -7134,115 +7134,84 @@
   }
 
   /* =======================================================
-   CINEMA SUBTITLE SETTINGS (PHASE 2)
+   CINEMA SUBTITLE SETTINGS (PHASE 3)
    ======================================================= */
 var DEFAULT_SUBTITLE_SETTINGS = {
-  size: 24,
-  color: '#ffffff',
-  shadow: true,
-  outline: false,
-  position: 'bottom',
-  animation: 'fade'
+  primary: {size:24,color:'#ffffff',font:'Vazirmatn',shadow:false,outline:false,background:{enabled:false,color:'#000000',opacity:60},position:80},
+  secondary: {size:18,color:'#f6dc7c',font:'Vazirmatn',shadow:true,outline:false,background:{enabled:false,color:'#000000',opacity:60},position:70}
 };
 
-function getCinemaSubtitleSettings() {
-  var saved = loadJSON('cinemaSubtitleSettings', null);
-  if (!saved || typeof saved !== 'object') {
-    return Object.assign({}, DEFAULT_SUBTITLE_SETTINGS);
-  }
-  return {
-    size: Number(saved.size) || DEFAULT_SUBTITLE_SETTINGS.size,
-    color: saved.color || DEFAULT_SUBTITLE_SETTINGS.color,
-    shadow: saved.shadow !== undefined ? !!saved.shadow : DEFAULT_SUBTITLE_SETTINGS.shadow,
-    outline: saved.outline !== undefined ? !!saved.outline : DEFAULT_SUBTITLE_SETTINGS.outline,
-    position: saved.position || DEFAULT_SUBTITLE_SETTINGS.position,
-    animation: saved.animation || DEFAULT_SUBTITLE_SETTINGS.animation
-  };
+var CINEMA_SUBTITLE_FONTS = {
+  Vazirmatn:'"Vazirmatn", sans-serif', K24Kurdish:'"K24Kurdish", sans-serif', Noon:'"Noon", sans-serif',
+  Manrope:'"Manrope", sans-serif', 'Rudaw-Bold':'"Rudaw-Bold", sans-serif', Rabar_004:'"Rabar_004", sans-serif',
+  RegularRabar_040:'"RegularRabar_040", sans-serif', 'ArabeticsLatte-Bold':'"ArabeticsLatte-Bold", sans-serif', 'Geist-Black':'"Geist-Black", sans-serif'
+};
+var CINEMA_SUBTITLE_FONT_FILES = {
+  K24Kurdish:'./K24KurdishBold-Bold.ttf', Noon:'./Noon.ttf', 'Rudaw-Bold':'./rudawbold.ttf', Rabar_004:'./Rabar_004.ttf',
+  RegularRabar_040:'./Rabar_040.ttf', 'ArabeticsLatte-Bold':'./Arabetics Latte Bold.otf', 'Geist-Black':'./Geist-Black-BF6569491cec591.otf'
+};
+function ensureCinemaSubtitleFonts(){
+  if(document.getElementById('cinemaSubtitleFontFaces'))return;
+  var style=document.createElement('style');style.id='cinemaSubtitleFontFaces';var rules=[];
+  Object.keys(CINEMA_SUBTITLE_FONT_FILES).forEach(function(name){var url=encodeURI(CINEMA_SUBTITLE_FONT_FILES[name]);var format=name==='Geist-Black'||name==='ArabeticsLatte-Bold'?'opentype':'truetype';rules.push('@font-face{font-family:"'+name+'";src:url("'+url+'") format("'+format+'");font-style:normal;font-weight:700;font-display:swap;}')});
+  style.textContent=rules.join('');document.head.appendChild(style);
 }
-
-function updateSubtitlePreview(settings) {
-  var previewTexts = document.querySelectorAll('.cinema-subtitle-preview-text');
-  if (!previewTexts.length) return;
-
-  previewTexts.forEach(function (el) {
-    el.style.fontSize = settings.size + 'px';
-    el.style.color = settings.color;
-
-    var textShadows = [];
-    if (settings.shadow) {
-      textShadows.push('0 2px 5px rgba(0,0,0,.86)', '0 1px 2px rgba(0,0,0,.94)');
-    }
-    if (settings.outline) {
-      textShadows.push('-1px -1px 0 #000', '1px -1px 0 #000', '-1px 1px 0 #000', '1px 1px 0 #000');
-    }
-    el.style.textShadow = textShadows.length ? textShadows.join(', ') : 'none';
-  });
+function clampCinemaSubtitleNumber(v,min,max,fallback){var n=Number(v);if(!Number.isFinite(n))n=fallback;return Math.max(min,Math.min(max,n))}
+function validCinemaSubtitleColor(v,fallback){var c=String(v||'').trim();return /^#[0-9a-fA-F]{6}$/.test(c)?c:fallback}
+function validCinemaSubtitleFont(v,fallback){return Object.prototype.hasOwnProperty.call(CINEMA_SUBTITLE_FONTS,v)?v:fallback}
+function normalizeCinemaSubtitleBackground(v,fallback){
+  if(v&&typeof v==='object')return {enabled:!!v.enabled,color:validCinemaSubtitleColor(v.color,'#000000'),opacity:[40,60,80].indexOf(Number(v.opacity))>=0?Number(v.opacity):60};
+  if(v==='semi'||v==='dark')return {enabled:true,color:'#000000',opacity:v==='dark'?80:60};
+  return Object.assign({},fallback);
 }
-
-function initCinemaSubtitleControls() {
-  var sizeInput = $('subtitleSize');
-  var colorInput = $('subtitleColor');
-  var shadowInput = $('subtitleShadow');
-  var outlineInput = $('subtitleOutline');
-  var posSelect = $('subtitlePosition');
-  var animSelect = $('subtitleAnimation');
-  var resetBtn1 = $('resetSubtitleSettings');
-  var resetBtn2 = $('resetSubtitleDefaults');
-
-  var settings = getCinemaSubtitleSettings();
-
-  if (sizeInput) sizeInput.value = String(settings.size);
-  if (colorInput) colorInput.value = settings.color;
-  if (shadowInput) shadowInput.checked = settings.shadow;
-  if (outlineInput) outlineInput.checked = settings.outline;
-  if (posSelect) posSelect.value = settings.position;
-  if (animSelect) animSelect.value = settings.animation;
-
-  updateSubtitlePreview(settings);
-
-  function onSettingChange() {
-    var updated = {
-      size: sizeInput ? Number(sizeInput.value) || 24 : 24,
-      color: colorInput ? colorInput.value : '#ffffff',
-      shadow: shadowInput ? shadowInput.checked : true,
-      outline: outlineInput ? outlineInput.checked : false,
-      position: posSelect ? posSelect.value : 'bottom',
-      animation: animSelect ? animSelect.value : 'fade'
-    };
-    saveJSON('cinemaSubtitleSettings', updated);
-    updateSubtitlePreview(updated);
-  }
-
-  [sizeInput, colorInput, shadowInput, outlineInput, posSelect, animSelect].forEach(function (el) {
-    if (!el || el.dataset.boundSub) return;
-    el.dataset.boundSub = 'true';
-    el.addEventListener(el.type === 'range' || el.type === 'color' ? 'input' : 'change', onSettingChange);
-  });
-
-  function resetToDefaults() {
-    var defaults = Object.assign({}, DEFAULT_SUBTITLE_SETTINGS);
-    saveJSON('cinemaSubtitleSettings', defaults);
-    if (sizeInput) sizeInput.value = String(defaults.size);
-    if (colorInput) colorInput.value = defaults.color;
-    if (shadowInput) shadowInput.checked = defaults.shadow;
-    if (outlineInput) outlineInput.checked = defaults.outline;
-    if (posSelect) posSelect.value = defaults.position;
-    if (animSelect) animSelect.value = defaults.animation;
-    updateSubtitlePreview(defaults);
-    toast('ڕێکخستنەکانی ژێرنووس گەڕانەوە سەرەتا');
-  }
-
-  [resetBtn1, resetBtn2].forEach(function (btn) {
-    if (!btn || btn.dataset.boundReset) return;
-    btn.dataset.boundReset = 'true';
-    btn.addEventListener('click', resetToDefaults);
-  });
+function normalizeCinemaSubtitleLayer(name,saved){
+  var d=Object.assign({},DEFAULT_SUBTITLE_SETTINGS[name]),x=saved&&typeof saved==='object'?saved:{};
+  var min=name==='secondary'?10:12,max=name==='secondary'?38:42;
+  return {size:Math.round(clampCinemaSubtitleNumber(x.size,min,max,d.size)),color:validCinemaSubtitleColor(x.color,d.color),font:validCinemaSubtitleFont(x.font,d.font),shadow:x.shadow!==undefined?!!x.shadow:d.shadow,outline:x.outline!==undefined?!!x.outline:d.outline,background:normalizeCinemaSubtitleBackground(x.background,d.background),position:Math.round(clampCinemaSubtitleNumber(x.position,5,90,d.position))};
 }
-
+function getCinemaSubtitleSettings(){
+  var saved=loadJSON('cinemaSubtitleSettings',null);
+  if(saved&&saved.primary&&typeof saved.primary==='object')return {primary:normalizeCinemaSubtitleLayer('primary',saved.primary),secondary:normalizeCinemaSubtitleLayer('secondary',saved.secondary)};
+  var old=saved&&typeof saved==='object'?saved:{};var oldSize=Number(old.size);if(!Number.isFinite(oldSize))oldSize=24;var oldColor=validCinemaSubtitleColor(old.color,'#ffffff');var oldShadow=old.shadow!==undefined?!!old.shadow:true;var oldOutline=old.outline!==undefined?!!old.outline:false;var pos=old.position==='top'?15:old.position==='center'?50:80;
+  var migrated={primary:normalizeCinemaSubtitleLayer('primary',{size:oldSize,color:oldColor,font:'Vazirmatn',shadow:oldShadow,outline:oldOutline,position:pos}),secondary:normalizeCinemaSubtitleLayer('secondary',{size:oldSize*.75,color:oldColor,font:'Vazirmatn',shadow:oldShadow,outline:oldOutline,position:pos})};
+  saveCinemaSubtitleSettings(migrated);return migrated;
+}
+function saveCinemaSubtitleSettings(settings){var value={primary:normalizeCinemaSubtitleLayer('primary',settings.primary),secondary:normalizeCinemaSubtitleLayer('secondary',settings.secondary)};saveJSON('cinemaSubtitleSettings',value);return value}
+function notifyCinemaSubtitleSettingsChanged(settings){try{window.dispatchEvent(new CustomEvent('xwendnga:cinema-subtitle-settings-changed',{detail:settings}))}catch(e){}}
+function cinemaSubtitleShadow(settings){var a=[];if(settings.shadow)a.push('0 2px 5px rgba(0,0,0,.86)','0 1px 2px rgba(0,0,0,.94)');if(settings.outline)a.push('-1px -1px 0 #000','1px -1px 0 #000','-1px 1px 0 #000','1px 1px 0 #000');return a.length?a.join(', '):'none'}
+function cinemaSubtitleBackground(settings){var b=settings.background||{};return b.enabled?{background:'rgba('+parseInt(String(b.color).slice(1,3),16)+','+parseInt(String(b.color).slice(3,5),16)+','+parseInt(String(b.color).slice(5,7),16)+','+(Number(b.opacity)/100)+')',padding:'.12em .42em',borderRadius:'.30em'}:{background:'transparent',padding:'0',borderRadius:'0'}}
+var CINEMA_SUBTITLE_PREVIEW_TEXTS={ku:'نموونەی ژێرنووسی ڕاستەوخۆ',en:'Live subtitle sample',fa:'نمونهٔ زیرنویس زنده',ar:'نموذج للترجمة المباشرة'};
+var cinemaSubtitlePreviewLang='ku';var cinemaSubtitleActiveLayer='primary';
+function updateCinemaSubtitleReadouts(settings){['primary','secondary'].forEach(function(n){var l=settings[n];var s=$(n==='primary'?'subtitleSizeValue':'subtitleSecondarySizeValue'),c=$(n==='primary'?'subtitleColorValue':'subtitleSecondaryColorValue'),p=$(n==='primary'?'subtitlePrimaryPositionValue':'subtitleSecondaryPositionValue');if(s)s.textContent=l.size+'px';if(c)c.textContent=l.color.toLowerCase();if(p)p.textContent=l.position+'%'})}
+function updateCinemaSubtitleGap(settings){
+  var preview=document.querySelector('.settings-subtitle-preview'),a=document.querySelector('[data-subtitle-preview=\"primary\"]'),b=document.querySelector('[data-subtitle-preview=\"secondary\"]');
+  var gapPct=Math.abs(Number(settings.primary.position)-Number(settings.secondary.position)),gapPx=Math.round(gapPct*1.7),cls=gapPct<6?'danger':gapPct<10?'warn':'safe';
+  if(preview&&a&&b){var ar=a.getBoundingClientRect(),br=b.getBoundingClientRect(),pr=preview.getBoundingClientRect(),actual=0;if(ar.bottom<=br.top)actual=br.top-ar.bottom;else if(br.bottom<=ar.top)actual=ar.top-br.bottom;else actual=Math.min(ar.bottom,br.bottom)-Math.max(ar.top,br.top);var actualPct=pr.height?Math.round((actual/pr.height)*100):gapPct;if(actual>0){gapPct=actualPct;gapPx=Math.round(actual)}else{gapPct=0;gapPx=-Math.round(Math.abs(actual))}cls=actual>0?(gapPct<6?'danger':gapPct<10?'warn':'safe'):'danger'}
+  ['subtitlePrimaryGapBadge','subtitleSecondaryGapBadge'].forEach(function(id){var el=$(id);if(el){el.className='settings-subtitle-gap-badge '+cls;el.textContent='بۆشایی: '+gapPct+'% / ≈ '+gapPx+'px'}});
+}
+function applyCinemaSubtitlePreviewLayer(name,layer,active){var el=document.querySelector('[data-subtitle-preview="'+name+'"]');var text=document.getElementById(name==='primary'?'subtitlePreviewPrimary':'subtitlePreviewSecondary');if(!el||!text)return;var b=cinemaSubtitleBackground(layer);text.style.fontSize=layer.size+'px';text.style.color=layer.color;text.style.fontFamily=CINEMA_SUBTITLE_FONTS[layer.font];text.style.textShadow=cinemaSubtitleShadow(layer);text.style.background=b.background;text.style.padding=b.padding;text.style.borderRadius=b.borderRadius;text.style.fontWeight='700';text.style.opacity=active?'1':'.30';text.style.direction=cinemaSubtitlePreviewLang==='en'?'ltr':'rtl';text.style.boxSizing='border-box';text.style.maxWidth='calc(100% - 28px)';text.style.width='auto';text.style.minWidth='0';text.style.whiteSpace='normal';text.style.overflowWrap='anywhere';text.style.wordBreak='normal';text.style.lineHeight='1.28';el.style.top=layer.position+'%';el.style.transform='translate(-50%, -50%)';el.style.left='50%';el.style.position='absolute';el.style.display='block';el.style.width='100%';el.style.maxWidth='100%';el.style.pointerEvents='none'}
+function updateSubtitlePreview(settings){ensureCinemaSubtitleFonts();var p=settings.primary,s=settings.secondary;var pt=$('subtitlePreviewPrimary'),st=$('subtitlePreviewSecondary');if(pt)pt.textContent=CINEMA_SUBTITLE_PREVIEW_TEXTS[cinemaSubtitlePreviewLang];if(st)st.textContent=CINEMA_SUBTITLE_PREVIEW_TEXTS[cinemaSubtitlePreviewLang];if(pt)pt.setAttribute('dir',cinemaSubtitlePreviewLang==='en'?'ltr':'rtl');if(st)st.setAttribute('dir',cinemaSubtitlePreviewLang==='en'?'ltr':'rtl');applyCinemaSubtitlePreviewLayer('primary',p,cinemaSubtitleActiveLayer==='primary');applyCinemaSubtitlePreviewLayer('secondary',s,cinemaSubtitleActiveLayer==='secondary');document.querySelectorAll('[data-subtitle-layer]').forEach(function(layer){var name=layer.getAttribute('data-subtitle-layer'),pos=Number(settings[name].position);layer.querySelectorAll('[data-subtitle-position]').forEach(function(btn){var mode=btn.getAttribute('data-subtitle-position'),v=mode==='top'?15:mode==='center'?50:mode==='bottom'?80:null;btn.classList.toggle('is-active',mode==='free'?v===null:pos===v)})});updateCinemaSubtitleReadouts(settings);updateCinemaSubtitleGap(settings);}
+function cinemaSubtitleSetActiveLayer(name){cinemaSubtitleActiveLayer=name;document.querySelectorAll('[data-subtitle-tab]').forEach(function(b){var on=b.getAttribute('data-subtitle-tab')===name;b.classList.toggle('is-active',on);b.setAttribute('aria-selected',on?'true':'false')});document.querySelectorAll('[data-subtitle-layer]').forEach(function(el){el.classList.toggle('settings-subtitle-layer--active',el.getAttribute('data-subtitle-layer')===name)});updateSubtitlePreview(getCinemaSubtitleSettings())}
+function initCinemaSubtitleControls(){
+  ensureCinemaSubtitleFonts();
+  var controls={primary:{size:$('subtitleSize'),sizeValue:$('subtitleSizeValue'),color:$('subtitleColor'),colorValue:$('subtitleColorValue'),swatch:$('subtitleColorSwatch'),font:$('subtitleFont'),shadow:$('subtitleShadow'),outline:$('subtitleOutline'),bgEnabled:$('subtitleBackgroundEnabled'),bgColor:$('subtitleBackgroundColor'),bgSwatch:$('subtitleBackgroundSwatch'),bgOpacity:$('subtitleBackgroundOpacity'),position:$('subtitlePrimaryVerticalPosition'),positionValue:$('subtitlePrimaryPositionValue')},secondary:{size:$('subtitleSecondarySize'),sizeValue:$('subtitleSecondarySizeValue'),color:$('subtitleSecondaryColor'),colorValue:$('subtitleSecondaryColorValue'),swatch:$('subtitleSecondaryColorSwatch'),font:$('subtitleSecondaryFont'),shadow:$('subtitleSecondaryShadow'),outline:$('subtitleSecondaryOutline'),bgEnabled:$('subtitleSecondaryBackgroundEnabled'),bgColor:$('subtitleSecondaryBackgroundColor'),bgSwatch:$('subtitleSecondaryBackgroundSwatch'),bgOpacity:$('subtitleSecondaryBackgroundOpacity'),position:$('subtitleSecondaryVerticalPosition'),positionValue:$('subtitleSecondaryPositionValue')}};
+  var settings=getCinemaSubtitleSettings();
+  function sync(name){var c=controls[name],l=settings[name];if(!c)return;if(c.size)c.size.value=l.size;if(c.color)c.color.value=l.color;if(c.font)c.font.value=l.font;if(c.shadow)c.shadow.checked=l.shadow;if(c.outline)c.outline.checked=l.outline;if(c.bgEnabled)c.bgEnabled.checked=l.background.enabled;if(c.bgColor)c.bgColor.value=l.background.color;if(c.bgOpacity)c.bgOpacity.value=l.background.opacity;if(c.position)c.position.value=l.position;if(c.sizeValue)c.sizeValue.textContent=l.size+'px';if(c.colorValue)c.colorValue.textContent=l.color.toLowerCase();if(c.positionValue)c.positionValue.textContent=l.position+'%';if(c.swatch)c.swatch.style.background=l.color;if(c.bgSwatch)c.bgSwatch.style.background=l.background.color}
+  function syncAll(){sync('primary');sync('secondary');updateSubtitlePreview(settings)}
+  function read(name){var c=controls[name],l=settings[name];var bg={enabled:c.bgEnabled?c.bgEnabled.checked:l.background.enabled,color:c.bgColor?c.bgColor.value:l.background.color,opacity:c.bgOpacity?Number(c.bgOpacity.value):l.background.opacity};return normalizeCinemaSubtitleLayer(name,{size:c.size?Number(c.size.value):l.size,color:c.color?c.color.value:l.color,font:c.font?c.font.value:l.font,shadow:c.shadow?c.shadow.checked:l.shadow,outline:c.outline?c.outline.checked:l.outline,background:bg,position:c.position?Number(c.position.value):l.position})}
+  function persist(name){settings[name]=read(name);settings=saveCinemaSubtitleSettings(settings);sync(name);updateSubtitlePreview(settings);notifyCinemaSubtitleSettingsChanged(settings)}
+  syncAll();
+  document.querySelectorAll('[data-subtitle-tab]').forEach(function(btn){if(btn.dataset.boundSubTab)return;btn.dataset.boundSubTab='1';btn.addEventListener('click',function(){cinemaSubtitleSetActiveLayer(btn.getAttribute('data-subtitle-tab'))})});
+  document.querySelectorAll('[data-subtitle-preview-lang]').forEach(function(btn){if(btn.dataset.boundSubLang)return;btn.dataset.boundSubLang='1';btn.addEventListener('click',function(){cinemaSubtitlePreviewLang=btn.getAttribute('data-subtitle-preview-lang');document.querySelectorAll('[data-subtitle-preview-lang]').forEach(function(x){x.classList.toggle('is-active',x===btn)});updateSubtitlePreview(settings)})});
+  ['primary','secondary'].forEach(function(name){var c=controls[name];Object.keys(c).forEach(function(k){if(['sizeValue','colorValue','swatch','bgSwatch','positionValue'].indexOf(k)>=0)return;var el=c[k];if(!el||el.dataset.boundSubFinal)return;el.dataset.boundSubFinal='1';el.addEventListener(el.type==='range'||el.type==='color'?'input':'change',function(){persist(name)})});var layer=document.querySelector('[data-subtitle-layer="'+name+'"]');if(layer)layer.querySelectorAll('[data-subtitle-position]').forEach(function(btn){if(btn.dataset.boundSubPreset)return;btn.dataset.boundSubPreset='1';btn.addEventListener('click',function(){var mode=btn.getAttribute('data-subtitle-position'),v=mode==='top'?15:mode==='center'?50:mode==='bottom'?80:Number(c.position.value);if(mode==='free'){c.position.value=String(v)}else{c.position.value=String(v)}persist(name);layer.querySelectorAll('[data-subtitle-position]').forEach(function(x){x.classList.toggle('is-active',x===btn)})})})});
+  var saveBtn=$('saveSubtitleSettings');if(saveBtn&&!saveBtn.dataset.boundSave){saveBtn.dataset.boundSave='1';saveBtn.addEventListener('click',function(){settings=saveCinemaSubtitleSettings(settings);notifyCinemaSubtitleSettingsChanged(settings);toast('ڕێکخستنەکانی ژێرنووس پاشەکەوت کران')})}
+  var r1=$('resetSubtitleSettings'),r2=$('resetSubtitleDefaults');if(r1&&!r1.dataset.boundResetFinal){r1.dataset.boundResetFinal='1';r1.addEventListener('click',function(){settings[cinemaSubtitleActiveLayer]=Object.assign({},DEFAULT_SUBTITLE_SETTINGS[cinemaSubtitleActiveLayer],{background:Object.assign({},DEFAULT_SUBTITLE_SETTINGS[cinemaSubtitleActiveLayer].background)});settings=saveCinemaSubtitleSettings(settings);syncAll();notifyCinemaSubtitleSettingsChanged(settings);toast('ڕێکخستنەکانی ئەم چینە گەڕانەوە سەرەتا')})}if(r2&&!r2.dataset.boundResetFinal){r2.dataset.boundResetFinal='1';r2.addEventListener('click',function(){settings={primary:cinemaSubtitleLayerDefaults('primary'),secondary:cinemaSubtitleLayerDefaults('secondary')};settings=saveCinemaSubtitleSettings(settings);syncAll();notifyCinemaSubtitleSettingsChanged(settings);toast('هەموو ڕێکخستنەکانی ژێرنووس گەڕانەوە سەرەتا')})}
+}
+function cinemaSubtitleLayerDefaults(name){return JSON.parse(JSON.stringify(DEFAULT_SUBTITLE_SETTINGS[name]))}
 
 
   /* =======================================================
-     SETTINGS ACCORDION
+     SETTINGS ACCORDION — SURGICAL / NO DOM RESTRUCTURE
      ======================================================= */
   function initSettingsAccordions() {
     var page = document.querySelector("[data-app-view='settings']");
@@ -7253,19 +7222,9 @@ function initCinemaSubtitleControls() {
       var head = card.querySelector(':scope > .settings-card-head');
       if (!head || head.dataset.accordionBound === 'true') return;
 
-      var body = document.createElement('div');
-      body.className = 'settings-accordion-body';
-      while (head.nextSibling) body.appendChild(head.nextSibling);
-      card.appendChild(body);
       card.classList.add('settings-accordion');
-      card.dataset.accordionBound = 'true';
       card.classList.remove('is-open');
-
-      var arrow = document.createElement('span');
-      arrow.className = 'settings-accordion-arrow';
-      arrow.setAttribute('aria-hidden', 'true');
-      arrow.innerHTML = '<i class="fa-solid fa-chevron-down"></i>';
-      head.appendChild(arrow);
+      head.dataset.accordionBound = 'true';
       head.setAttribute('role', 'button');
       head.setAttribute('tabindex', '0');
       head.setAttribute('aria-expanded', 'false');
@@ -7285,6 +7244,7 @@ function initCinemaSubtitleControls() {
       });
     });
   }
+
 
 function renderSettingsPage() {
     var page =
@@ -7433,9 +7393,9 @@ function renderSettingsPage() {
     renderReaderThemes();
     updateThemeBadges();
     updateSettingsGeminiStatus();
-    initSettingsAccordions();
   
 
+  initSettingsAccordions();
   initCinemaSubtitleControls();}
 
   function updateAuthUI() {
