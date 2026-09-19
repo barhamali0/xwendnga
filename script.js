@@ -7209,6 +7209,43 @@ function initCinemaSubtitleControls(){
 }
 function cinemaSubtitleLayerDefaults(name){return JSON.parse(JSON.stringify(DEFAULT_SUBTITLE_SETTINGS[name]))}
 
+function initSettingsAccordions(){
+  var cards=document.querySelectorAll("[data-app-view='settings'] .settings-card");
+  cards.forEach(function(card){
+    if(card.classList.contains('settings-profile-card'))return;
+    var head=card.querySelector(':scope > .settings-card-head');
+    if(!head)return;
+
+    if(!card.classList.contains('settings-accordion-ready')){
+      var body=document.createElement('div');
+      body.className='settings-accordion-body';
+      var children=Array.prototype.slice.call(card.children);
+      children.forEach(function(child){
+        if(child!==head)body.appendChild(child);
+      });
+      card.appendChild(body);
+      card.classList.add('settings-accordion-ready');
+      head.setAttribute('role','button');
+      head.setAttribute('tabindex','0');
+      head.setAttribute('aria-expanded','false');
+      head.setAttribute('aria-controls','settings-accordion-'+Math.random().toString(36).slice(2));
+      body.id=head.getAttribute('aria-controls');
+
+      function toggle(){
+        var open=card.classList.toggle('is-settings-open');
+        head.setAttribute('aria-expanded',open?'true':'false');
+      }
+      head.addEventListener('click',toggle);
+      head.addEventListener('keydown',function(e){
+        if(e.key==='Enter'||e.key===' '){
+          e.preventDefault();
+          toggle();
+        }
+      });
+    }
+  });
+}
+
 
 function renderSettingsPage() {
     var page =
@@ -7359,7 +7396,9 @@ function renderSettingsPage() {
     updateSettingsGeminiStatus();
   
 
-  initCinemaSubtitleControls();}
+  initCinemaSubtitleControls();
+  initSettingsAccordions();
+}
 
   function updateAuthUI() {
     var ownerButtons = document.querySelectorAll("[data-action='owner-panel']");

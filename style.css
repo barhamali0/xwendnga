@@ -7809,3 +7809,79 @@ main{
   .settings-subtitle-controls .settings-control-row{min-height:46px!important;font-size:12px!important}
   .settings-subtitle-controls .settings-control-row>span{font-size:12px!important}
 }
+
+
+/* =========================================================
+   XWENDNGA — SETTINGS ACCORDION
+   Compact, closed-by-default settings sections.
+   No business logic or individual control styles are changed.
+   ========================================================= */
+
+.settings-card.settings-accordion-ready{
+  transition:box-shadow .24s ease,border-color .24s ease;
+}
+
+.settings-card.settings-accordion-ready > .settings-card-head{
+  position:relative;
+  margin-bottom:0;
+  padding:2px 28px 2px 0;
+  cursor:pointer;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+.settings-card.settings-accordion-ready > .settings-card-head:focus-visible{
+  outline:2px solid var(--a);
+  outline-offset:3px;
+  border-radius:12px;
+}
+
+.settings-card.settings-accordion-ready > .settings-card-head::after{
+  content:'\f078';
+  position:absolute;
+  top:50%;
+  right:0;
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  color:var(--muted);
+  font-family:'Font Awesome 6 Free';
+  font-size:10px;
+  font-weight:900;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:color-mix(in srgb,var(--surface2) 88%,transparent);
+  transform:translateY(-50%) rotate(0deg);
+  transition:transform .28s ease,color .22s ease,border-color .22s ease,background .22s ease;
+}
+
+.settings-card.settings-accordion-ready.is-settings-open > .settings-card-head{
+  margin-bottom:11px;
+}
+
+.settings-card.settings-accordion-ready.is-settings-open > .settings-card-head::after{
+  color:#fff;
+  border-color:color-mix(in srgb,var(--a) 45%,var(--line));
+  background:color-mix(in srgb,var(--a) 12%,var(--surface2));
+  transform:translateY(-50%) rotate(180deg);
+}
+
+.settings-accordion-body{
+  max-height:0;
+  opacity:0;
+  overflow:hidden;
+  transition:max-height .38s ease,opacity .24s ease;
+}
+
+.settings-card.settings-accordion-ready.is-settings-open > .settings-accordion-body{
+  max-height:5000px;
+  opacity:1;
+}
+
+@media (prefers-reduced-motion:reduce){
+  .settings-card.settings-accordion-ready > .settings-card-head::after,
+  .settings-accordion-body{
+    transition:none !important;
+  }
+}
