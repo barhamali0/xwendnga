@@ -16,6 +16,7 @@
   var C = {
     url: "https://nretwjagqnisyihtuwwn.supabase.co",
     key: "sb_publishable_603X2LJm3l-diUOPeXqyPQ_NkrIiD7M",
+    posterBucket: "cinema-posters",
     cinemas: "cinemas",
     episodes: "cinema_episodes",
     servers: "cinema_servers",
@@ -35,7 +36,9 @@
     opening: false,
     authBound: false,
     clickBound: false,
-    observerBound: false
+    observerBound: false,
+    posterFile: null,
+    posterPreviewUrl: ""
   };
 
   var TYPES = [
@@ -118,6 +121,102 @@
 
   function isEpisodeType(type) {
     return type === "series" || type === "anime";
+  }
+
+  function resetPosterDraft() {
+    if (S.posterPreviewUrl && S.posterPreviewUrl.indexOf("blob:") === 0) {
+      try {
+        URL.revokeObjectURL(S.posterPreviewUrl);
+      } catch (e) {}
+    }
+
+    S.posterFile = null;
+    S.posterPreviewUrl = "";
+  }
+
+  function posterPreviewUrl(f) {
+    return S.posterPreviewUrl || String((f && f.poster_url) || "").trim();
+  }
+
+  function safePosterName(name) {
+    var base = String(name || "poster").trim().toLowerCase();
+    base = base.replace(/[^a-z0-9._-]+/gi, "-");
+    base = base.replace(/^-+|-+$/g, "");
+    return base || "poster";
+  }
+
+  function posterObjectPath(file) {
+    var id = "";
+
+    try {
+      if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        id = window.crypto.randomUUID();
+      }
+    } catch (e) {}
+
+    if (!id) {
+      id = String(Date.now()) + "-" + String(Math.random()).slice(2);
+    }
+
+    return "posters/" + id + "-" + safePosterName(file && file.name);
+  }
+
+  async function uploadCinemaPoster(file) {
+    if (!file) {
+      return null;
+    }
+
+    if (!String(file.type || "").toLowerCase().startsWith("image/")) {
+      throw new Error("تکایە تەنها فایلێکی وێنە هەڵبژێرە.");
+    }
+
+    var path = posterObjectPath(file);
+    var storage = S.db.storage.from(C.posterBucket);
+
+    var upload = await storage.upload(path, file, {
+      cacheControl: "3600",
+      upsert: false,
+      contentType: file.type || undefined
+    });
+
+    if (upload.error) {
+      throw upload.error;
+    }
+
+    var publicResult = storage.getPublicUrl(path);
+    var publicUrl = publicResult && publicResult.data
+      ? publicResult.data.publicUrl
+      : "";
+
+    if (!publicUrl) {
+      try {
+        await storage.remove([path]);
+      } catch (e) {}
+      throw new Error("URL ـی گشتیی پۆستەر دروست نەکرا.");
+    }
+
+    return {
+      path: path,
+      url: publicUrl
+    };
+  }
+
+  async function removeCinemaPoster(path) {
+    if (!path) {
+      return;
+    }
+
+    try {
+      var result = await S.db.storage
+        .from(C.posterBucket)
+        .remove([path]);
+
+      if (result && result.error) {
+        console.warn("Cinema poster cleanup failed:", result.error);
+      }
+    } catch (e) {
+      console.warn("Cinema poster cleanup failed:", e);
+    }
   }
 
   function client() {
@@ -798,9 +897,24 @@
                 <input class="ca-input" name="genres" value="${esc(f.genres)}" placeholder="ئەکشن, دراما, فەنتازیا">
               </label>
 
-              <label class="ca-field">
-                <span class="ca-label">لینکی پۆستەر</span>
-                <input class="ca-input" dir="ltr" name="poster_url" value="${esc(f.poster_url)}" placeholder="https://...jpg">
+              <label class="ca-field ca-full">
+                <span class="ca-label">وێنەی پۆستەر</span>
+                <div class="ca-poster-upload" data-poster-upload>
+                  <input class="ca-poster-file-input" type="file" accept="image/*" data-poster-file>
+                  <div class="ca-poster-upload-inner">
+                    <div class="ca-poster-preview${posterPreviewUrl(f) ? " has-image" : ""}" data-poster-preview>
+                      ${posterPreviewUrl(f)
+                        ? '<img src="' + esc(posterPreviewUrl(f)) + '" alt="پۆستەر" data-poster-preview-image>'
+                        : '<i class="fa-solid fa-image" aria-hidden="true"></i>'}
+                    </div>
+                    <div class="ca-poster-upload-copy">
+                      <strong data-poster-name>${S.posterFile ? esc(S.posterFile.name) : (f.poster_url ? "پۆستەری ئێستا" : "وێنەی پۆستەر هەڵبژێرە")}</strong>
+                      <small>کرتە بکە و وێنەی خۆت لە مۆبایل یان کۆمپیوتەر هەڵبژێرە.</small>
+                      <small class="ca-poster-upload-note">فۆرماتەکانی وێنە وەک JPG، PNG، WEBP پشتیوانی دەکرێن.</small>
+                    </div>
+                  </div>
+                </div>
+                <input type="hidden" name="poster_url" value="${esc(f.poster_url)}">
               </label>
 
               <label class="ca-field">
@@ -891,6 +1005,52 @@
       form.addEventListener("submit", function (e) {
         e.preventDefault();
         save();
+      });
+    }
+
+    var posterInput = S.root.querySelector("[data-poster-file]");
+    var posterPreview = S.root.querySelector("[data-poster-preview]");
+    var posterName = S.root.querySelector("[data-poster-name]");
+    var posterUrlInput = S.root.querySelector('[name="poster_url"]');
+
+    if (posterInput) {
+      posterInput.addEventListener("change", function () {
+        var file = posterInput.files && posterInput.files[0]
+          ? posterInput.files[0]
+          : null;
+
+        if (!file) {
+          return;
+        }
+
+        if (!String(file.type || "").toLowerCase().startsWith("image/")) {
+          posterInput.value = "";
+          message("تکایە تەنها فایلێکی وێنە هەڵبژێرە.", false);
+          return;
+        }
+
+        if (S.posterPreviewUrl && S.posterPreviewUrl.indexOf("blob:") === 0) {
+          try {
+            URL.revokeObjectURL(S.posterPreviewUrl);
+          } catch (e) {}
+        }
+
+        S.posterFile = file;
+        S.posterPreviewUrl = URL.createObjectURL(file);
+
+        if (posterUrlInput) {
+          posterUrlInput.value = "";
+        }
+
+        if (posterPreview) {
+          posterPreview.classList.add("has-image");
+          posterPreview.innerHTML =
+            '<img src="' + esc(S.posterPreviewUrl) + '" alt="پۆستەر" data-poster-preview-image>';
+        }
+
+        if (posterName) {
+          posterName.textContent = file.name || "وێنەی پۆستەر";
+        }
       });
     }
 
@@ -1178,6 +1338,8 @@
   }
 
   function closeAdminPanel() {
+    resetPosterDraft();
+
     if (S.root) {
       S.root.style.display = "none";
       S.root.setAttribute("aria-hidden", "true");
@@ -1197,6 +1359,7 @@
       return;
     }
 
+    resetPosterDraft();
     S.editing = null;
 
     S.root.innerHTML = `
@@ -1287,6 +1450,8 @@
   }
 
   async function edit(id) {
+    resetPosterDraft();
+
     try {
       var r = await S.db
         .from(C.cinemas)
@@ -1406,6 +1571,15 @@
     }
 
     try {
+      var uploadedPosterPath = null;
+      var posterPersistedToRow = false;
+
+      if (S.posterFile) {
+        var posterUpload = await uploadCinemaPoster(S.posterFile);
+        uploadedPosterPath = posterUpload.path;
+        f.poster_url = posterUpload.url;
+      }
+
       var payload = {
         title_en:f.title_en || null,
         title_ku:f.title_ku || null,
@@ -1444,6 +1618,8 @@
         if (u.error) {
           throw u.error;
         }
+
+        posterPersistedToRow = true;
       } else {
         var ins = await S.db
           .from(C.cinemas)
@@ -1456,6 +1632,7 @@
         }
 
         id = ins.data.id;
+        posterPersistedToRow = true;
       }
 
       if (isEpisodeType(f.type)) {
@@ -1481,6 +1658,10 @@
         true
       );
     } catch (e) {
+      if (uploadedPosterPath && !posterPersistedToRow) {
+        await removeCinemaPoster(uploadedPosterPath);
+      }
+
       console.error("Cinema save:", e);
       message(
         "پاشەکەوتکردن سەرکەوتوو نەبوو:\n" + errorText(e),
@@ -1880,6 +2061,7 @@
 
       if (newButton && S.root && S.root.contains(newButton)) {
         e.preventDefault();
+        resetPosterDraft();
         S.editing = null;
         renderForm(empty());
         return;

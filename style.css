@@ -7867,3 +7867,118 @@ main{
   .settings-card.settings-accordion > .settings-card-head{padding-left:30px;}
   .settings-card.settings-accordion > .settings-card-head::after{left:8px;}
 }
+
+/* =========================================================
+   CINEMA ADMIN — MANUAL POSTER UPLOAD
+   ========================================================= */
+.cinema-admin-root .ca-poster-upload{
+  position:relative;
+  min-height:148px;
+  overflow:hidden;
+  border:1px dashed rgba(53,187,255,.28);
+  border-radius:16px;
+  background:linear-gradient(145deg,rgba(53,187,255,.045),rgba(123,97,255,.035));
+  cursor:pointer;
+}
+
+.cinema-admin-root .ca-poster-file-input{
+  position:absolute;
+  inset:0;
+  z-index:3;
+  width:100%;
+  height:100%;
+  opacity:0;
+  cursor:pointer;
+}
+
+.cinema-admin-root .ca-poster-upload-inner{
+  position:relative;
+  z-index:2;
+  min-height:148px;
+  display:grid;
+  grid-template-columns:94px minmax(0,1fr);
+  align-items:center;
+  gap:14px;
+  padding:12px;
+}
+
+.cinema-admin-root .ca-poster-preview{
+  width:94px;
+  height:124px;
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:12px;
+  background:#07111f;
+  color:#6f879d;
+  box-shadow:0 12px 28px rgba(0,0,0,.20);
+}
+
+.cinema-admin-root .ca-poster-preview i{
+  font-size:24px;
+}
+
+.cinema-admin-root .ca-poster-preview img{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+}
+
+.cinema-admin-root .ca-poster-upload-copy{
+  min-width:0;
+  display:grid;
+  gap:6px;
+}
+
+.cinema-admin-root .ca-poster-upload-copy strong{
+  color:#fff;
+  font-size:.88rem;
+  font-weight:900;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+
+.cinema-admin-root .ca-poster-upload-copy small{
+  color:#9aa8bd;
+  font-size:.72rem;
+  line-height:1.7;
+}
+
+.cinema-admin-root .ca-poster-upload-note{
+  color:#6f839c!important;
+}
+
+.cinema-admin-root .ca-poster-upload:hover{
+  border-color:rgba(53,187,255,.48);
+  background:linear-gradient(145deg,rgba(53,187,255,.075),rgba(123,97,255,.055));
+}
+
+.cinema-admin-root .ca-poster-upload:focus-within{
+  border-color:rgba(53,187,255,.60);
+  box-shadow:0 0 0 3px rgba(53,187,255,.10);
+}
+
+@media(max-width:700px){
+  .cinema-admin-root .ca-poster-upload-inner{
+    grid-template-columns:82px minmax(0,1fr);
+    gap:11px;
+    min-height:132px;
+    padding:10px;
+  }
+
+  .cinema-admin-root .ca-poster-preview{
+    width:82px;
+    height:108px;
+  }
+
+  .cinema-admin-root .ca-poster-upload-copy strong{
+    font-size:.8rem;
+  }
+
+  .cinema-admin-root .ca-poster-upload-copy small{
+    font-size:.68rem;
+  }
+}
+
