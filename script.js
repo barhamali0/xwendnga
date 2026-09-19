@@ -7189,7 +7189,39 @@ function updateCinemaSubtitleGap(settings){
   if(preview&&a&&b){var ar=a.getBoundingClientRect(),br=b.getBoundingClientRect(),pr=preview.getBoundingClientRect(),actual=0;if(ar.bottom<=br.top)actual=br.top-ar.bottom;else if(br.bottom<=ar.top)actual=ar.top-br.bottom;else actual=Math.min(ar.bottom,br.bottom)-Math.max(ar.top,br.top);var actualPct=pr.height?Math.round((actual/pr.height)*100):gapPct;if(actual>0){gapPct=actualPct;gapPx=Math.round(actual)}else{gapPct=0;gapPx=-Math.round(Math.abs(actual))}cls=actual>0?(gapPct<6?'danger':gapPct<10?'warn':'safe'):'danger'}
   ['subtitlePrimaryGapBadge','subtitleSecondaryGapBadge'].forEach(function(id){var el=$(id);if(el){el.className='settings-subtitle-gap-badge '+cls;el.textContent='بۆشایی: '+gapPct+'% / ≈ '+gapPx+'px'}});
 }
-function applyCinemaSubtitlePreviewLayer(name,layer,active){var el=document.querySelector('[data-subtitle-preview="'+name+'"]');var text=document.getElementById(name==='primary'?'subtitlePreviewPrimary':'subtitlePreviewSecondary');if(!el||!text)return;var b=cinemaSubtitleBackground(layer);text.style.fontSize=layer.size+'px';text.style.color=layer.color;text.style.fontFamily=CINEMA_SUBTITLE_FONTS[layer.font];text.style.textShadow=cinemaSubtitleShadow(layer);text.style.background=b.background;text.style.padding=b.padding;text.style.borderRadius=b.borderRadius;text.style.fontWeight='700';text.style.opacity=active?'1':'.30';text.style.direction=cinemaSubtitlePreviewLang==='en'?'ltr':'rtl';text.style.boxSizing='border-box';text.style.position='absolute';text.style.left='50%';text.style.top=layer.position+'%';text.style.transform='translate(-50%, -50%)';text.style.display='block';text.style.width='max-content';text.style.maxWidth='calc(100% - 28px)';text.style.minWidth='0';text.style.whiteSpace='normal';text.style.overflowWrap='anywhere';text.style.wordBreak='normal';text.style.lineHeight='1.28';text.style.zIndex='3';el.style.top='0';el.style.left='0';el.style.transform='none';el.style.position='absolute';el.style.display='block';el.style.width='100%';el.style.height='100%';el.style.maxWidth='100%';el.style.inset='0';el.style.pointerEvents='none';el.style.zIndex='2'}
+function fitCinemaSubtitlePreviewText(text,preview,layer){
+  if(!text||!preview)return;
+  var base=Math.max(10,Number(layer&&layer.size)||24),min=10;
+  var available=Math.max(80,preview.clientWidth-28);
+  function measure(){return Math.max(text.scrollWidth||0,text.getBoundingClientRect().width||0)}
+  function run(){
+    text.style.setProperty('white-space','nowrap','important');
+    text.style.overflowWrap='normal';
+    text.style.wordBreak='normal';
+    text.style.width='max-content';
+    text.style.maxWidth='none';
+    text.style.fontSize=base+'px';
+    var natural=measure();
+    if(natural<=available)return;
+    var low=min,high=base;
+    for(var i=0;i<8;i++){
+      var mid=(low+high)/2;
+      text.style.fontSize=mid+'px';
+      if(measure()<=available)low=mid;else high=mid;
+    }
+    text.style.fontSize=Math.max(min,Math.floor(low*10)/10)+'px';
+  }
+  window.requestAnimationFrame(run);
+  try{
+    if(document.fonts&&document.fonts.ready){
+      document.fonts.ready.then(function(){window.requestAnimationFrame(run)});
+    }
+    if(document.fonts&&document.fonts.load){
+      document.fonts.load('700 '+base+'px '+(CINEMA_SUBTITLE_FONTS[layer.font]||'sans-serif')).then(function(){window.requestAnimationFrame(run)});
+    }
+  }catch(e){}
+}
+function applyCinemaSubtitlePreviewLayer(name,layer,active){var el=document.querySelector('[data-subtitle-preview="'+name+'"]');var text=document.getElementById(name==='primary'?'subtitlePreviewPrimary':'subtitlePreviewSecondary');var preview=document.querySelector('.settings-subtitle-preview');if(!el||!text||!preview)return;var b=cinemaSubtitleBackground(layer);text.style.fontSize=layer.size+'px';text.style.color=layer.color;text.style.fontFamily=CINEMA_SUBTITLE_FONTS[layer.font];text.style.textShadow=cinemaSubtitleShadow(layer);text.style.background=b.background;text.style.padding=b.padding;text.style.borderRadius=b.borderRadius;text.style.fontWeight='700';text.style.opacity=active?'1':'.30';text.style.direction=cinemaSubtitlePreviewLang==='en'?'ltr':'rtl';text.style.boxSizing='border-box';text.style.position='absolute';text.style.left='50%';text.style.top=layer.position+'%';text.style.transform='translate(-50%, -50%)';text.style.display='block';text.style.width='max-content';text.style.maxWidth='none';text.style.minWidth='0';text.style.setProperty('white-space','nowrap','important');text.style.overflowWrap='normal';text.style.wordBreak='normal';text.style.lineHeight='1.28';text.style.zIndex='3';el.style.top='0';el.style.left='0';el.style.transform='none';el.style.position='absolute';el.style.display='block';el.style.width='100%';el.style.height='100%';el.style.maxWidth='100%';el.style.inset='0';el.style.pointerEvents='none';el.style.zIndex='2';fitCinemaSubtitlePreviewText(text,preview,layer)}
 function updateSubtitlePreview(settings){ensureCinemaSubtitleFonts();var p=settings.primary,s=settings.secondary;var pt=$('subtitlePreviewPrimary'),st=$('subtitlePreviewSecondary');if(pt)pt.textContent=CINEMA_SUBTITLE_PREVIEW_TEXTS[cinemaSubtitlePreviewLang];if(st)st.textContent=CINEMA_SUBTITLE_PREVIEW_TEXTS[cinemaSubtitlePreviewLang];if(pt)pt.setAttribute('dir',cinemaSubtitlePreviewLang==='en'?'ltr':'rtl');if(st)st.setAttribute('dir',cinemaSubtitlePreviewLang==='en'?'ltr':'rtl');applyCinemaSubtitlePreviewLayer('primary',p,cinemaSubtitleActiveLayer==='primary');applyCinemaSubtitlePreviewLayer('secondary',s,cinemaSubtitleActiveLayer==='secondary');document.querySelectorAll('[data-subtitle-layer]').forEach(function(layer){var name=layer.getAttribute('data-subtitle-layer'),pos=Number(settings[name].position);layer.querySelectorAll('[data-subtitle-position]').forEach(function(btn){var mode=btn.getAttribute('data-subtitle-position'),v=mode==='top'?15:mode==='center'?50:mode==='bottom'?80:null;btn.classList.toggle('is-active',mode==='free'?v===null:pos===v)})});updateCinemaSubtitleReadouts(settings);updateCinemaSubtitleGap(settings);}
 function cinemaSubtitleSetActiveLayer(name){cinemaSubtitleActiveLayer=name;document.querySelectorAll('[data-subtitle-tab]').forEach(function(b){var on=b.getAttribute('data-subtitle-tab')===name;b.classList.toggle('is-active',on);b.setAttribute('aria-selected',on?'true':'false')});document.querySelectorAll('[data-subtitle-layer]').forEach(function(el){el.classList.toggle('settings-subtitle-layer--active',el.getAttribute('data-subtitle-layer')===name)});updateSubtitlePreview(getCinemaSubtitleSettings())}
 function initCinemaSubtitleControls(){
