@@ -7692,7 +7692,7 @@ main{
   border-radius:14px!important;
 }
 .settings-subtitle-preview-layer{
-  inset:auto!important;
+  inset:0;
   left:50%!important;
   right:auto!important;
   bottom:auto!important;

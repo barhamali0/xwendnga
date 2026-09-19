@@ -786,11 +786,13 @@
 }
 
 .cinema-subtitle{
-  max-width:min(92%,1000px);
+  width:max-content;
+  max-width:none;
+  white-space:nowrap;
   padding:0;
   border:0;
   border-radius:0;
-  text-wrap:balance;
+  text-wrap:nowrap;
   background:transparent;
   box-shadow:none;
   text-shadow:0 2px 5px rgba(0,0,0,.86),0 1px 2px rgba(0,0,0,.94);
