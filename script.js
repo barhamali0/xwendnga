@@ -6249,6 +6249,29 @@
     ).trim();
   }
 
+  /* =======================================================
+     HOME CINEMA — PHASE 2C NAVIGATION COORDINATION
+     Route first, then perform the cinema action from the
+     xwendnga:routechange event. This avoids timing races.
+     ======================================================= */
+
+  var pendingHomeCinemaAction = null;
+
+  function navigateHomeCinema(action) {
+    pendingHomeCinemaAction = action || null;
+
+    if (
+      window.XwendngaApp &&
+      typeof window.XwendngaApp.navigate === "function"
+    ) {
+      window.XwendngaApp.navigate("cinema");
+      return;
+    }
+
+    /* Fallback only when the router API is unavailable. */
+    window.location.hash = "#cinema";
+  }
+
   function dispatchHomeCinemaOpen(item) {
     if (!item) {
       return;
@@ -6389,7 +6412,10 @@
         });
 
         if (item) {
-          dispatchHomeCinemaOpen(item);
+          navigateHomeCinema({
+            kind: "open",
+            item: item
+          });
         }
       };
 
@@ -6424,6 +6450,79 @@
           : [];
 
       renderHomeCinema(items);
+    }
+  );
+
+  /* =======================================================
+     PHASE 2C — CINEMA ROUTE ACTIONS
+     ======================================================= */
+
+  document.addEventListener(
+    "xwendnga:routechange",
+    function (event) {
+      var route =
+        event &&
+        event.detail
+          ? event.detail.route
+          : "";
+
+      if (route !== "cinema" || !pendingHomeCinemaAction) {
+        return;
+      }
+
+      var action = pendingHomeCinemaAction;
+      pendingHomeCinemaAction = null;
+
+      if (action.kind === "open" && action.item) {
+        dispatchHomeCinemaOpen(action.item);
+        return;
+      }
+
+      if (action.kind === "filter" && action.type) {
+        var chip = document.querySelector(
+          '#cinemaTypeFilters [data-cinema-type="' +
+          String(action.type).replace(/"/g, "\\\"") +
+          '"]'
+        );
+
+        if (chip) {
+          chip.click();
+        }
+      }
+    }
+  );
+
+  /* =======================================================
+     HOME CINEMA — "SEE ALL" CATEGORY NAVIGATION
+     ======================================================= */
+
+  document.addEventListener(
+    "click",
+    function (event) {
+      var button =
+        event.target &&
+        typeof event.target.closest === "function"
+          ? event.target.closest("[data-cinema-filter]")
+          : null;
+
+      if (!button) {
+        return;
+      }
+
+      var type = String(
+        button.getAttribute("data-cinema-filter") || ""
+      )
+        .trim()
+        .toLowerCase();
+
+      if (["movie", "series", "anime", "cartoon"].indexOf(type) < 0) {
+        return;
+      }
+
+      navigateHomeCinema({
+        kind: "filter",
+        type: type
+      });
     }
   );
 
