@@ -6226,6 +6226,207 @@
   }
 
 
+
+  /* =======================================================
+     HOME CINEMA — PHASE 2B
+     DATA + RENDER ONLY
+     ======================================================= */
+
+  var homeCinemaItems = [];
+
+  var HOME_CINEMA_ROWS = {
+    movie: "homeCinemaMoviesTitle",
+    series: "homeCinemaSeriesTitle",
+    anime: "homeCinemaAnimeTitle",
+    cartoon: "homeCinemaCartoonTitle"
+  };
+
+  function homeCinemaTitle(item) {
+    return String(
+      item && (item.title_ku || item.title_en)
+        ? (item.title_ku || item.title_en)
+        : "بێ ناونیشان"
+    ).trim();
+  }
+
+  function dispatchHomeCinemaOpen(item) {
+    if (!item) {
+      return;
+    }
+
+    var detail = {
+      item: item
+    };
+
+    try {
+      window.dispatchEvent(
+        new CustomEvent("xwendnga:cinema-open", {
+          detail: detail
+        })
+      );
+    } catch (error) {
+      try {
+        var event = document.createEvent("CustomEvent");
+        event.initCustomEvent(
+          "xwendnga:cinema-open",
+          true,
+          false,
+          detail
+        );
+        window.dispatchEvent(event);
+      } catch (fallbackError) {
+        console.error(
+          "Xwendnga home cinema open event error:",
+          fallbackError
+        );
+      }
+    }
+  }
+
+  function renderHomeCinemaRow(type, items) {
+    var titleId = HOME_CINEMA_ROWS[type];
+
+    if (!titleId) {
+      return;
+    }
+
+    var track = document.querySelector(
+      '[data-app-view="home"] section[aria-labelledby="' +
+      titleId + '"] .home-cinema-track'
+    );
+
+    if (!track) {
+      return;
+    }
+
+    var normalizedType = String(type || "")
+      .trim()
+      .toLowerCase();
+
+    var rowItems = (Array.isArray(items) ? items : [])
+      .filter(function (item) {
+        return String(item && item.type || "")
+          .trim()
+          .toLowerCase() === normalizedType;
+      });
+
+    if (!rowItems.length) {
+      track.innerHTML = [
+        '<article class="home-cinema-card" aria-hidden="true">',
+          '<div class="home-cinema-poster">',
+            '<span class="home-cinema-poster-glow"></span>',
+            '<i class="fa-solid fa-film"></i>',
+            '<span class="home-cinema-type">',
+              type === "movie"
+                ? "فیلم"
+                : type === "series"
+                ? "زنجیرە"
+                : type === "anime"
+                ? "ئەنیمی"
+                : "کارتۆن",
+            '</span>',
+          '</div>',
+          '<div class="home-cinema-card-body">',
+            '<strong>هێشتا ناوەڕۆک نییە</strong>',
+            '<span>بەم زووانە زیاد دەکرێت</span>',
+          '</div>',
+        '</article>'
+      ].join("");
+      return;
+    }
+
+    track.innerHTML = rowItems.map(function (item) {
+      var id = String(item && item.id != null ? item.id : "");
+      var title = homeCinemaTitle(item);
+      var poster = String(item && item.poster_url || "").trim();
+      var year = String(item && item.year != null ? item.year : "").trim();
+
+      var posterHtml = poster
+        ? '<img class="home-cinema-real-poster" src="' +
+          esc(poster) +
+          '" alt="' +
+          esc(title) +
+          '" loading="lazy" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;">'
+        : '<i class="fa-solid fa-film" aria-hidden="true"></i>';
+
+      return [
+        '<article',
+          ' class="home-cinema-card"',
+          ' data-home-cinema-id="' + esc(id) + '"',
+          ' role="button"',
+          ' tabindex="0"',
+          ' aria-label="بینینی ' + esc(title) + '"',
+        '>',
+          '<div class="home-cinema-poster">',
+            '<span class="home-cinema-poster-glow"></span>',
+            posterHtml,
+            '<span class="home-cinema-type">',
+              type === "movie"
+                ? "فیلم"
+                : type === "series"
+                ? "زنجیرە"
+                : type === "anime"
+                ? "ئەنیمی"
+                : "کارتۆن",
+            '</span>',
+          '</div>',
+          '<div class="home-cinema-card-body">',
+            '<strong>' + esc(title) + '</strong>',
+            '<span>' +
+              esc(year || "XWENDNGA • CINEMA") +
+            '</span>',
+          '</div>',
+        '</article>'
+      ].join("");
+    }).join("");
+
+    track.querySelectorAll("[data-home-cinema-id]").forEach(function (card) {
+      var activate = function () {
+        var id = card.getAttribute("data-home-cinema-id");
+
+        var item = homeCinemaItems.find(function (entry) {
+          return String(entry && entry.id) === String(id);
+        });
+
+        if (item) {
+          dispatchHomeCinemaOpen(item);
+        }
+      };
+
+      card.addEventListener("click", activate);
+      card.addEventListener("keydown", function (event) {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          activate();
+        }
+      });
+    });
+  }
+
+  function renderHomeCinema(items) {
+    homeCinemaItems = Array.isArray(items)
+      ? items.slice()
+      : [];
+
+    Object.keys(HOME_CINEMA_ROWS).forEach(function (type) {
+      renderHomeCinemaRow(type, homeCinemaItems);
+    });
+  }
+
+  window.addEventListener(
+    "xwendnga:cinema-data-ready",
+    function (event) {
+      var items =
+        event &&
+        event.detail &&
+        Array.isArray(event.detail.items)
+          ? event.detail.items
+          : [];
+
+      renderHomeCinema(items);
+    }
+  );
+
   /* =======================================================
      PAGE / BOOK ROUTE EVENTS
      ======================================================= */
