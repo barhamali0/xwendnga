@@ -1246,10 +1246,13 @@
 
         <!-- ===============================================
              CINEMA — HOME 2.0 / PHASE 2A
-             UI ONLY — MOCK CARDS
+             UI ONLY — HORIZONTAL CAROUSEL MOCK ROWS
              =============================================== -->
 
-        <section class="section home-cinema-section" aria-labelledby="homeCinemaTitle">
+        <section
+          class="section home-cinema-section"
+          aria-labelledby="homeCinemaTitle"
+        >
 
           <div class="section-head home-cinema-head">
 
@@ -1268,71 +1271,419 @@
 
             </div>
 
-            <button
-              class="small-head-btn home-cinema-all"
-              type="button"
-              data-nav="cinema"
+          </div>
+
+
+          <!-- FILMS -->
+          <section class="home-cinema-row" aria-labelledby="homeCinemaMoviesTitle">
+
+            <div class="home-cinema-row-head">
+
+              <h3 class="home-cinema-row-title" id="homeCinemaMoviesTitle">
+                فیلمەکان
+              </h3>
+
+              <button
+                class="small-head-btn home-cinema-row-link"
+                type="button"
+                data-nav="cinema"
+              >
+                هەمووی ببینە
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+              </button>
+
+            </div>
+
+            <div
+              class="home-cinema-track"
+              aria-label="پێشبینینی فیلمەکان"
+              tabindex="0"
             >
-              هەمووی ببینە
-              <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
-            </button>
 
-          </div>
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-film"></i>
+                  <span class="home-cinema-type">فیلم</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>فیلمی نموونەیی ١</strong>
+                  <span>شوێنی فیلمی نوێ</span>
+                </div>
+              </article>
 
-          <div
-            class="home-cinema-grid"
-            aria-label="پێشبینینی فیلم و زنجیرەکان"
-          >
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-clapperboard"></i>
+                  <span class="home-cinema-type">فیلم</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>فیلمی نموونەیی ٢</strong>
+                  <span>شوێنی فیلمی نوێ</span>
+                </div>
+              </article>
 
-            <article class="home-cinema-card home-cinema-card--one">
-              <div class="home-cinema-poster" aria-hidden="true">
-                <span class="home-cinema-poster-glow"></span>
-                <i class="fa-solid fa-film"></i>
-                <span class="home-cinema-type">فیلم</span>
-              </div>
-              <div class="home-cinema-card-body">
-                <strong>پۆستەری نموونەیی</strong>
-                <span>شوێنی فیلمی نوێ</span>
-              </div>
-            </article>
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-video"></i>
+                  <span class="home-cinema-type">فیلم</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>فیلمی نموونەیی ٣</strong>
+                  <span>شوێنی فیلمی نوێ</span>
+                </div>
+              </article>
 
-            <article class="home-cinema-card home-cinema-card--two">
-              <div class="home-cinema-poster" aria-hidden="true">
-                <span class="home-cinema-poster-glow"></span>
-                <i class="fa-solid fa-clapperboard"></i>
-                <span class="home-cinema-type">زنجیرە</span>
-              </div>
-              <div class="home-cinema-card-body">
-                <strong>پۆستەری نموونەیی</strong>
-                <span>شوێنی زنجیرەی نوێ</span>
-              </div>
-            </article>
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-ticket"></i>
+                  <span class="home-cinema-type">فیلم</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>فیلمی نموونەیی ٤</strong>
+                  <span>شوێنی فیلمی نوێ</span>
+                </div>
+              </article>
 
-            <article class="home-cinema-card home-cinema-card--three">
-              <div class="home-cinema-poster" aria-hidden="true">
-                <span class="home-cinema-poster-glow"></span>
-                <i class="fa-solid fa-tv"></i>
-                <span class="home-cinema-type">ئەنیمی</span>
-              </div>
-              <div class="home-cinema-card-body">
-                <strong>پۆستەری نموونەیی</strong>
-                <span>شوێنی ناوەڕۆکی نوێ</span>
-              </div>
-            </article>
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-video"></i>
+                  <span class="home-cinema-type">فیلم</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>فیلمی نموونەیی ٥</strong>
+                  <span>شوێنی فیلمی نوێ</span>
+                </div>
+              </article>
 
-            <article class="home-cinema-card home-cinema-card--four">
-              <div class="home-cinema-poster" aria-hidden="true">
-                <span class="home-cinema-poster-glow"></span>
-                <i class="fa-solid fa-photo-film"></i>
-                <span class="home-cinema-type">کارتۆن</span>
-              </div>
-              <div class="home-cinema-card-body">
-                <strong>پۆستەری نموونەیی</strong>
-                <span>شوێنی کارتۆنی نوێ</span>
-              </div>
-            </article>
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-star"></i>
+                  <span class="home-cinema-type">فیلم</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>فیلمی نموونەیی ٦</strong>
+                  <span>شوێنی فیلمی نوێ</span>
+                </div>
+              </article>
 
-          </div>
+            </div>
+
+          </section>
+
+
+          <!-- SERIES -->
+          <section class="home-cinema-row" aria-labelledby="homeCinemaSeriesTitle">
+
+            <div class="home-cinema-row-head">
+
+              <h3 class="home-cinema-row-title" id="homeCinemaSeriesTitle">
+                زنجیرەکان
+              </h3>
+
+              <button
+                class="small-head-btn home-cinema-row-link"
+                type="button"
+                data-nav="cinema"
+              >
+                هەمووی ببینە
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+              </button>
+
+            </div>
+
+            <div
+              class="home-cinema-track"
+              aria-label="پێشبینینی زنجیرەکان"
+              tabindex="0"
+            >
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-tv"></i>
+                  <span class="home-cinema-type">زنجیرە</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>زنجیرەی نموونەیی ١</strong>
+                  <span>شوێنی زنجیرەی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-clapperboard"></i>
+                  <span class="home-cinema-type">زنجیرە</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>زنجیرەی نموونەیی ٢</strong>
+                  <span>شوێنی زنجیرەی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-display"></i>
+                  <span class="home-cinema-type">زنجیرە</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>زنجیرەی نموونەیی ٣</strong>
+                  <span>شوێنی زنجیرەی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-photo-film"></i>
+                  <span class="home-cinema-type">زنجیرە</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>زنجیرەی نموونەیی ٤</strong>
+                  <span>شوێنی زنجیرەی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-film"></i>
+                  <span class="home-cinema-type">زنجیرە</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>زنجیرەی نموونەیی ٥</strong>
+                  <span>شوێنی زنجیرەی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-star"></i>
+                  <span class="home-cinema-type">زنجیرە</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>زنجیرەی نموونەیی ٦</strong>
+                  <span>شوێنی زنجیرەی نوێ</span>
+                </div>
+              </article>
+
+            </div>
+
+          </section>
+
+
+          <!-- ANIME -->
+          <section class="home-cinema-row" aria-labelledby="homeCinemaAnimeTitle">
+
+            <div class="home-cinema-row-head">
+
+              <h3 class="home-cinema-row-title" id="homeCinemaAnimeTitle">
+                ئەنیمییەکان
+              </h3>
+
+              <button
+                class="small-head-btn home-cinema-row-link"
+                type="button"
+                data-nav="cinema"
+              >
+                هەمووی ببینە
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+              </button>
+
+            </div>
+
+            <div
+              class="home-cinema-track"
+              aria-label="پێشبینینی ئەنیمییەکان"
+              tabindex="0"
+            >
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-tv"></i>
+                  <span class="home-cinema-type">ئەنیمی</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>ئەنیمیی نموونەیی ١</strong>
+                  <span>شوێنی ئەنیمیی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-wand-magic-sparkles"></i>
+                  <span class="home-cinema-type">ئەنیمی</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>ئەنیمیی نموونەیی ٢</strong>
+                  <span>شوێنی ئەنیمیی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-dragon"></i>
+                  <span class="home-cinema-type">ئەنیمی</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>ئەنیمیی نموونەیی ٣</strong>
+                  <span>شوێنی ئەنیمیی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-meteor"></i>
+                  <span class="home-cinema-type">ئەنیمی</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>ئەنیمیی نموونەیی ٤</strong>
+                  <span>شوێنی ئەنیمیی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-rocket"></i>
+                  <span class="home-cinema-type">ئەنیمی</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>ئەنیمیی نموونەیی ٥</strong>
+                  <span>شوێنی ئەنیمیی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-star"></i>
+                  <span class="home-cinema-type">ئەنیمی</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>ئەنیمیی نموونەیی ٦</strong>
+                  <span>شوێنی ئەنیمیی نوێ</span>
+                </div>
+              </article>
+
+            </div>
+
+          </section>
+
+
+          <!-- CARTOONS -->
+          <section class="home-cinema-row" aria-labelledby="homeCinemaCartoonTitle">
+
+            <div class="home-cinema-row-head">
+
+              <h3 class="home-cinema-row-title" id="homeCinemaCartoonTitle">
+                کارتۆنەکان
+              </h3>
+
+              <button
+                class="small-head-btn home-cinema-row-link"
+                type="button"
+                data-nav="cinema"
+              >
+                هەمووی ببینە
+                <i class="fa-solid fa-arrow-left" aria-hidden="true"></i>
+              </button>
+
+            </div>
+
+            <div
+              class="home-cinema-track"
+              aria-label="پێشبینینی کارتۆنەکان"
+              tabindex="0"
+            >
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-face-smile"></i>
+                  <span class="home-cinema-type">کارتۆن</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>کارتۆنی نموونەیی ١</strong>
+                  <span>شوێنی کارتۆنی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-cat"></i>
+                  <span class="home-cinema-type">کارتۆن</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>کارتۆنی نموونەیی ٢</strong>
+                  <span>شوێنی کارتۆنی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-dog"></i>
+                  <span class="home-cinema-type">کارتۆن</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>کارتۆنی نموونەیی ٣</strong>
+                  <span>شوێنی کارتۆنی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-cloud"></i>
+                  <span class="home-cinema-type">کارتۆن</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>کارتۆنی نموونەیی ٤</strong>
+                  <span>شوێنی کارتۆنی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-bolt"></i>
+                  <span class="home-cinema-type">کارتۆن</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>کارتۆنی نموونەیی ٥</strong>
+                  <span>شوێنی کارتۆنی نوێ</span>
+                </div>
+              </article>
+
+              <article class="home-cinema-card">
+                <div class="home-cinema-poster" aria-hidden="true">
+                  <span class="home-cinema-poster-glow"></span>
+                  <i class="fa-solid fa-star"></i>
+                  <span class="home-cinema-type">کارتۆن</span>
+                </div>
+                <div class="home-cinema-card-body">
+                  <strong>کارتۆنی نموونەیی ٦</strong>
+                  <span>شوێنی کارتۆنی نوێ</span>
+                </div>
+              </article>
+
+            </div>
+
+          </section>
 
         </section>
 

@@ -156,6 +156,40 @@
   }
 
 
+  function dispatchDataReady(items) {
+    var detail = {
+      items: Array.isArray(items) ? items.slice() : [],
+      count: Array.isArray(items) ? items.length : 0
+    };
+
+    try {
+      window.dispatchEvent(
+        new CustomEvent("xwendnga:cinema-data-ready", {
+          detail: detail
+        })
+      );
+    } catch (error) {
+      var event;
+
+      try {
+        event = document.createEvent("CustomEvent");
+        event.initCustomEvent(
+          "xwendnga:cinema-data-ready",
+          true,
+          false,
+          detail
+        );
+        window.dispatchEvent(event);
+      } catch (fallbackError) {
+        console.error(
+          "Xwendnga cinema data event error:",
+          fallbackError
+        );
+      }
+    }
+  }
+
+
   function dispatchOpen(item) {
     try {
       window.dispatchEvent(
@@ -771,6 +805,8 @@
 
     try {
       state.items = await fetchCinemas();
+
+      dispatchDataReady(state.items);
 
       renderGenres();
       applyFilters();
