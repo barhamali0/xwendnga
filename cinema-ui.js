@@ -190,12 +190,13 @@
   }
 
 
-  function dispatchOpen(item) {
+  function dispatchOpen(item, episodeId) {
     try {
       window.dispatchEvent(
         new CustomEvent("xwendnga:cinema-open", {
           detail: {
-            item: item
+            item: item,
+            episodeId: episodeId || null
           }
         })
       );
@@ -208,7 +209,7 @@
           "xwendnga:cinema-open",
           true,
           false,
-          { item: item }
+          { item: item, episodeId: episodeId || null }
         );
         window.dispatchEvent(event);
       } catch (fallbackError) {
@@ -316,6 +317,139 @@
   }
 
 
+  var PROGRESS_KEY = "xwendnga_cinema_progress";
+
+  function readCinemaProgress() {
+    try {
+      var raw = localStorage.getItem(PROGRESS_KEY);
+      var data = raw ? JSON.parse(raw) : {};
+      return data && typeof data === "object" && !Array.isArray(data)
+        ? data
+        : {};
+    } catch (error) {
+      return {};
+    }
+  }
+
+  function progressItems() {
+    var stored = readCinemaProgress();
+    var result = [];
+
+    Object.keys(stored).forEach(function (key) {
+      var progress = stored[key];
+
+      if (!progress || typeof progress !== "object") {
+        return;
+      }
+
+      var currentTime = Number(progress.currentTime);
+      var duration = Number(progress.duration);
+      var percent = Number(progress.percent);
+
+      if (!Number.isFinite(currentTime) || !Number.isFinite(duration) || duration <= 0) {
+        return;
+      }
+
+      if (!Number.isFinite(percent)) {
+        percent = currentTime / duration * 100;
+      }
+
+      if (currentTime <= 10 || percent >= 95) {
+        return;
+      }
+
+      var item = state.items.find(function (entry) {
+        return String(entry.id) === String(progress.cinemaId || key.split("::")[0]);
+      });
+
+      if (!item) {
+        return;
+      }
+
+      result.push({
+        progressKey: key,
+        item: item,
+        progress: progress,
+        percent: Math.max(0, Math.min(100, percent)),
+        updatedAt: Number(progress.updatedAt) || 0
+      });
+    });
+
+    return result
+      .sort(function (a, b) {
+        return b.updatedAt - a.updatedAt;
+      });
+  }
+
+  function renderContinueWatching() {
+    var host = document.getElementById("cinemaContinueWatching");
+    if (!host) {
+      return;
+    }
+
+    var entries = progressItems();
+
+    if (!entries.length) {
+      host.innerHTML = "";
+      host.hidden = true;
+      return;
+    }
+
+    host.hidden = false;
+    host.innerHTML = [
+      '<div class="cinema-section__head">',
+        '<div>',
+          '<h2 class="cinema-section__title">بەردەوام بە لە سەیرکردن</h2>',
+          '<p class="cinema-section__hint">لەو شوێنەی وەستابوویتەوە بەردەوام بە</p>',
+        '</div>',
+      '</div>',
+      '<div class="cinema-wide-grid">',
+        entries.map(function (entry) {
+          var item = entry.item;
+          var progress = entry.progress;
+          var title = getTitle(item);
+          var episodeLabel = progress.episodeNumber != null
+            ? "ئەڵقە " + String(progress.episodeNumber)
+            : "";
+          var meta = [
+            typeLabel(item.type),
+            episodeLabel,
+            item.duration ? String(item.duration) : ""
+          ].filter(Boolean);
+
+          return [
+            '<article class="cinema-wide-card" data-cinema-progress-key="' + escapeHtml(String(entry.progressKey)) + '">',
+              '<button type="button" class="cinema-wide-card__thumb" data-cinema-progress-open="' + escapeHtml(String(entry.progressKey)) + '" aria-label="بەردەوام بە لە ' + escapeHtml(title) + '">',
+                item.poster_url
+                  ? '<img src="' + escapeHtml(item.poster_url) + '" alt="" loading="lazy">'
+                  : "",
+              '</button>',
+              '<div class="cinema-wide-card__body">',
+                '<h3 class="cinema-wide-card__title">' + escapeHtml(title) + '</h3>',
+                '<div class="cinema-wide-card__meta">' + escapeHtml(meta.join(" • ")) + '</div>',
+                '<div class="cinema-progress" aria-label="' + escapeHtml(entry.percent.toFixed(0) + "%") + '">',
+                  '<span style="width:' + entry.percent.toFixed(2) + '%"></span>',
+                '</div>',
+              '</div>',
+            '</article>'
+          ].join("");
+        }).join(""),
+      '</div>'
+    ].join("");
+
+    host.querySelectorAll("[data-cinema-progress-open]").forEach(function (button) {
+      button.addEventListener("click", function () {
+        var progressKey = button.getAttribute("data-cinema-progress-open");
+        var entry = entries.find(function (candidate) {
+          return String(candidate.progressKey) === String(progressKey);
+        });
+        if (entry) {
+          dispatchOpen(entry.item, entry.progress.episodeId || null);
+        }
+      });
+    });
+  }
+
   function renderShell() {
     if (!root) {
       return;
@@ -368,6 +502,8 @@
         '<div class="cinema-filter-group" id="cinemaGenreFilters" aria-label="ژانەرەکان"></div>',
 
         '<section id="cinemaHero" class="cinema-hero" aria-label="فیلمی تایبەت"></section>',
+
+        '<section id="cinemaContinueWatching" class="cinema-section" hidden aria-label="بەردەوام بە لە سەیرکردن"></section>',
 
         '<section class="cinema-section">',
           '<div class="cinema-section__head">',
@@ -738,6 +874,7 @@
     state.filtered = sortItems(filtered);
 
     renderHero(state.filtered.length ? state.filtered : state.items);
+    renderContinueWatching();
     renderGrid(state.filtered);
   }
 
@@ -883,6 +1020,8 @@
     load();
   }
 
+
+  window.addEventListener("xwendnga:cinema-player-close", renderContinueWatching);
 
   window.XwendngaCinemaUI = {
     init: init,
