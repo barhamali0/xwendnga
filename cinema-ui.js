@@ -459,6 +459,7 @@
         return ratingB - ratingA;
       })[0];
 
+    var hasBackdrop = String(featured.backdrop_url || "").trim() !== "";
     var backdrop = getBackdrop(featured);
     var title = getTitle(featured);
     var original = getOriginalTitle(featured);
@@ -472,7 +473,7 @@
 
     hero.innerHTML = [
       backdrop
-        ? '<img class="cinema-hero__backdrop" src="' + escapeHtml(backdrop) + '" alt="" aria-hidden="true" loading="eager">'
+        ? '<img class="cinema-hero__backdrop' + (hasBackdrop ? '' : ' cinema-hero__backdrop--poster-fallback') + '" src="' + escapeHtml(backdrop) + '" alt="" aria-hidden="true" loading="eager">'
         : "",
       '<div class="cinema-hero__content">',
         '<div class="cinema-hero__body">',
@@ -482,10 +483,10 @@
           '</div>',
           '<h1 class="cinema-hero__title">', escapeHtml(title), '</h1>',
           original && normalizeText(original) !== normalizeText(title)
-            ? '<div class="cinema-hero__description">' + escapeHtml(original) + '</div>'
+            ? '<div class="cinema-hero__original">' + escapeHtml(original) + '</div>'
             : "",
-          '<div class="cinema-hero__meta">',
-            '<span class="cinema-card__badge">', escapeHtml(typeLabel(featured.type)), '</span>',
+          '<div class="cinema-hero__meta cinema-hero__meta--facts">',
+            '<span class="cinema-card__badge cinema-hero__type">', escapeHtml(typeLabel(featured.type)), '</span>',
             featured.year ? '<span>' + escapeHtml(featured.year) + '</span>' : "",
             featured.duration ? '<span>' + escapeHtml(featured.duration) + '</span>' : "",
             Number.isFinite(Number(featured.rating))
@@ -496,7 +497,7 @@
             ? '<p class="cinema-hero__description">' + escapeHtml(synopsis) + '</p>'
             : "",
           genres.length
-            ? '<div class="cinema-hero__meta">' +
+            ? '<div class="cinema-hero__meta cinema-hero__meta--genres">' +
                 genres.map(function (genre) {
                   return '<span>' + escapeHtml(genre) + '</span>';
                 }).join("") +

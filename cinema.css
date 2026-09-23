@@ -151,45 +151,69 @@
 
 .cinema-hero{
   position:relative;
-  min-height:clamp(300px,46vw,560px);
+  min-height:clamp(320px,46vw,570px);
   overflow:hidden;
-  border:1px solid var(--cinema-line);
+  border:1px solid color-mix(in srgb,var(--cinema-line-strong) 72%,transparent);
   border-radius:var(--cinema-radius-xl);
-  background:#0c1220;
+  background:
+    radial-gradient(circle at 78% 24%,color-mix(in srgb,var(--cinema-accent) 16%,transparent),transparent 34%),
+    #0c1220;
   box-shadow:var(--cinema-shadow-heavy);
+  isolation:isolate;
+}
+
+.cinema-hero::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 78% 20%,color-mix(in srgb,var(--cinema-accent-2) 13%,transparent),transparent 32%),
+    linear-gradient(135deg,rgba(255,255,255,.035),transparent 42%);
+  opacity:.9;
 }
 
 .cinema-hero__backdrop{
   position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
+  inset:-1.5%;
+  width:103%;
+  height:103%;
   object-fit:cover;
   object-position:center;
-  filter:saturate(.95) contrast(1.03);
-  transform:scale(1.012);
+  filter:saturate(.98) contrast(1.05) brightness(.78);
+  transform:scale(1.018);
+  transition:filter .45s ease,transform .7s cubic-bezier(.2,.72,.2,1);
+}
+
+.cinema-hero__backdrop--poster-fallback{
+  filter:blur(13px) saturate(.9) contrast(1.04) brightness(.55);
+  transform:scale(1.09);
 }
 
 .cinema-hero::after{
   content:"";
   position:absolute;
   inset:0;
+  z-index:1;
+  pointer-events:none;
   background:
-    linear-gradient(90deg,rgba(3,5,12,.94) 0%,rgba(3,5,12,.68) 42%,rgba(3,5,12,.20) 72%,rgba(3,5,12,.48) 100%),
-    linear-gradient(0deg,rgba(3,5,12,.92) 0%,transparent 45%,rgba(3,5,12,.18) 100%);
+    linear-gradient(90deg,rgba(3,5,12,.97) 0%,rgba(3,5,12,.82) 34%,rgba(3,5,12,.42) 62%,rgba(3,5,12,.22) 78%,rgba(3,5,12,.55) 100%),
+    linear-gradient(0deg,rgba(3,5,12,.96) 0%,rgba(3,5,12,.22) 48%,rgba(3,5,12,.28) 100%),
+    radial-gradient(circle at 74% 42%,transparent 0%,rgba(3,5,12,.18) 54%,rgba(3,5,12,.55) 100%);
 }
 
 .cinema-hero__content{
   position:relative;
-  z-index:1;
+  z-index:2;
   min-height:inherit;
   display:flex;
   align-items:flex-end;
-  padding:clamp(24px,5vw,58px);
+  padding:clamp(28px,5vw,62px);
 }
 
 .cinema-hero__body{
-  width:min(650px,100%);
+  width:min(690px,100%);
 }
 
 .cinema-hero__eyebrow{
@@ -240,6 +264,68 @@
   gap:10px;
   margin-top:22px;
   flex-wrap:wrap;
+}
+
+.cinema-hero__original{
+  margin-top:9px;
+  color:#aeb9cc;
+  font-size:.76rem;
+  font-weight:700;
+  letter-spacing:.02em;
+}
+
+.cinema-hero__meta--facts{
+  gap:8px;
+  margin-top:14px;
+}
+
+.cinema-hero__meta--facts > span:not(.cinema-card__badge){
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+  min-height:30px;
+  padding:5px 9px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;
+  background:rgba(8,12,22,.42);
+  color:#e4e9f3;
+  backdrop-filter:blur(12px) saturate(125%);
+  -webkit-backdrop-filter:blur(12px) saturate(125%);
+}
+
+.cinema-hero__type{
+  position:static;
+  min-height:30px;
+  padding:5px 10px;
+  border-color:color-mix(in srgb,var(--cinema-accent) 34%,rgba(255,255,255,.13));
+  background:color-mix(in srgb,var(--cinema-accent) 13%,rgba(8,12,22,.48));
+}
+
+.cinema-hero__rating{
+  color:#ffe08a !important;
+}
+
+.cinema-hero__meta--genres{
+  gap:7px;
+  margin-top:11px;
+}
+
+.cinema-hero__meta--genres span{
+  padding:4px 8px;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:999px;
+  color:#c5cede;
+  background:rgba(255,255,255,.035);
+  font-size:.72rem;
+}
+
+.cinema-hero__actions .cinema-action-btn{
+  min-height:46px;
+  border-radius:14px;
+}
+
+.cinema-hero__actions .cinema-action-btn--primary{
+  min-width:116px;
 }
 
 /* =========================================================
@@ -1105,22 +1191,60 @@
   }
 
   .cinema-hero{
-    min-height:410px;
+    min-height:430px;
     border-radius:23px;
+  }
+
+  .cinema-hero__backdrop{
+    object-position:58% center;
   }
 
   .cinema-hero__content{
     align-items:flex-end;
-    padding:22px 18px;
+    padding:24px 18px 20px;
   }
 
   .cinema-hero__title{
-    font-size:clamp(1.8rem,8vw,2.5rem);
+    font-size:clamp(1.9rem,8.6vw,2.65rem);
+    line-height:1.04;
+  }
+
+  .cinema-hero__original{
+    margin-top:7px;
+    font-size:.68rem;
+  }
+
+  .cinema-hero__meta--facts{
+    gap:6px;
+    margin-top:12px;
+  }
+
+  .cinema-hero__meta--facts > span:not(.cinema-card__badge){
+    min-height:28px;
+    padding:4px 8px;
+    font-size:.68rem;
   }
 
   .cinema-hero__description{
+    margin-top:13px;
     font-size:.78rem;
-    line-height:1.9;
+    line-height:1.85;
+  }
+
+  .cinema-hero__meta--genres{
+    margin-top:9px;
+  }
+
+  .cinema-hero__meta--genres span{
+    font-size:.65rem;
+  }
+
+  .cinema-hero__actions{
+    margin-top:17px;
+  }
+
+  .cinema-hero__actions .cinema-action-btn{
+    min-height:44px;
   }
 
   .cinema-grid,
