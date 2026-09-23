@@ -591,12 +591,6 @@
           '<button class="cinema-card__play" type="button" data-cinema-open-id="' + escapeHtml(item.id) + '" aria-label="بینینی ' + escapeHtml(title) + '">',
             '<i class="fa-solid fa-play"></i>',
           '</button>',
-          '<div class="cinema-card__glass">',
-            '<h3 class="cinema-card__title">' + escapeHtml(title) + '</h3>',
-            Number.isFinite(Number(item.rating))
-              ? '<span class="cinema-card__rating"><i class="fa-solid fa-star"></i> ' + escapeHtml(formatRating(item.rating)) + '</span>'
-              : "",
-          '</div>',
         '</div>',
         '<div class="cinema-card__body">',
           '<h3 class="cinema-card__name">' + escapeHtml(title) + '</h3>',

@@ -1283,22 +1283,32 @@
   }
 
   .cinema-card__name{
-    font-size:.79rem;
+    font-size:.84rem;
   }
 
   .cinema-card__meta{
-    font-size:.60rem;
+    gap:5px;
+    margin-top:5px;
+    font-size:.66rem;
+    line-height:1.5;
   }
 
   .cinema-card__description{
-    font-size:.63rem;
+    margin-top:6px;
+    font-size:.66rem;
+    line-height:1.7;
   }
 
   .cinema-card__play{
     width:46px;
     height:46px;
-    opacity:1;
+    opacity:0;
     transform:translate(-50%,-50%) scale(.92);
+  }
+
+  .cinema-card:active .cinema-card__play{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(.96);
   }
 
   .cinema-wide-grid{
