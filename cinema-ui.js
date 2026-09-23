@@ -392,13 +392,45 @@
     var hero = document.getElementById("cinemaHero");
 
     if (hero) {
-      hero.innerHTML = '<div class="cinema-skeleton-grid"><div class="cinema-skeleton-card"></div><div class="cinema-skeleton-card"></div><div class="cinema-skeleton-card"></div></div>';
+      hero.innerHTML = [
+        '<div class="cinema-skeleton-hero" aria-hidden="true">',
+          '<div class="cinema-skeleton-hero__backdrop"></div>',
+          '<div class="cinema-skeleton-hero__content">',
+            '<div class="cinema-skeleton-hero__body">',
+              '<span class="cinema-skeleton-line cinema-skeleton-line--eyebrow"></span>',
+              '<span class="cinema-skeleton-line cinema-skeleton-line--title"></span>',
+              '<span class="cinema-skeleton-line cinema-skeleton-line--original"></span>',
+              '<div class="cinema-skeleton-hero__facts">',
+                '<span class="cinema-skeleton-pill"></span>',
+                '<span class="cinema-skeleton-pill"></span>',
+                '<span class="cinema-skeleton-pill cinema-skeleton-pill--short"></span>',
+              '</div>',
+              '<div class="cinema-skeleton-hero__description">',
+                '<span class="cinema-skeleton-line cinema-skeleton-line--description"></span>',
+                '<span class="cinema-skeleton-line cinema-skeleton-line--description cinema-skeleton-line--description-short"></span>',
+              '</div>',
+              '<div class="cinema-skeleton-hero__actions">',
+                '<span class="cinema-skeleton-button cinema-skeleton-button--primary"></span>',
+                '<span class="cinema-skeleton-button"></span>',
+              '</div>',
+            '</div>',
+          '</div>',
+        '</div>'
+      ].join("");
     }
 
     if (grid) {
       grid.innerHTML = [1, 2, 3, 4, 5, 6]
         .map(function () {
-          return '<article class="cinema-skeleton-card"></article>';
+          return [
+            '<article class="cinema-skeleton-card" aria-hidden="true">',
+              '<div class="cinema-skeleton-card__poster"></div>',
+              '<div class="cinema-skeleton-card__body">',
+                '<span class="cinema-skeleton-card__title"></span>',
+                '<span class="cinema-skeleton-card__meta"></span>',
+              '</div>',
+            '</article>'
+          ].join("");
         })
         .join("");
     }
