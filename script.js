@@ -5792,42 +5792,6 @@
 
 
   /* =======================================================
-     GLOBAL SEARCH SUPPORT
-     ======================================================= */
-
-  var globalSearch =
-    $("globalSearchInput");
-
-  if (
-    globalSearch
-  ) {
-    globalSearch.addEventListener(
-      "input",
-      function () {
-        query =
-          this.value.trim();
-
-        renderBooks();
-
-        var target =
-          $("globalSearchResults");
-
-        var source =
-          $("bookList");
-
-        if (
-          target &&
-          source
-        ) {
-          target.innerHTML =
-            source.innerHTML;
-        }
-      }
-    );
-  }
-
-
-  /* =======================================================
      AUDIO EVENTS
      ======================================================= */
 
@@ -6551,18 +6515,6 @@
         renderFavorites();
       }
 
-      if (route === "search") {
-        var searchTarget = $("globalSearchResults");
-        var searchSource = $("bookList");
-
-        if (
-          searchTarget &&
-          searchSource
-        ) {
-          searchTarget.innerHTML =
-            searchSource.innerHTML;
-        }
-      }
     }
   );
 
@@ -6678,6 +6630,19 @@
 
     authState:
       authState,
+
+    getBooks:
+      function () {
+        return books.slice();
+      },
+
+    getMusic:
+      function () {
+        return music.slice();
+      },
+
+    openBook:
+      openBook,
 
     reloadFromSupabase:
       function () {
