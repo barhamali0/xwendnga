@@ -542,6 +542,170 @@
     }
 
   </style>
+  <style id="xwendnga-search-ui-foundation">
+    .xwendnga-search-view{
+      min-width:0;
+    }
+
+    .xwendnga-search-head{
+      margin-bottom:14px;
+    }
+
+    .xwendnga-search-bar{
+      position:relative;
+      isolation:isolate;
+      min-height:58px;
+      margin:0;
+      border-radius:20px;
+      overflow:hidden;
+    }
+
+    .xwendnga-search-bar i{
+      z-index:2;
+      pointer-events:none;
+    }
+
+    .xwendnga-search-bar input{
+      min-width:0;
+      width:100%;
+    }
+
+    .xwendnga-search-chips{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      margin:12px 0 18px;
+      padding:3px 1px;
+      overflow-x:auto;
+      overflow-y:hidden;
+      scrollbar-width:none;
+      -webkit-overflow-scrolling:touch;
+      scroll-snap-type:x proximity;
+    }
+
+    .xwendnga-search-chips::-webkit-scrollbar{
+      display:none;
+    }
+
+    .xwendnga-search-chip{
+      flex:0 0 auto;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:7px;
+      min-height:42px;
+      padding:0 15px;
+      border:1px solid rgba(255,255,255,.10);
+      border-radius:999px;
+      background:rgba(255,255,255,.045);
+      color:rgba(255,255,255,.72);
+      font:inherit;
+      font-weight:700;
+      white-space:nowrap;
+      cursor:pointer;
+      scroll-snap-align:start;
+      transition:transform .18s ease,background .18s ease,border-color .18s ease,color .18s ease,box-shadow .18s ease;
+    }
+
+    .xwendnga-search-chip i{
+      font-size:.86em;
+      opacity:.86;
+    }
+
+    .xwendnga-search-chip:hover{
+      transform:translateY(-1px);
+      color:#fff;
+      background:rgba(255,255,255,.075);
+      border-color:rgba(255,255,255,.16);
+    }
+
+    .xwendnga-search-chip.is-active{
+      color:#fff;
+      background:rgba(255,255,255,.12);
+      border-color:rgba(255,255,255,.24);
+      box-shadow:0 8px 24px rgba(0,0,0,.16);
+    }
+
+    .xwendnga-search-chip:focus-visible{
+      outline:2px solid currentColor;
+      outline-offset:2px;
+    }
+
+    .xwendnga-search-results{
+      min-width:0;
+    }
+
+    .xwendnga-search-empty{
+      grid-column:1/-1;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      min-height:230px;
+      padding:28px 18px;
+      text-align:center;
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:24px;
+      background:rgba(255,255,255,.025);
+    }
+
+    .xwendnga-search-empty-icon{
+      display:grid;
+      place-items:center;
+      width:56px;
+      height:56px;
+      margin-bottom:13px;
+      border-radius:18px;
+      background:rgba(255,255,255,.07);
+      color:rgba(255,255,255,.75);
+      font-size:20px;
+    }
+
+    .xwendnga-search-empty h3{
+      margin:0 0 7px;
+      color:#fff;
+      font-size:16px;
+      font-weight:800;
+    }
+
+    .xwendnga-search-empty p{
+      max-width:420px;
+      margin:0;
+      color:rgba(255,255,255,.52);
+      font-size:13px;
+      line-height:1.8;
+    }
+
+    @media (max-width:640px){
+      .xwendnga-search-head{
+        margin-bottom:11px;
+      }
+
+      .xwendnga-search-bar{
+        min-height:54px;
+        border-radius:18px;
+      }
+
+      .xwendnga-search-chips{
+        gap:7px;
+        margin-top:10px;
+        margin-bottom:14px;
+        padding-inline:0;
+      }
+
+      .xwendnga-search-chip{
+        min-height:40px;
+        padding-inline:13px;
+        font-size:13px;
+      }
+
+      .xwendnga-search-empty{
+        min-height:200px;
+        border-radius:20px;
+      }
+    }
+  </style>
+
 </head>
 
 <body>
@@ -2080,7 +2244,8 @@
 
 
       <!-- =================================================
-           SEARCH VIEW
+           SEARCH VIEW — PHASE 4A-1
+           SEARCH UI FOUNDATION
            ================================================= -->
 
       <section
@@ -2088,9 +2253,9 @@
         data-app-view="search"
       >
 
-        <section class="section">
+        <section class="section xwendnga-search-view">
 
-          <div class="section-head">
+          <div class="section-head xwendnga-search-head">
 
             <div>
 
@@ -2107,16 +2272,16 @@
           </div>
 
 
-          <div class="hero-search">
+          <div class="hero-search xwendnga-search-bar">
 
-            <i class="fa-solid fa-magnifying-glass"></i>
+            <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
 
             <input
               id="globalSearchInput"
               type="search"
               inputmode="search"
               autocomplete="off"
-              placeholder="گەڕان بۆ کتێب، نووسەر یان پۆل..."
+              placeholder="لە خوێندنگەدا بگەڕێ..."
               aria-label="گەڕانی گشتی"
             >
 
@@ -2124,9 +2289,86 @@
 
 
           <div
+            class="xwendnga-search-chips"
+            id="globalSearchFilters"
+            role="tablist"
+            aria-label="جۆری ئەنجامەکانی گەڕان"
+          >
+
+            <button
+              class="xwendnga-search-chip is-active"
+              type="button"
+              role="tab"
+              aria-selected="true"
+              data-search-filter="all"
+            >
+              <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+              <span>هەموو</span>
+            </button>
+
+            <button
+              class="xwendnga-search-chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-search-filter="cinema"
+            >
+              <i class="fa-solid fa-film" aria-hidden="true"></i>
+              <span>سینەما</span>
+            </button>
+
+            <button
+              class="xwendnga-search-chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-search-filter="books"
+            >
+              <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+              <span>کتێب</span>
+            </button>
+
+            <button
+              class="xwendnga-search-chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-search-filter="music"
+            >
+              <i class="fa-solid fa-music" aria-hidden="true"></i>
+              <span>موزیک</span>
+            </button>
+
+            <button
+              class="xwendnga-search-chip"
+              type="button"
+              role="tab"
+              aria-selected="false"
+              data-search-filter="members"
+            >
+              <i class="fa-solid fa-user-group" aria-hidden="true"></i>
+              <span>ئەندامان</span>
+            </button>
+
+          </div>
+
+
+          <div
             id="globalSearchResults"
-            class="grid book-grid"
-          ></div>
+            class="grid book-grid xwendnga-search-results"
+            data-search-results="all"
+            aria-live="polite"
+          >
+
+            <div class="xwendnga-search-empty" data-search-empty>
+              <div class="xwendnga-search-empty-icon">
+                <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
+              </div>
+              <h3>لە خوێندنگەدا بگەڕێ</h3>
+              <p>وشە یان ناوی شتێک بنووسە بۆ دۆزینەوەی ئەنجامەکان.</p>
+            </div>
+
+          </div>
 
         </section>
 
@@ -3840,6 +4082,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <script src="script.js?v=3.5"></script>
+  <script src="search-ui.js?v=4.0.1"></script>
   <script src="reader.js?v=2.6"></script>
   <script src="app.js?v=2.6"></script>
   <script src="cinema-ui.js?v=4.3"></script>
