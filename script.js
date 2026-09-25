@@ -6644,6 +6644,14 @@
     openBook:
       openBook,
 
+    openCinema:
+      function (item) {
+        navigateHomeCinema({
+          kind: "open",
+          item: item
+        });
+      },
+
     reloadFromSupabase:
       function () {
         var booksPromise =

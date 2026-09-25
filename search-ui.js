@@ -255,8 +255,15 @@
 
   function openCinema(item) {
     try {
-      window.dispatchEvent(new CustomEvent("xwendnga:cinema-open", { detail: { item: item } }));
-    } catch (e) { console.warn("Xwendnga Search: cinema open failed.", e); }
+      if (window.AppLib && typeof window.AppLib.openCinema === "function") {
+        window.AppLib.openCinema(item);
+        return;
+      }
+
+      console.warn("Xwendnga Search: AppLib.openCinema is unavailable.");
+    } catch (e) {
+      console.warn("Xwendnga Search: cinema open failed.", e);
+    }
   }
 
   function openBook(item) {
