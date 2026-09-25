@@ -588,6 +588,116 @@
     savedWords: []
   };
 
+  /* =======================================================
+     PUBLIC PROFILE DATA LAYER — PHASE 4B-2
+     Kept completely separate from authState.profile.
+     ======================================================= */
+
+  var publicProfileState = {
+    loading: false,
+    error: null,
+    profile: null,
+    books: [],
+    music: [],
+    requestId: 0
+  };
+
+  function normalizePublicProfileList(value) {
+    return Array.isArray(value) ? value.slice() : [];
+  }
+
+  function normalizePublicProfileResult(row) {
+    var source = row && typeof row === "object" ? row : {};
+
+    return {
+      id: source.id || null,
+      display_name: String(source.display_name || "").trim(),
+      username: String(source.username || "").trim(),
+      avatar_url: String(source.avatar_url || "").trim(),
+      role: String(source.role || "user").trim(),
+      books: normalizePublicProfileList(source.books),
+      music: normalizePublicProfileList(source.music)
+    };
+  }
+
+  function getPublicProfile(profileId) {
+    if (!supabaseReady()) {
+      return Promise.reject(
+        new Error("Supabase بەردەست نییە")
+      );
+    }
+
+    var id = String(profileId || "").trim();
+
+    if (!id) {
+      return Promise.reject(
+        new Error("ناسنامەی پڕۆفایل دیاری نەکراوە")
+      );
+    }
+
+    var requestId = ++publicProfileState.requestId;
+
+    publicProfileState.loading = true;
+    publicProfileState.error = null;
+
+    return supabaseClient
+      .rpc(
+        "get_public_profile",
+        {
+          p_profile_id: id
+        }
+      )
+      .then(function (result) {
+        if (requestId !== publicProfileState.requestId) {
+          return null;
+        }
+
+        if (result && result.error) {
+          throw result.error;
+        }
+
+        var row = Array.isArray(result && result.data)
+          ? (result.data[0] || null)
+          : (result && result.data ? result.data : null);
+
+        if (!row) {
+          throw new Error("پڕۆفایلی گشتی نەدۆزرایەوە");
+        }
+
+        var profile = normalizePublicProfileResult(row);
+
+        publicProfileState.profile = profile;
+        publicProfileState.books = profile.books;
+        publicProfileState.music = profile.music;
+        publicProfileState.loading = false;
+        publicProfileState.error = null;
+
+        return {
+          id: profile.id,
+          display_name: profile.display_name,
+          username: profile.username,
+          avatar_url: profile.avatar_url,
+          role: profile.role,
+          books: profile.books.slice(),
+          music: profile.music.slice()
+        };
+      })
+      .catch(function (error) {
+        if (requestId !== publicProfileState.requestId) {
+          return null;
+        }
+
+        publicProfileState.loading = false;
+        publicProfileState.error = error || new Error("هێنانی پڕۆفایلی گشتی سەرکەوتوو نەبوو");
+        publicProfileState.profile = null;
+        publicProfileState.books = [];
+        publicProfileState.music = [];
+
+        console.error("getPublicProfile:", error);
+        throw error;
+      });
+  }
+
   function favoriteKey(itemType, itemId) {
     return String(itemType || "book") + ":" + String(itemId);
   }
@@ -6615,6 +6725,9 @@
 
     renderProfile:
       renderProfile,
+
+    getPublicProfile:
+      getPublicProfile,
 
     renderSettingsPage:
       renderSettingsPage,

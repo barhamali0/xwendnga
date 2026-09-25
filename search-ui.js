@@ -82,17 +82,24 @@
       var safeQuery = String(query).replace(/[%_,]/g, "").trim();
       if (!safeQuery) return [];
 
-      var response = await client
-        .from("profiles")
-        .select("id, display_name, username, avatar_url")
-        .or("display_name.ilike.%" + safeQuery + "%,username.ilike.%" + safeQuery + "%")
-        .limit(20);
+      var response = await client.rpc(
+        "search_public_members",
+        {
+          p_query: safeQuery,
+          p_limit: 20
+        }
+      );
 
       if (response && response.error) {
+        console.warn("Xwendnga Search: public member search failed.", response.error);
         return [];
       }
-      return response && Array.isArray(response.data) ? response.data : [];
+
+      return response && Array.isArray(response.data)
+        ? response.data
+        : [];
     } catch (e) {
+      console.warn("Xwendnga Search: public member search failed.", e);
       return [];
     }
   }
