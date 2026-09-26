@@ -1,7 +1,7 @@
 /* =========================================================
    XWENDNGA — PROFILE UI
-   Phase 4B-6-C / Part 1
-   Public Profile + My Profile Edit UI module
+   Phase 4B-6-C / Part 2
+   Public Profile + My Profile Edit UI + My Profile renderer module
    ---------------------------------------------------------
    Scope:
    - Public Profile UI.
@@ -427,7 +427,7 @@
     return section;
   }
 
-  function renderProfile(profile) {
+  function renderPublicProfile(profile) {
     clearContent();
     content.appendChild(renderHero(profile));
     content.appendChild(renderStats(profile));
@@ -443,6 +443,287 @@
     ));
   }
 
+
+  /* =========================================================
+     MY PROFILE RENDERER — PHASE 4B-6-C / PART 2
+     Main My Profile UI lives in this module.
+     Auth Core / Session remain in script.js and are consumed
+     through window.AppLib only.
+     ========================================================= */
+
+  function htmlEscape(value) {
+    return String(value == null ? "" : value).replace(/[&<>"']/g, function (char) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      }[char];
+    });
+  }
+
+  function normalizeMyProfileUsername(value) {
+    return String(value == null ? "" : value)
+      .trim()
+      .replace(/^@+/, "")
+      .trim();
+  }
+
+  function getMyProfileData() {
+    var api = appLib();
+    var currentAuth = authState();
+
+    if (!api || !currentAuth) {
+      return {
+        api: api,
+        auth: currentAuth,
+        books: [],
+        music: []
+      };
+    }
+
+    var bookItems = [];
+    var musicItems = [];
+
+    if (typeof api.getBooks === "function") {
+      try {
+        bookItems = api.getBooks();
+      } catch (error) {
+        console.warn("Xwendnga My Profile — getBooks:", error);
+        bookItems = [];
+      }
+    }
+
+    if (typeof api.getMusic === "function") {
+      try {
+        musicItems = api.getMusic();
+      } catch (error) {
+        console.warn("Xwendnga My Profile — getMusic:", error);
+        musicItems = [];
+      }
+    }
+
+    return {
+      api: api,
+      auth: currentAuth,
+      books: Array.isArray(bookItems) ? bookItems : [],
+      music: Array.isArray(musicItems) ? musicItems : []
+    };
+  }
+
+  function myProfileUsage(items, userId) {
+    if (!Array.isArray(items) || !userId) return 0;
+
+    return items.filter(function (item) {
+      return item &&
+        String(item.ownerId || "") === String(userId) &&
+        (item.status === "pending" || item.status === "approved");
+    }).length;
+  }
+
+  function myProfileOwnedItems(items, userId) {
+    if (!Array.isArray(items) || !userId) return [];
+
+    return items.filter(function (item) {
+      return item && String(item.ownerId || "") === String(userId);
+    });
+  }
+
+  function myProfileStatusLabel(status) {
+    if (status === "approved") return "پەسەندکراو";
+    if (status === "rejected") return "ڕەتکراوە";
+    return "چاوەڕوان";
+  }
+
+  function myProfileStatusClass(status) {
+    if (status === "approved") return "is-approved";
+    if (status === "rejected") return "is-rejected";
+    return "is-pending";
+  }
+
+  function renderMyProfile() {
+    var page = document.querySelector(
+      "[data-app-view='profile'] .profile-page"
+    );
+
+    if (!page) return false;
+
+    var data = getMyProfileData();
+    var api = data.api;
+    var currentAuth = data.auth;
+
+    if (!currentAuth || !currentAuth.user) {
+      page.innerHTML =
+        '<div class="xwendnga-my-profile-hero profile-hero">' +
+          '<div class="xwendnga-my-profile-avatar-wrap profile-avatar-wrap">' +
+            '<div class="xwendnga-my-profile-avatar profile-avatar"><i class="fa-solid fa-user-lock"></i></div>' +
+          '</div>' +
+          '<div class="xwendnga-my-profile-intro profile-intro">' +
+            '<div class="xwendnga-my-profile-kicker section-kicker">ACCOUNT</div>' +
+            '<h2 class="xwendnga-my-profile-name section-title">هەژمارێکت دروست بکە</h2>' +
+            '<p class="xwendnga-my-profile-welcome profile-welcome">بە Login ـکردن دڵخوازەکان و وشە خەزنکراوەکانت لەگەڵت لە هەموو ئامێرێک دەمێننەوە.</p>' +
+          '</div>' +
+        '</div>' +
+        '<div class="xwendnga-my-profile-menu profile-menu">' +
+          '<button class="xwendnga-my-profile-menu-item profile-menu-item" type="button" data-action="auth-login">' +
+            '<span class="xwendnga-my-profile-menu-icon profile-menu-icon"><i class="fa-solid fa-right-to-bracket"></i></span>' +
+            '<span class="xwendnga-my-profile-menu-copy profile-menu-copy"><strong>چوونەژوورەوە</strong><small>بچۆ ناو هەژمارەکەت</small></span>' +
+            '<i class="xwendnga-my-profile-menu-arrow profile-menu-arrow fa-solid fa-chevron-left"></i>' +
+          '</button>' +
+          '<button class="xwendnga-my-profile-menu-item profile-menu-item" type="button" data-action="auth-signup">' +
+            '<span class="xwendnga-my-profile-menu-icon profile-menu-icon"><i class="fa-solid fa-user-plus"></i></span>' +
+            '<span class="xwendnga-my-profile-menu-copy profile-menu-copy"><strong>دروستکردنی هەژمار</strong><small>ئەکاونتێکی نوێ دروست بکە</small></span>' +
+            '<i class="xwendnga-my-profile-menu-arrow profile-menu-arrow fa-solid fa-chevron-left"></i>' +
+          '</button>' +
+        '</div>';
+      return true;
+    }
+
+    var profile = currentAuth.profile || {};
+    var roleLabelValue = currentAuth.isAdmin
+      ? "OWNER / ADMIN 👑"
+      : (currentAuth.role === "premium" ? "PREMIUM" : "USER");
+
+    var profileName = String(profile.display_name || "").trim() || "بێ ناو";
+    var profileUsername = normalizeMyProfileUsername(profile.username || "");
+
+    var planText = currentAuth.isAdmin
+      ? "دەسەڵاتی تەواوی پلاتفۆرم"
+      : currentAuth.role === "premium"
+        ? (profile.premium_until
+            ? "Premium ـی چالاک تا " + new Date(profile.premium_until).toLocaleDateString("ku-IQ")
+            : "Premium ـی چالاک")
+        : "سنووری نێردان: 3 کتێب + 5 موزیک";
+
+    var bookLimit = currentAuth.isAdmin
+      ? "∞"
+      : (profile.book_limit != null ? profile.book_limit : "3");
+
+    var musicLimit = currentAuth.isAdmin
+      ? "∞"
+      : (profile.music_limit != null ? profile.music_limit : "5");
+
+    var userId = String(currentAuth.user.id || "");
+    var bookUsage = myProfileUsage(data.books, userId);
+    var musicUsage = myProfileUsage(data.music, userId);
+    var myBooks = myProfileOwnedItems(data.books, userId);
+    var myMusic = myProfileOwnedItems(data.music, userId);
+    var favoriteCount = Object.keys(currentAuth.favorites || {}).length;
+    var vocabCount = Array.isArray(currentAuth.savedWords)
+      ? currentAuth.savedWords.length
+      : 0;
+
+    var avatarMarkup = profile.avatar_url
+      ? '<img src="' + htmlEscape(profile.avatar_url) + '" alt="">'
+      : '<i class="fa-solid ' + (currentAuth.isAdmin ? "fa-crown" : "fa-user") + '"></i>';
+
+    page.innerHTML =
+      '<div class="xwendnga-my-profile-hero profile-hero">' +
+        '<div class="xwendnga-my-profile-avatar-wrap profile-avatar-wrap">' +
+          '<div class="xwendnga-my-profile-avatar xwendnga-my-profile-avatar--public profile-public-avatar">' + avatarMarkup + '</div>' +
+        '</div>' +
+        '<div class="xwendnga-my-profile-intro profile-intro">' +
+          '<div class="xwendnga-my-profile-kicker section-kicker">' + roleLabelValue + '</div>' +
+          '<h2 class="xwendnga-my-profile-name section-title">' + htmlEscape(profileName) + '</h2>' +
+          '<div class="xwendnga-my-profile-username profile-username">' +
+            (profileUsername ? "@" + htmlEscape(profileUsername) : "@username") +
+          '</div>' +
+          '<p class="xwendnga-my-profile-welcome profile-welcome">' + planText + '</p>' +
+        '</div>' +
+      '</div>' +
+      '<button class="xwendnga-my-profile-edit-button primary" type="button" data-action="edit-profile">' +
+        '<i class="fa-solid fa-user-pen"></i> دەستکاریی پڕۆفایل' +
+      '</button>' +
+      '<div class="xwendnga-my-profile-usage">' +
+        '<div class="xwendnga-my-profile-usage-grid">' +
+          '<div class="xwendnga-my-profile-usage-card">' +
+            '<small class="xwendnga-my-profile-usage-label">کتێب</small>' +
+            '<strong class="xwendnga-my-profile-usage-value">' + bookUsage + ' / ' + bookLimit + '</strong>' +
+          '</div>' +
+          '<div class="xwendnga-my-profile-usage-card">' +
+            '<small class="xwendnga-my-profile-usage-label">موزیک</small>' +
+            '<strong class="xwendnga-my-profile-usage-value">' + musicUsage + ' / ' + musicLimit + '</strong>' +
+          '</div>' +
+        '</div>' +
+        '<div class="xwendnga-my-profile-menu profile-menu">' +
+          '<button class="xwendnga-my-profile-menu-item profile-menu-item" type="button" data-nav="favorites">' +
+            '<span class="xwendnga-my-profile-menu-icon profile-menu-icon"><i class="fa-solid fa-heart"></i></span>' +
+            '<span class="xwendnga-my-profile-menu-copy profile-menu-copy"><strong>دڵخوازەکانم</strong><small>' + favoriteCount + ' دانە</small></span>' +
+            '<i class="xwendnga-my-profile-menu-arrow profile-menu-arrow fa-solid fa-chevron-left"></i>' +
+          '</button>' +
+          '<button class="xwendnga-my-profile-menu-item profile-menu-item" type="button" data-nav="vocab">' +
+            '<span class="xwendnga-my-profile-menu-icon profile-menu-icon"><i class="fa-solid fa-language"></i></span>' +
+            '<span class="xwendnga-my-profile-menu-copy profile-menu-copy"><strong>وشەکانم</strong><small>' + vocabCount + ' وشە</small></span>' +
+            '<i class="xwendnga-my-profile-menu-arrow profile-menu-arrow fa-solid fa-chevron-left"></i>' +
+          '</button>' +
+          '<button class="xwendnga-my-profile-menu-item profile-menu-item" type="button" data-action="premium-info">' +
+            '<span class="xwendnga-my-profile-menu-icon profile-menu-icon"><i class="fa-solid fa-crown"></i></span>' +
+            '<span class="xwendnga-my-profile-menu-copy profile-menu-copy"><strong>' +
+              (currentAuth.role === "premium" || currentAuth.isAdmin ? "پلانی ئێستا" : "Upgrade to Premium") +
+            '</strong><small>' +
+              (currentAuth.isAdmin ? "Owner" : currentAuth.role === "premium" ? "Premium" : "پارەدان بە دەستی لە Telegram") +
+            '</small></span>' +
+            '<i class="xwendnga-my-profile-menu-arrow profile-menu-arrow fa-solid fa-chevron-left"></i>' +
+          '</button>' +
+          (currentAuth.isAdmin
+            ? '<button class="xwendnga-my-profile-menu-item profile-menu-item" type="button" data-action="owner-panel">' +
+                '<span class="xwendnga-my-profile-menu-icon profile-menu-icon"><i class="fa-solid fa-crown"></i></span>' +
+                '<span class="xwendnga-my-profile-menu-copy profile-menu-copy"><strong>پانێڵی بەڕێوەبەر</strong><small>کۆنترۆڵی هەموو پلاتفۆرم</small></span>' +
+                '<i class="xwendnga-my-profile-menu-arrow profile-menu-arrow fa-solid fa-chevron-left"></i>' +
+              '</button>'
+            : "") +
+          '<button class="xwendnga-my-profile-menu-item profile-menu-item" type="button" data-action="auth-signout">' +
+            '<span class="xwendnga-my-profile-menu-icon profile-menu-icon"><i class="fa-solid fa-right-from-bracket"></i></span>' +
+            '<span class="xwendnga-my-profile-menu-copy profile-menu-copy"><strong>دەرچوون</strong><small>لە هەژمارەکەت دەرچۆ</small></span>' +
+            '<i class="xwendnga-my-profile-menu-arrow profile-menu-arrow fa-solid fa-chevron-left"></i>' +
+          '</button>' +
+        '</div>' +
+        '<div class="xwendnga-my-profile-submissions">' +
+          '<strong class="xwendnga-my-profile-submissions-title">ناوەڕۆکی من</strong>' +
+          '<div class="xwendnga-my-profile-submissions-list" id="mySubmissionsList"></div>' +
+        '</div>' +
+      '</div>';
+
+    var subBox = document.getElementById("mySubmissionsList");
+    if (subBox) {
+      var rows = [];
+
+      myBooks.forEach(function (book) {
+        var status = String(book.status || "pending").toLowerCase();
+        rows.push(
+          '<div class="xwendnga-my-profile-submission">' +
+            '<span class="xwendnga-my-profile-submission-title">' +
+              htmlEscape(book.title || "") +
+            '</span>' +
+            '<small class="xwendnga-my-profile-submission-status ' + myProfileStatusClass(status) + '">' +
+              myProfileStatusLabel(status) +
+            '</small>' +
+          '</div>'
+        );
+      });
+
+      myMusic.forEach(function (track) {
+        var status = String(track.status || "pending").toLowerCase();
+        rows.push(
+          '<div class="xwendnga-my-profile-submission">' +
+            '<span class="xwendnga-my-profile-submission-title">' +
+              htmlEscape(track.name || "") +
+            '</span>' +
+            '<small class="xwendnga-my-profile-submission-status ' + myProfileStatusClass(status) + '">' +
+              myProfileStatusLabel(status) +
+            '</small>' +
+          '</div>'
+        );
+      });
+
+      subBox.innerHTML = rows.length
+        ? rows.join("")
+        : '<small class="xwendnga-my-profile-submissions-empty">هێشتا هیچ ناوەڕۆکێکت نەناردووە.</small>';
+    }
+
+    return true;
+  }
 
   /* =========================================================
      MY PROFILE EDIT UI — PHASE 4B-6-C / PART 1
@@ -911,9 +1192,7 @@
         editState.saving = false;
         closeProfileEdit();
 
-        if (api && typeof api.renderProfile === "function") {
-          api.renderProfile();
-        }
+        renderMyProfile();
 
         showProfileToast("پڕۆفایل پاشەکەوت کرا");
       })
@@ -1043,7 +1322,7 @@
         state.loading = false;
         state.error = null;
         state.profile = profile;
-        renderProfile(profile);
+        renderPublicProfile(profile);
       })
       .catch(function (error) {
         if (token !== state.requestToken) return;
@@ -1096,12 +1375,18 @@
     initMyProfileEditUI();
 
     state.ready = true;
+
+    if (window.XwendngaApp && typeof window.XwendngaApp.getRoute === "function" && window.XwendngaApp.getRoute() === "profile") {
+      renderMyProfile();
+    }
   }
 
   window[MODULE_NAME] = {
     init: init,
     open: loadProfile,
     close: closeSheet,
+    renderMyProfile: renderMyProfile,
+    renderPublicProfile: renderPublicProfile,
     openMyProfileEdit: openProfileEdit,
     closeMyProfileEdit: closeProfileEdit,
     saveMyProfileEdits: saveProfileEdits,

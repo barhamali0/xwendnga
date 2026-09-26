@@ -7376,88 +7376,32 @@
     return Promise.resolve(false);
   }
 
+  /* =======================================================
+     PROFILE RENDER BRIDGE — PHASE 4B-6-C / PART 2
+     Main My Profile UI now belongs to profile-ui.js.
+     Keep the legacy global entry point so existing call sites
+     continue to work without owning Profile UI logic here.
+     ======================================================= */
+
   function renderProfile() {
-    var page = document.querySelector("[data-app-view='profile'] .profile-page");
-    if (!page) return;
-
-    if (!authState.user) {
-      page.innerHTML =
-        '<div class="profile-hero"><div class="profile-avatar-wrap"><div class="profile-avatar"><i class="fa-solid fa-user-lock"></i></div></div><div class="profile-intro"><div class="section-kicker">ACCOUNT</div><h2 class="section-title">هەژمارێکت دروست بکە</h2><p class="profile-welcome">بە Login ـکردن دڵخوازەکان و وشە خەزنکراوەکانت لەگەڵت لە هەموو ئامێرێک دەمێننەوە.</p></div></div>' +
-        '<div class="profile-menu"><button class="profile-menu-item" type="button" data-action="auth-login"><span class="profile-menu-icon"><i class="fa-solid fa-right-to-bracket"></i></span><span class="profile-menu-copy"><strong>چوونەژوورەوە</strong><small>بچۆ ناو هەژمارەکەت</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
-        '<button class="profile-menu-item" type="button" data-action="auth-signup"><span class="profile-menu-icon"><i class="fa-solid fa-user-plus"></i></span><span class="profile-menu-copy"><strong>دروستکردنی هەژمار</strong><small>ئەکاونتێکی نوێ دروست بکە</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button></div>';
-      return;
+    if (
+      window.XwendngaProfileUI &&
+      typeof window.XwendngaProfileUI.renderMyProfile === "function"
+    ) {
+      return window.XwendngaProfileUI.renderMyProfile();
     }
 
-    var profile = authState.profile || {};
-    var roleLabel = authState.isAdmin ? "OWNER / ADMIN 👑" : (authState.role === "premium" ? "PREMIUM" : "USER");
-    var profileName = String(profile.display_name || "").trim() || "بێ ناو";
-    var profileUsername = normalizeUsername(profile.username || "");
-    var profileEmail = esc(authState.user.email || "");
-    var planText = authState.isAdmin
-      ? "دەسەڵاتی تەواوی پلاتفۆرم"
-      : authState.role === "premium"
-        ? (profile.premium_until
-            ? "Premium ـی چالاک تا " + new Date(profile.premium_until).toLocaleDateString("ku-IQ")
-            : "Premium ـی چالاک")
-        : "سنووری نێردان: 3 کتێب + 5 موزیک";
+    window.setTimeout(function () {
+      if (
+        window.XwendngaProfileUI &&
+        typeof window.XwendngaProfileUI.renderMyProfile === "function"
+      ) {
+        window.XwendngaProfileUI.renderMyProfile();
+      }
+    }, 0);
 
-    var bookLimit = authState.isAdmin ? "∞" : (profile.book_limit != null ? profile.book_limit : "3");
-    var musicLimit = authState.isAdmin ? "∞" : (profile.music_limit != null ? profile.music_limit : "5");
-    var bookUsage = userBookUsage();
-    var musicUsage = userMusicUsage();
-
-    var myBooks = books.filter(function (book) {
-      return authState.user && book.ownerId === authState.user.id;
-    });
-    var myMusic = music.filter(function (track) {
-      return authState.user && track.ownerId === authState.user.id;
-    });
-
-    var avatarMarkup = profile.avatar_url
-      ? '<img src="' + esc(profile.avatar_url) + '" alt="">'
-      : '<i class="fa-solid ' + (authState.isAdmin ? 'fa-crown' : 'fa-user') + '"></i>';
-
-    page.innerHTML =
-      '<div class="profile-hero">' +
-        '<div class="profile-public-avatar">' + avatarMarkup + '</div>' +
-        '<div class="profile-intro">' +
-          '<div class="section-kicker">' + roleLabel + '</div>' +
-          '<h2 class="section-title">' + esc(profileName) + '</h2>' +
-          '<div class="profile-username">' + (profileUsername ? '@' + esc(profileUsername) : '@username') + '</div>' +
-          '<p class="profile-welcome">' + planText + '</p>' +
-        '</div>' +
-      '</div>' +
-      '<button class="primary" type="button" data-action="edit-profile" style="margin-top:10px;min-height:48px"><i class="fa-solid fa-user-pen"></i> دەستکاریی پڕۆفایل</button>' +
-      '<div style="display:grid;gap:9px;margin-top:12px">' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:9px">' +
-      '<div style="padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:16px;background:rgba(255,255,255,.025)"><small style="color:#8ea1b7;font-size:7px">کتێب</small><strong style="display:block;color:#fff;font-size:18px;margin-top:4px">' + bookUsage + ' / ' + bookLimit + '</strong></div>' +
-      '<div style="padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:16px;background:rgba(255,255,255,.025)"><small style="color:#8ea1b7;font-size:7px">موزیک</small><strong style="display:block;color:#fff;font-size:18px;margin-top:4px">' + musicUsage + ' / ' + musicLimit + '</strong></div>' +
-      '</div>' +
-      '<div class="profile-menu">' +
-      '<button class="profile-menu-item" type="button" data-nav="favorites"><span class="profile-menu-icon"><i class="fa-solid fa-heart"></i></span><span class="profile-menu-copy"><strong>دڵخوازەکانم</strong><small>' + Object.keys(authState.favorites).length + ' دانە</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
-      '<button class="profile-menu-item" type="button" data-nav="vocab"><span class="profile-menu-icon"><i class="fa-solid fa-language"></i></span><span class="profile-menu-copy"><strong>وشەکانم</strong><small>' + vocab.length + ' وشە</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
-      '<button class="profile-menu-item" type="button" data-action="premium-info"><span class="profile-menu-icon"><i class="fa-solid fa-crown"></i></span><span class="profile-menu-copy"><strong>' + (authState.role === "premium" || authState.isAdmin ? 'پلانی ئێستا' : 'Upgrade to Premium') + '</strong><small>' + (authState.isAdmin ? 'Owner' : authState.role === 'premium' ? 'Premium' : 'پارەدان بە دەستی لە Telegram') + '</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
-      (authState.isAdmin ? '<button class="profile-menu-item" type="button" data-action="owner-panel"><span class="profile-menu-icon"><i class="fa-solid fa-crown"></i></span><span class="profile-menu-copy"><strong>پانێڵی بەڕێوەبەر</strong><small>کۆنترۆڵی هەموو پلاتفۆرم</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' : '') +
-      '<button class="profile-menu-item" type="button" data-action="auth-signout"><span class="profile-menu-icon"><i class="fa-solid fa-right-from-bracket"></i></span><span class="profile-menu-copy"><strong>دەرچوون</strong><small>لە هەژمارەکەت دەرچۆ</small></span><i class="fa-solid fa-chevron-left profile-menu-arrow"></i></button>' +
-      '</div>' +
-      '<div style="margin-top:2px;padding:13px;border:1px solid rgba(255,255,255,.06);border-radius:18px;background:rgba(255,255,255,.02)">' +
-      '<strong style="color:#fff;font-size:11px">ناوەڕۆکی من</strong>' +
-      '<div id="mySubmissionsList" style="display:grid;gap:7px;margin-top:9px"></div>' +
-      '</div></div>';
-
-    var subBox = $("mySubmissionsList");
-    if (subBox) {
-      var rows = [];
-      myBooks.forEach(function (book) {
-        rows.push('<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px;border-radius:12px;background:rgba(255,255,255,.025)"><span style="min-width:0;color:#dbe7f3;font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(book.title) + '</span><small style="color:' + (book.status === 'approved' ? '#7ee2ad' : book.status === 'rejected' ? '#ff8b9d' : '#f5cd68') + ';font-size:7px">' + (book.status === 'approved' ? 'پەسەندکراو' : book.status === 'rejected' ? 'ڕەتکراوە' : 'چاوەڕوان') + '</small></div>');
-      });
-      myMusic.forEach(function (track) {
-        rows.push('<div style="display:flex;justify-content:space-between;gap:8px;align-items:center;padding:9px;border-radius:12px;background:rgba(255,255,255,.025)"><span style="min-width:0;color:#dbe7f3;font-size:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(track.name) + '</span><small style="color:' + (track.status === 'approved' ? '#7ee2ad' : track.status === 'rejected' ? '#ff8b9d' : '#f5cd68') + ';font-size:7px">' + (track.status === 'approved' ? 'پەسەندکراو' : track.status === 'rejected' ? 'ڕەتکراوە' : 'چاوەڕوان') + '</small></div>');
-      });
-      subBox.innerHTML = rows.length ? rows.join('') : '<small style="color:#7f91a6;font-size:8px">هێشتا هیچ ناوەڕۆکێکت نەناردووە.</small>';
-    }
+    return false;
   }
-
 
   function getSettingsFontSize() {
     var saved =
