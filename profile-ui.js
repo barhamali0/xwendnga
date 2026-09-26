@@ -1,12 +1,13 @@
 /* =========================================================
    XWENDNGA — PROFILE UI
-   Phase 4B-3
-   Public Profile UI module
+   Phase 4B-6-C / Part 1
+   Public Profile + My Profile Edit UI module
    ---------------------------------------------------------
    Scope:
-   - Public Profile only in this phase.
-   - No changes to script.js / search-ui.js are required.
-   - My Profile integration is intentionally reserved for a later phase.
+   - Public Profile UI.
+   - My Profile Edit UI / form interaction.
+   - Auth Core / Session remain in script.js.
+   - My Profile data writes use window.AppLib bridges.
    ========================================================= */
 
 (function (window, document) {
@@ -442,6 +443,546 @@
     ));
   }
 
+
+  /* =========================================================
+     MY PROFILE EDIT UI — PHASE 4B-6-C / PART 1
+     UI and form interaction only.
+     Auth Core / Session stay in script.js and are consumed
+     through window.AppLib.
+     ========================================================= */
+
+  var editState = {
+    ready: false,
+    open: false,
+    saving: false,
+    requestToken: 0
+  };
+
+  var editRoot = null;
+  var editBackdrop = null;
+  var editSheet = null;
+  var editForm = null;
+  var editMessage = null;
+  var editAvatar = null;
+  var editCloseButton = null;
+
+  function appLib() {
+    return window.AppLib || null;
+  }
+
+  function authState() {
+    var api = appLib();
+    return api && api.authState ? api.authState : null;
+  }
+
+  function showProfileToast(message) {
+    var toast = document.getElementById("toast");
+    if (!toast) return;
+
+    toast.textContent = String(message || "");
+    toast.className = "toast show";
+
+    clearTimeout(showProfileToast._timer);
+    showProfileToast._timer = window.setTimeout(function () {
+      toast.className = "toast";
+    }, 2600);
+  }
+
+  function setProfileEditMessage(message) {
+    if (!editMessage) return;
+    editMessage.textContent = message || "";
+  }
+
+  function clearEditMessage() {
+    setProfileEditMessage("");
+  }
+
+  function renderEditAvatar(url) {
+    if (!editAvatar) return;
+
+    var safe = safeUrl(url);
+    while (editAvatar.firstChild) {
+      editAvatar.removeChild(editAvatar.firstChild);
+    }
+
+    if (safe) {
+      var image = createElement("img", null, {
+        src: safe,
+        alt: "",
+        loading: "eager",
+        referrerpolicy: "no-referrer"
+      });
+      editAvatar.appendChild(image);
+    } else {
+      var icon = createElement("i", null, {
+        class: "fa-regular fa-user",
+        "aria-hidden": "true"
+      });
+      editAvatar.appendChild(icon);
+    }
+  }
+
+  function renderEditFilePreview(file) {
+    if (!file || !editAvatar || !window.FileReader) return;
+
+    var token = ++editState.requestToken;
+    var reader = new FileReader();
+
+    reader.onload = function () {
+      if (token !== editState.requestToken) return;
+      while (editAvatar.firstChild) {
+        editAvatar.removeChild(editAvatar.firstChild);
+      }
+
+      var image = createElement("img", null, {
+        src: String(reader.result || ""),
+        alt: ""
+      });
+      editAvatar.appendChild(image);
+    };
+
+    reader.onerror = function () {
+      if (token !== editState.requestToken) return;
+      renderEditAvatar("");
+    };
+
+    reader.readAsDataURL(file);
+  }
+
+  function injectProfileEditUI() {
+    if (editState.ready && editRoot) return;
+
+    editRoot = createElement("div", "xwendnga-profile-edit-root");
+    editRoot.id = "xwendngaProfileEditRoot";
+    editRoot.setAttribute("aria-hidden", "true");
+
+    editBackdrop = createElement("button", "xwendnga-profile-edit-backdrop", {
+      type: "button",
+      ariaLabel: "داخستن"
+    });
+
+    editSheet = createElement("section", "xwendnga-profile-edit-sheet", {
+      role: "dialog",
+      "aria-modal": "true",
+      "aria-labelledby": "xwendngaProfileEditTitle"
+    });
+
+    var handle = createElement("div", "xwendnga-profile-edit-handle", {
+      "aria-hidden": "true"
+    });
+
+    var header = createElement("header", "xwendnga-profile-edit-head");
+
+    var headerTitle = createElement("div", "xwendnga-profile-edit-head-title");
+
+    var headerIcon = createElement("span", "xwendnga-profile-edit-head-icon", {
+      "aria-hidden": "true"
+    });
+    headerIcon.innerHTML = '<i class="fa-solid fa-user-pen"></i>';
+
+    var titleWrap = createElement("div");
+    titleWrap.appendChild(createElement("div", "xwendnga-profile-edit-kicker", {
+      text: "PROFILE"
+    }));
+    titleWrap.appendChild(createElement("h3", null, {
+      text: "دەستکاریی پڕۆفایل",
+      id: "xwendngaProfileEditTitle"
+    }));
+
+    headerTitle.appendChild(headerIcon);
+    headerTitle.appendChild(titleWrap);
+
+    editCloseButton = createElement("button", "xwendnga-profile-edit-close", {
+      type: "button",
+      ariaLabel: "داخستن"
+    });
+    editCloseButton.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i>';
+
+    header.appendChild(headerTitle);
+    header.appendChild(editCloseButton);
+
+    editMessage = createElement("div", "xwendnga-profile-edit-message", {
+      role: "status",
+      "aria-live": "polite"
+    });
+
+    editForm = createElement("form", "xwendnga-profile-edit-form", {
+      id: "xwendngaProfileEditForm"
+    });
+
+    var avatarRow = createElement("div", "xwendnga-profile-edit-avatar-row");
+    editAvatar = createElement("div", "xwendnga-profile-edit-avatar", {
+      "aria-hidden": "true"
+    });
+
+    var avatarFields = createElement("div", "xwendnga-profile-edit-avatar-fields");
+    var avatarLabel = createElement("label", "xwendnga-profile-edit-field");
+    avatarLabel.appendChild(createElement("span", null, {
+      text: "وێنەی پڕۆفایل"
+    }));
+
+    var avatarInput = createElement("input", null, {
+      id: "xwendngaProfileAvatarInput",
+      type: "file",
+      accept: "image/*"
+    });
+    avatarLabel.appendChild(avatarInput);
+
+    avatarFields.appendChild(avatarLabel);
+    avatarFields.appendChild(createElement("p", "xwendnga-profile-edit-help", {
+      text: "وێنەیەکی خۆت هەڵبژێرە بۆ پڕۆفایل."
+    }));
+
+    avatarRow.appendChild(editAvatar);
+    avatarRow.appendChild(avatarFields);
+    editForm.appendChild(avatarRow);
+
+    function addField(label, id, type, attrs) {
+      var field = createElement("label", "xwendnga-profile-edit-field");
+      field.appendChild(createElement("span", null, { text: label }));
+
+      var input = createElement(
+        type === "select" ? "select" : "input",
+        null,
+        Object.assign({ id: id }, attrs || {})
+      );
+
+      field.appendChild(input);
+      editForm.appendChild(field);
+      return input;
+    }
+
+    addField("ناو", "xwendngaProfileDisplayNameInput", "input", {
+      type: "text",
+      autocomplete: "name",
+      maxlength: "80",
+      placeholder: "ناوی تەواوی کەسەکە"
+    });
+
+    addField("ناوی بەکارهێنەر", "xwendngaProfileUsernameInput", "input", {
+      type: "text",
+      autocomplete: "username",
+      maxlength: "30",
+      placeholder: "@username",
+      required: "required"
+    });
+
+    addField("ئیمەیڵ", "xwendngaProfileEmailInput", "input", {
+      type: "email",
+      readonly: "readonly",
+      autocomplete: "email"
+    });
+
+    addField("ژمارەی مۆبایل", "xwendngaProfilePhoneInput", "input", {
+      type: "tel",
+      autocomplete: "tel",
+      maxlength: "30",
+      placeholder: "ئارەزوومەندانە"
+    });
+
+    addField("ڕۆژی لەدایکبوون", "xwendngaProfileBirthDateInput", "input", {
+      type: "date"
+    });
+
+    var gender = addField("ڕەگەز", "xwendngaProfileGenderInput", "select");
+    gender.appendChild(createElement("option", null, {
+      value: "",
+      text: "دیاری نەکراوە"
+    }));
+    gender.appendChild(createElement("option", null, {
+      value: "نێر",
+      text: "نێر"
+    }));
+    gender.appendChild(createElement("option", null, {
+      value: "مێ",
+      text: "مێ"
+    }));
+
+    var actions = createElement("div", "xwendnga-profile-edit-actions");
+
+    var cancelButton = createElement("button", "xwendnga-profile-edit-button xwendnga-profile-edit-button-ghost", {
+      type: "button",
+      text: "پاشگەزبوونەوە"
+    });
+
+    var saveButton = createElement("button", "xwendnga-profile-edit-button xwendnga-profile-edit-button-primary", {
+      type: "submit"
+    });
+    saveButton.innerHTML = '<i class="fa-solid fa-check"></i><span>پاشەکەوتکردن</span>';
+
+    actions.appendChild(cancelButton);
+    actions.appendChild(saveButton);
+    editForm.appendChild(actions);
+
+    editSheet.appendChild(handle);
+    editSheet.appendChild(header);
+    editSheet.appendChild(editMessage);
+    editSheet.appendChild(editForm);
+
+    editRoot.appendChild(editBackdrop);
+    editRoot.appendChild(editSheet);
+    document.body.appendChild(editRoot);
+
+    avatarInput.addEventListener("change", function () {
+      var file = avatarInput.files && avatarInput.files[0];
+      if (!file) {
+        var current = (authState() && authState().profile) || {};
+        renderEditAvatar(current.avatar_url || "");
+        return;
+      }
+      renderEditFilePreview(file);
+    });
+
+    editForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      saveProfileEdits();
+    });
+
+    cancelButton.addEventListener("click", closeProfileEdit);
+    editCloseButton.addEventListener("click", closeProfileEdit);
+    editBackdrop.addEventListener("click", closeProfileEdit);
+
+    editState.ready = true;
+    editState.open = false;
+    renderEditAvatar("");
+  }
+
+  function renderProfileEditValues() {
+    injectProfileEditUI();
+
+    var api = appLib();
+    var currentAuth = authState();
+
+    if (!currentAuth || !currentAuth.user) return Promise.resolve(false);
+
+    clearEditMessage();
+
+    var fallbackProfile = currentAuth.profile || {};
+
+    var setValues = function (profile) {
+      var source = profile || fallbackProfile;
+
+      renderEditAvatar(source.avatar_url || "");
+
+      var displayName = document.getElementById("xwendngaProfileDisplayNameInput");
+      var username = document.getElementById("xwendngaProfileUsernameInput");
+      var email = document.getElementById("xwendngaProfileEmailInput");
+      var phone = document.getElementById("xwendngaProfilePhoneInput");
+      var birthDate = document.getElementById("xwendngaProfileBirthDateInput");
+      var gender = document.getElementById("xwendngaProfileGenderInput");
+      var avatarInput = document.getElementById("xwendngaProfileAvatarInput");
+
+      if (displayName) displayName.value = source.display_name || "";
+      if (username) username.value = source.username ? "@" + normalizeId(source.username).replace(/^@/, "") : "";
+      if (email) email.value = currentAuth.user.email || "";
+      if (phone) phone.value = source.phone || "";
+      if (birthDate) birthDate.value = source.birth_date || "";
+      if (gender) gender.value = source.gender || "";
+      if (avatarInput) avatarInput.value = "";
+
+      return true;
+    };
+
+    if (api && typeof api.getMyProfile === "function") {
+      return Promise.resolve(api.getMyProfile())
+        .then(function (profile) {
+          return setValues(profile || fallbackProfile);
+        })
+        .catch(function () {
+          return setValues(fallbackProfile);
+        });
+    }
+
+    return Promise.resolve(setValues(fallbackProfile));
+  }
+
+  function openProfileEdit() {
+    injectProfileEditUI();
+
+    var currentAuth = authState();
+    if (!currentAuth || !currentAuth.user) {
+      return;
+    }
+
+    editState.open = true;
+    editState.requestToken++;
+    editRoot.classList.add("is-open");
+    editRoot.setAttribute("aria-hidden", "false");
+    document.body.classList.add("xwendnga-profile-edit-lock");
+
+    renderProfileEditValues().then(function () {
+      if (!editState.open) return;
+      window.setTimeout(function () {
+        if (editCloseButton) editCloseButton.focus();
+      }, 30);
+    });
+  }
+
+  function closeProfileEdit() {
+    if (!editRoot) return;
+
+    editState.open = false;
+    editState.saving = false;
+    editState.requestToken++;
+    editRoot.classList.remove("is-open");
+    editRoot.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("xwendnga-profile-edit-lock");
+    clearEditMessage();
+  }
+
+  function saveProfileEdits() {
+    if (editState.saving) return;
+
+    var api = appLib();
+    var currentAuth = authState();
+
+    if (!api || !currentAuth || !currentAuth.user) {
+      return;
+    }
+
+    if (
+      typeof api.updateMyProfile !== "function" ||
+      typeof api.uploadMyAvatar !== "function"
+    ) {
+      setProfileEditMessage("پەیوەندی پڕۆفایل بەردەست نییە.");
+      return;
+    }
+
+    var displayName = String(
+      (document.getElementById("xwendngaProfileDisplayNameInput") || {}).value || ""
+    ).trim();
+
+    var username = String(
+      (document.getElementById("xwendngaProfileUsernameInput") || {}).value || ""
+    ).trim();
+
+    var phone = String(
+      (document.getElementById("xwendngaProfilePhoneInput") || {}).value || ""
+    ).trim();
+
+    var birthDate = String(
+      (document.getElementById("xwendngaProfileBirthDateInput") || {}).value || ""
+    ).trim();
+
+    var gender = String(
+      (document.getElementById("xwendngaProfileGenderInput") || {}).value || ""
+    ).trim();
+
+    var usernameClean = username.replace(/^@+/, "").trim();
+
+    if (!usernameClean) {
+      setProfileEditMessage("ناوی بەکارهێنەر پێویستە.");
+      return;
+    }
+
+    if (
+      typeof usernameClean.normalize === "function"
+    ) {
+      usernameClean = usernameClean.normalize("NFKC");
+    }
+
+    var avatarInput = document.getElementById("xwendngaProfileAvatarInput");
+    var file = avatarInput && avatarInput.files ? avatarInput.files[0] : null;
+
+    editState.saving = true;
+    setProfileEditMessage("خەریکی پاشەکەوتکردنی زانیارییەکانە...");
+
+    var currentProfile = currentAuth.profile || {};
+    var oldAvatarUrl = String(currentProfile.avatar_url || "").trim();
+
+    var avatarPromise = file
+      ? Promise.resolve(api.uploadMyAvatar(file)).then(function (result) {
+          return String(result && result.url || "").trim();
+        })
+      : Promise.resolve(oldAvatarUrl);
+
+    avatarPromise
+      .then(function (avatarUrl) {
+        return api.updateMyProfile({
+          display_name: displayName,
+          username: usernameClean,
+          avatar_url: avatarUrl || oldAvatarUrl || "",
+          phone: phone,
+          birth_date: birthDate,
+          gender: gender
+        });
+      })
+      .then(function () {
+        editState.saving = false;
+        closeProfileEdit();
+
+        if (api && typeof api.renderProfile === "function") {
+          api.renderProfile();
+        }
+
+        showProfileToast("پڕۆفایل پاشەکەوت کرا");
+      })
+      .catch(function (error) {
+        editState.saving = false;
+
+        console.error("Xwendnga Profile UI — saveProfileEdits:", error);
+
+        var message = String(error && error.message || "هەڵە");
+        if (
+          error &&
+          (
+            error.code === "23505" ||
+            message.toLowerCase().indexOf("duplicate") >= 0
+          )
+        ) {
+          setProfileEditMessage("ئەم ناوی بەکارهێنەرە پێشتر بەکارهاتووە.");
+          return;
+        }
+
+        setProfileEditMessage(
+          "پاشەکەوتکردن سەرکەوتوو نەبوو: " + message.slice(0, 120)
+        );
+      });
+  }
+
+  function handleProfileEditClick(event) {
+    var target = event && event.target;
+    if (!target || !target.closest) return;
+
+    var action = target.closest("[data-action]");
+    if (!action) return;
+
+    var name = action.getAttribute("data-action");
+
+    if (name === "edit-profile") {
+      event.preventDefault();
+      event.stopPropagation();
+      openProfileEdit();
+      return;
+    }
+
+    if (name === "close-profile-edit") {
+      event.preventDefault();
+      event.stopPropagation();
+      closeProfileEdit();
+    }
+  }
+
+  function handleProfileEditKeydown(event) {
+    if (!editState.open) return;
+
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeProfileEdit();
+    }
+  }
+
+  function initMyProfileEditUI() {
+    if (editState.ready) return;
+
+    injectProfileEditUI();
+
+    document.addEventListener("click", handleProfileEditClick, true);
+    document.addEventListener("keydown", handleProfileEditKeydown);
+
+    editState.ready = true;
+  }
+
   function setOpenClasses(open) {
     if (!root) return;
     root.classList.toggle("is-open", open);
@@ -551,6 +1092,9 @@
     backdrop.addEventListener("click", closeSheet);
     document.addEventListener("keydown", handleKeydown);
     window.addEventListener("xwendnga:profile-open", handleProfileOpen);
+
+    initMyProfileEditUI();
+
     state.ready = true;
   }
 
@@ -558,6 +1102,16 @@
     init: init,
     open: loadProfile,
     close: closeSheet,
+    openMyProfileEdit: openProfileEdit,
+    closeMyProfileEdit: closeProfileEdit,
+    saveMyProfileEdits: saveProfileEdits,
+    getEditState: function () {
+      return {
+        ready: editState.ready,
+        open: editState.open,
+        saving: editState.saving
+      };
+    },
     getState: function () {
       return {
         ready: state.ready,
