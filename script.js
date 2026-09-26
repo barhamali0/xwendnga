@@ -6683,6 +6683,185 @@
 
 
   /* =======================================================
+     PROFILE BRIDGE API — PHASE 4B-6-B
+     Keeps My Profile UI independent from the Auth Core.
+     Only the six user-editable profile fields are writable here.
+     ======================================================= */
+
+  function getMyProfile() {
+    if (!authState.user) {
+      return Promise.reject(
+        new Error("بەکارهێنەر چووە ژوورەوە نییە")
+      );
+    }
+
+    if (!supabaseReady()) {
+      return Promise.reject(
+        new Error("Supabase بەردەست نییە")
+      );
+    }
+
+    if (authState.profile) {
+      return Promise.resolve(
+        Object.assign({}, authState.profile, {
+          email: authState.user.email || ""
+        })
+      );
+    }
+
+    return getFreshProfile().then(function (profile) {
+      return Object.assign({}, profile || {}, {
+        email: authState.user ? (authState.user.email || "") : ""
+      });
+    });
+  }
+
+  function updateMyProfile(values) {
+    if (!authState.user) {
+      return Promise.reject(
+        new Error("سەرەتا بچۆ ژوورەوە")
+      );
+    }
+
+    if (!supabaseReady()) {
+      return Promise.reject(
+        new Error("Supabase بەردەست نییە")
+      );
+    }
+
+    var source = values && typeof values === "object" ? values : {};
+    var cleanUsername = normalizeUsername(source.username);
+    var usernameError = validateUsername(cleanUsername);
+
+    if (usernameError) {
+      return Promise.reject(new Error(usernameError));
+    }
+
+    var patch = {
+      display_name: String(source.display_name || "").trim() || null,
+      username: cleanUsername,
+      avatar_url: String(source.avatar_url || "").trim() || null,
+      phone: String(source.phone || "").trim() || null,
+      birth_date: String(source.birth_date || "").trim() || null,
+      gender: String(source.gender || "").trim() || null
+    };
+
+    return supabaseClient
+      .from("profiles")
+      .update(patch)
+      .eq("id", authState.user.id)
+      .then(function (result) {
+        if (result && result.error) {
+          throw result.error;
+        }
+
+        return supabaseClient.auth
+          .updateUser({
+            data: {
+              display_name: patch.display_name,
+              username: patch.username,
+              avatar_url: patch.avatar_url,
+              phone: patch.phone,
+              birth_date: patch.birth_date,
+              gender: patch.gender
+            }
+          })
+          .catch(function (metadataError) {
+            console.warn("updateMyProfile metadata:", metadataError);
+          })
+          .then(function () {
+            return getFreshProfile();
+          });
+      });
+  }
+
+  function uploadMyAvatar(file) {
+    if (!authState.user) {
+      return Promise.reject(
+        new Error("سەرەتا بچۆ ژوورەوە")
+      );
+    }
+
+    if (!file) {
+      return Promise.reject(
+        new Error("فایلی وێنەی پڕۆفایل دیاری نەکراوە")
+      );
+    }
+
+    var fileType = String(file.type || "").toLowerCase();
+    if (fileType && fileType.indexOf("image/") !== 0) {
+      return Promise.reject(
+        new Error("تەنها فایلەکانی وێنە ڕێگەپێدراون")
+      );
+    }
+
+    var safeExtension = (String(file.name || "").split(".").pop() || "jpg")
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .toLowerCase() || "jpg";
+
+    var path =
+      authState.user.id + "/" +
+      Date.now() + "-" +
+      Math.random().toString(36).slice(2, 10) +
+      "." + safeExtension;
+
+    return uploadToStorage("avatars", path, file).then(function (result) {
+      return {
+        url: result && result.url ? result.url : "",
+        path: result && result.path ? result.path : path
+      };
+    });
+  }
+
+  function checkMyUsername(username) {
+    if (!supabaseReady()) {
+      return Promise.reject(
+        new Error("Supabase بەردەست نییە")
+      );
+    }
+
+    var cleanUsername = normalizeUsername(username);
+    var validationError = validateUsername(cleanUsername);
+
+    if (validationError) {
+      return Promise.resolve({
+        available: false,
+        username: cleanUsername,
+        reason: validationError
+      });
+    }
+
+    return supabaseClient
+      .from("profiles")
+      .select("id,username")
+      .ilike("username", cleanUsername)
+      .limit(1)
+      .then(function (result) {
+        if (result && result.error) {
+          throw result.error;
+        }
+
+        var row = Array.isArray(result && result.data)
+          ? (result.data[0] || null)
+          : null;
+
+        var isOwn = !!(
+          row &&
+          authState.user &&
+          String(row.id) === String(authState.user.id)
+        );
+
+        return {
+          available: !row || isOwn,
+          username: cleanUsername,
+          reason: row && !isOwn
+            ? "ئەم ناوی بەکارهێنەرە پێشتر بەکارهاتووە."
+            : ""
+        };
+      });
+  }
+
+  /* =======================================================
      READER API COORDINATION
      ======================================================= */
 
@@ -6728,6 +6907,18 @@
 
     getPublicProfile:
       getPublicProfile,
+
+    getMyProfile:
+      getMyProfile,
+
+    updateMyProfile:
+      updateMyProfile,
+
+    uploadMyAvatar:
+      uploadMyAvatar,
+
+    checkMyUsername:
+      checkMyUsername,
 
     renderSettingsPage:
       renderSettingsPage,
