@@ -6594,37 +6594,22 @@
 
 
   function renderFavorites() {
+    if (
+      window.XwendngaFavoritesUI &&
+      typeof window.XwendngaFavoritesUI.render === "function"
+    ) {
+      return window.XwendngaFavoritesUI.render();
+    }
+
     var box = $("favoritesList");
     if (!box) return;
 
-    if (!authState.user) {
-      box.innerHTML =
-        '<div class="empty" style="grid-column:1/-1">' +
-        '<div class="empty-icon"><i class="fa-solid fa-lock"></i></div>' +
-        '<h3>دڵخوازەکانت پاش Login</h3>' +
-        '<p>بۆ بینینی دڵخوازەکانت سەرەتا بچۆ ژوورەوە.</p>' +
-        '<button class="primary empty-button" type="button" data-action="auth-login">' +
-        '<i class="fa-solid fa-right-to-bracket"></i> چوونەژوورەوە' +
-        '</button>' +
-        '</div>';
-      return;
-    }
-
-    var source = $("bookList");
-    if (!source) return;
-
-    var oldFilter = filter;
-    var oldQuery = query;
-
-    filter = "favorites";
-    query = "";
-
-    renderBooks();
-    box.innerHTML = source.innerHTML;
-
-    filter = oldFilter;
-    query = oldQuery;
-    renderBooks();
+    box.innerHTML =
+      '<div class="empty" style="grid-column:1/-1">' +
+      '<div class="empty-icon"><i class="fa-solid fa-spinner fa-spin"></i></div>' +
+      '<h3>دڵخوازەکان خەریکی ئامادەکردنن</h3>' +
+      '<p>تکایە چەند چرکەیەک چاوەڕێ بکە.</p>' +
+      '</div>';
   }
 
 

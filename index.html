@@ -2915,9 +2915,9 @@
         data-app-view="favorites"
       >
 
-        <section class="section">
+        <section class="section favorites-page-section">
 
-          <div class="section-head">
+          <div class="section-head favorites-page-head">
 
             <div>
 
@@ -2926,17 +2926,61 @@
               </div>
 
               <h2 class="section-title">
-                کتێبە دڵخوازەکان
+                دڵخوازەکان
               </h2>
+
+              <p class="favorites-page-hint">
+                کتێب و ناوەڕۆکی سینەمای دڵخوازکراوت لە یەک شوێن
+              </p>
 
             </div>
 
           </div>
 
+          <div
+            id="favoritesFilters"
+            class="favorites-filter-group"
+            role="tablist"
+            aria-label="فلتەری دڵخوازەکان"
+          >
+            <button
+              class="favorites-filter is-active"
+              type="button"
+              data-favorites-filter="all"
+              role="tab"
+              aria-selected="true"
+            >
+              <i class="fa-solid fa-layer-group" aria-hidden="true"></i>
+              هەموو
+            </button>
+
+            <button
+              class="favorites-filter"
+              type="button"
+              data-favorites-filter="book"
+              role="tab"
+              aria-selected="false"
+            >
+              <i class="fa-solid fa-book-open" aria-hidden="true"></i>
+              کتێب
+            </button>
+
+            <button
+              class="favorites-filter"
+              type="button"
+              data-favorites-filter="cinema"
+              role="tab"
+              aria-selected="false"
+            >
+              <i class="fa-solid fa-film" aria-hidden="true"></i>
+              سینەما
+            </button>
+          </div>
 
           <div
             id="favoritesList"
-            class="grid book-grid"
+            class="grid book-grid xwendnga-favorites-grid"
+            aria-live="polite"
           ></div>
 
         </section>
@@ -4085,6 +4129,7 @@
   <script src="script.js?v=3.6"></script>
   <script src="search-ui.js?v=4.0.1"></script>
   <script src="reader.js?v=2.6"></script>
+  <script src="favorites-ui.js?v=6D-2"></script>
   <script src="app.js?v=2.6"></script>
   <script src="cinema-ui.js?v=4.3"></script>
   <script src="cinema-player.js?v=4.4"></script>
