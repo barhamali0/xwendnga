@@ -2904,6 +2904,8 @@
     updateReaderStatus();
     updateZoomReadout();
 
+    saveReadingProgress();
+
     renderPage();
   }
 
@@ -2973,6 +2975,8 @@
 
     updateReaderStatus();
     updateZoomReadout();
+
+    saveReadingProgress();
 
     renderPage();
   }
@@ -3044,6 +3048,50 @@
   /* =======================================================
      BOOKMARK / SAVE
      ======================================================= */
+
+  function saveReadingProgress() {
+
+    if (!currentBook) {
+      return Promise.resolve(null);
+    }
+
+    currentBook.currentPage =
+      currentPage;
+
+    currentBook.progress =
+      currentBook.pageCount >
+      1
+        ? currentPage /
+          (
+            currentBook.pageCount -
+            1
+          )
+        : 1;
+
+    if (
+      window.AppLib &&
+      typeof window.AppLib.dbPut ===
+        "function"
+    ) {
+
+      return window.AppLib.dbPut(
+        currentBook
+      ).catch(
+        function (error) {
+          console.error(
+            "Reader auto-save:",
+            error
+          );
+
+          return null;
+        }
+      );
+    }
+
+    return Promise.resolve(
+      null
+    );
+  }
 
   function saveProgress() {
 
@@ -3978,6 +4026,7 @@
     close:
       function () {
 
+        saveReadingProgress();
         stopSpeech();
 
         ++openRequestId;
