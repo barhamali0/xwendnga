@@ -629,6 +629,21 @@
   var CINEMA_PROGRESS_SYNC_MS = 5000;
 
   /* =======================================================
+     PHASE 6-D-1 — CINEMA STATE INTEGRATION
+     script.js owns the adapter while cinema-ui.js and
+     cinema-player.js remain locked.
+     ======================================================= */
+  var cinemaFavoriteObserver = null;
+  var cinemaStateUiObserver = null;
+  var cinemaLatestRenderTimer = null;
+  var cinemaLatestRenderRequestId = 0;
+  var cinemaLatestSelfMutation = false;
+  var cinemaLatestState = null;
+  var cinemaLatestEpisodeCache = {};
+  var cinemaStateStyleInjected = false;
+  var legacyCinemaSessionEntries = {};
+
+  /* =======================================================
      PUBLIC PROFILE DATA LAYER — PHASE 4B-2
      Kept completely separate from authState.profile.
      ======================================================= */
@@ -1140,6 +1155,28 @@
       });
   }
 
+  function dispatchUserContentStateChange(detail) {
+    try {
+      window.dispatchEvent(
+        new CustomEvent("xwendnga:user-content-state-changed", {
+          detail: detail || {}
+        })
+      );
+    } catch (error) {
+      try {
+        var event = document.createEvent("CustomEvent");
+        event.initCustomEvent(
+          "xwendnga:user-content-state-changed",
+          true,
+          false,
+          detail || {}
+        );
+        window.dispatchEvent(event);
+      } catch (fallbackError) {}
+    }
+  }
+
+
   function setFavorite(
     type,
     id,
@@ -1243,17 +1280,17 @@
           )
         ] = cached;
 
+        authState.favorites[
+          favoriteKey(
+            contentType,
+            contentId
+          )
+        ] = nextState;
+
         if (
           contentType ===
           "book"
         ) {
-          authState.favorites[
-            favoriteKey(
-              contentType,
-              contentId
-            )
-          ] = nextState;
-
           var targetBook =
             books.find(
               function (book) {
@@ -1272,6 +1309,13 @@
               nextState;
           }
         }
+
+        dispatchUserContentStateChange({
+          reason: "favorite",
+          contentType: contentType,
+          contentId: contentId,
+          isFavorite: nextState
+        });
 
         return cached;
       })
@@ -1685,6 +1729,180 @@
         throw error;
       });
   }
+
+  function clearLegacyCinemaProgressForContent(contentId) {
+    var cinemaId = normalizeContentId(contentId);
+    if (!cinemaId) {
+      return;
+    }
+
+    try {
+      var raw = localStorage.getItem("xwendnga_cinema_progress");
+      var data = raw ? JSON.parse(raw) : {};
+
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        return;
+      }
+
+      var changed = false;
+      Object.keys(data).forEach(function (key) {
+        var entry = data[key];
+        var storedCinemaId = normalizeContentId(
+          entry && entry.cinemaId
+            ? entry.cinemaId
+            : String(key).split("::")[0]
+        );
+
+        if (storedCinemaId === cinemaId) {
+          delete data[key];
+          changed = true;
+        }
+      });
+
+      if (changed) {
+        localStorage.setItem(
+          "xwendnga_cinema_progress",
+          JSON.stringify(data)
+        );
+      }
+
+      if (authState.user) {
+        var uid = String(authState.user.id || "");
+        Object.keys(legacyCinemaSessionEntries).forEach(function (seenKey) {
+          if (seenKey.indexOf(uid + ":") !== 0) {
+            return;
+          }
+
+          var localKey = seenKey.slice(uid.length + 1);
+          var seenCinemaId = normalizeContentId(
+            String(localKey).split("::")[0]
+          );
+
+          if (seenCinemaId === cinemaId) {
+            delete legacyCinemaSessionEntries[seenKey];
+            delete legacyCinemaProgressSeen[seenKey];
+          }
+        });
+      }
+    } catch (error) {}
+  }
+
+
+  function clearProgress(
+    type,
+    id
+  ) {
+    if (!authState.user) {
+      return Promise.reject(
+        new Error("سەرەتا بچۆ ژوورەوە")
+      );
+    }
+
+    var contentType =
+      normalizeContentType(type);
+
+    var contentId =
+      normalizeContentId(id);
+
+    if (!contentType || !contentId) {
+      return Promise.reject(
+        new Error("جۆر یان ناسنامەی ناوەڕۆک نادروستە")
+      );
+    }
+
+    var previous =
+      getCachedUserContentState(
+        contentType,
+        contentId
+      );
+
+    var cached = previous
+      ? Object.assign({}, previous)
+      : {
+          contentType: contentType,
+          contentId: contentId,
+          isFavorite: false,
+          progress: null,
+          progressUpdatedAt: null,
+          updatedAt: null
+        };
+
+    var now = new Date().toISOString();
+
+    cached.progress = null;
+    cached.progressUpdatedAt = null;
+    cached.updatedAt = now;
+
+    function commitLocalState(localOnly) {
+      userContentStateCache[
+        userContentStateKey(
+          contentType,
+          contentId
+        )
+      ] = cached;
+
+      if (contentType === "cinema") {
+        clearLegacyCinemaProgressForContent(
+          contentId
+        );
+      }
+
+      dispatchUserContentStateChange({
+        reason: "progress-cleared",
+        contentType: contentType,
+        contentId: contentId,
+        state: cached,
+        localOnly: !!localOnly
+      });
+
+      return localOnly
+        ? Object.assign({}, cached, {
+            localOnly: true
+          })
+        : cached;
+    }
+
+    if (!supabaseReady()) {
+      return Promise.resolve(
+        commitLocalState(true)
+      );
+    }
+
+    return supabaseClient
+      .from(USER_CONTENT_STATE_TABLE)
+      .update({
+        progress: null,
+        progress_updated_at: null,
+        updated_at: now
+      })
+      .eq("user_id", authState.user.id)
+      .eq("content_type", contentType)
+      .eq("content_id", contentId)
+      .then(function (result) {
+        if (result && result.error) {
+          throw result.error;
+        }
+
+        return commitLocalState(false);
+      })
+      .catch(function (error) {
+        if (isUserContentStateMissingError(error)) {
+          return commitLocalState(true);
+        }
+
+        if (previous) {
+          userContentStateCache[
+            userContentStateKey(
+              contentType,
+              contentId
+            )
+          ] = previous;
+        }
+
+        throw error;
+      });
+  }
+
 
   function getProgress(
     type,
@@ -2125,184 +2343,6 @@
         );
         return null;
       }
-    );
-  }
-
-  function syncLegacyCinemaProgress(
-    force
-  ) {
-    if (!authState.user) {
-      return Promise.resolve(
-        []
-      );
-    }
-
-    var raw;
-
-    try {
-      raw =
-        localStorage.getItem(
-          "xwendnga_cinema_progress"
-        );
-    } catch (error) {
-      return Promise.resolve(
-        []
-      );
-    }
-
-    var data;
-
-    try {
-      data =
-        raw
-          ? JSON.parse(raw)
-          : {};
-    } catch (error) {
-      data = {};
-    }
-
-    if (
-      !data ||
-      typeof data !== "object" ||
-      Array.isArray(data)
-    ) {
-      return Promise.resolve(
-        []
-      );
-    }
-
-    var tasks = [];
-
-    Object.keys(data).forEach(
-      function (key) {
-        var entry =
-          data[key];
-
-        if (
-          !entry ||
-          typeof entry !== "object"
-        ) {
-          return;
-        }
-
-        var cinemaId =
-          normalizeContentId(
-            entry.cinemaId ||
-              String(
-                key
-              ).split("::")[0]
-          );
-
-        if (!cinemaId) {
-          return;
-        }
-
-        var seconds =
-          Number(
-            entry.currentTime
-          );
-
-        var episodeNumber =
-          entry.episodeNumber !=
-          null
-            ? Number(
-                entry.episodeNumber
-              )
-            : null;
-
-        var updatedAt =
-          Number(
-            entry.updatedAt
-          ) || 0;
-
-        if (
-          !Number.isFinite(
-            seconds
-          ) ||
-          seconds < 0 ||
-          !Number.isFinite(
-            updatedAt
-          ) ||
-          updatedAt <= 0
-        ) {
-          return;
-        }
-
-        var seenKey =
-          String(
-            authState.user.id
-          ) +
-          ":" +
-          String(key);
-
-        if (
-          !force &&
-          updatedAt <=
-            Number(
-              legacyCinemaProgressSeen[
-                seenKey
-              ] || 0
-            )
-        ) {
-          return;
-        }
-
-        /* The legacy store has no user_id.
-           Do not silently attach stale guest/device
-           progress to a newly opened account. */
-        if (
-          userContentStateLoadedUserId &&
-          updatedAt <
-            Number(
-              window.XWENDNGA_SESSION_STARTED_AT ||
-              0
-            )
-        ) {
-          legacyCinemaProgressSeen[
-            seenKey
-          ] = updatedAt;
-          return;
-        }
-
-        tasks.push(
-          saveProgress(
-            "cinema",
-            cinemaId,
-            {
-              seconds:
-                seconds,
-              episode_number:
-                Number.isFinite(
-                  episodeNumber
-                ) &&
-                episodeNumber >= 0
-                  ? Math.floor(
-                      episodeNumber
-                    )
-                  : null
-            }
-          ).then(
-            function (result) {
-              legacyCinemaProgressSeen[
-                seenKey
-              ] = updatedAt;
-              return result;
-            }
-          ).catch(
-            function (error) {
-              console.warn(
-                "Cinema progress cloud sync:",
-                error
-              );
-              return null;
-            }
-          )
-        );
-      }
-    );
-
-    return Promise.all(
-      tasks
     );
   }
 
@@ -8200,13 +8240,14 @@
     window.location.hash = "#cinema";
   }
 
-  function dispatchHomeCinemaOpen(item) {
+  function dispatchHomeCinemaOpen(item, episodeId) {
     if (!item) {
       return;
     }
 
     var detail = {
-      item: item
+      item: item,
+      episodeId: episodeId ? String(episodeId) : null
     };
 
     try {
@@ -8402,7 +8443,10 @@
       pendingHomeCinemaAction = null;
 
       if (action.kind === "open" && action.item) {
-        dispatchHomeCinemaOpen(action.item);
+        dispatchHomeCinemaOpen(
+          action.item,
+          action.episodeId || null
+        );
         return;
       }
 
@@ -8455,39 +8499,1218 @@
   );
 
   /* =======================================================
-     PHASE 6-C — LEGACY CINEMA PROGRESS BRIDGE
-     cinema-player.js remains locked and continues using
-     xwendnga_cinema_progress in localStorage.
-     Newly observed entries are mirrored to the unified
-     user_content_state through AppLib.saveProgress().
+     PHASE 6-D-1 — CINEMA STATE INTEGRATION
+     -------------------------------------------------------
+     - cinema-player.js remains locked.
+     - Favorites are injected into cinema cards through a
+       MutationObserver and use AppLib.setFavorite().
+     - Continue Watching is rendered from AppLib.getLatestContent().
+     - Cloud progress is hydrated back into the legacy player store.
+     - Completed cinema progress is cleared from cloud state.
      ======================================================= */
+
+  function ensureCinemaStateStyles() {
+    if (cinemaStateStyleInjected) {
+      return;
+    }
+
+    if (!document.head) {
+      return;
+    }
+
+    var style = document.createElement("style");
+    style.id = "xwendngaCinemaStateStyles";
+    style.textContent =
+      ".cinema-state-favorite{" +
+        "position:absolute;" +
+        "inset-block-start:11px;" +
+        "inset-inline-start:11px;" +
+        "z-index:6;" +
+        "width:40px;" +
+        "height:40px;" +
+        "display:grid;" +
+        "place-items:center;" +
+        "padding:0;" +
+        "border:1px solid rgba(255,255,255,.16);" +
+        "border-radius:50%;" +
+        "color:#ffffff;" +
+        "background:rgba(7,11,20,.64);" +
+        "box-shadow:0 10px 26px rgba(0,0,0,.28);" +
+        "backdrop-filter:blur(12px) saturate(135%);" +
+        "-webkit-backdrop-filter:blur(12px) saturate(135%);" +
+        "cursor:pointer;" +
+        "transition:transform .18s ease,background .18s ease,border-color .18s ease,color .18s ease,opacity .18s ease;" +
+      "}" +
+      ".cinema-state-favorite:hover{" +
+        "transform:scale(1.06);" +
+        "background:rgba(7,11,20,.82);" +
+        "border-color:rgba(255,255,255,.28);" +
+      "}" +
+      ".cinema-state-favorite:active{transform:scale(.94);}" +
+      ".cinema-state-favorite.is-favorite{" +
+        "color:#ff607c;" +
+        "border-color:rgba(255,96,124,.34);" +
+        "background:rgba(72,18,31,.78);" +
+      "}" +
+      ".cinema-state-favorite.is-busy{" +
+        "opacity:.58;" +
+        "cursor:wait;" +
+      "}" +
+      ".cinema-state-favorite:focus-visible{" +
+        "outline:2px solid currentColor;" +
+        "outline-offset:2px;" +
+      "}";
+
+    document.head.appendChild(style);
+    cinemaStateStyleInjected = true;
+  }
+
+
+  function cinemaFavoriteState(id) {
+    var contentId = normalizeContentId(id);
+    if (!contentId) {
+      return false;
+    }
+
+    var state = getCachedUserContentState(
+      "cinema",
+      contentId
+    );
+
+    if (state) {
+      return !!state.isFavorite;
+    }
+
+    return !!authState.favorites[
+      favoriteKey("cinema", contentId)
+    ];
+  }
+
+
+  function updateCinemaFavoriteButton(button) {
+    if (!button) {
+      return;
+    }
+
+    var id = button.getAttribute(
+      "data-xwendnga-cinema-favorite"
+    );
+
+    var active = cinemaFavoriteState(id);
+
+    button.classList.toggle(
+      "is-favorite",
+      active
+    );
+
+    button.setAttribute(
+      "aria-pressed",
+      active ? "true" : "false"
+    );
+
+    button.setAttribute(
+      "aria-label",
+      active
+        ? "لابردنی سینەما لە دڵخوازەکان"
+        : "زیادکردنی سینەما بۆ دڵخوازەکان"
+    );
+
+    button.title = active
+      ? "لابردن لە دڵخوازەکان"
+      : "زیادکردن بۆ دڵخوازەکان";
+
+    var desiredIconHtml = active
+      ? '<i class="fa-solid fa-heart" aria-hidden="true"></i>'
+      : '<i class="fa-regular fa-heart" aria-hidden="true"></i>';
+
+    if (button.innerHTML !== desiredIconHtml) {
+      button.innerHTML = desiredIconHtml;
+    }
+  }
+
+
+  function updateCinemaFavoriteButtons() {
+    document
+      .querySelectorAll(
+        '[data-xwendnga-cinema-favorite]'
+      )
+      .forEach(function (button) {
+        updateCinemaFavoriteButton(button);
+      });
+  }
+
+
+  function bindCinemaFavoriteButton(button) {
+    if (!button || button.dataset.xwendngaBound === "1") {
+      return;
+    }
+
+    button.dataset.xwendngaBound = "1";
+
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      if (!authState.user) {
+        openAuthModal(
+          "login",
+          "بۆ بەکارهێنانی دڵخوازەکان سەرەتا بچۆ ژوورەوە."
+        );
+        return;
+      }
+
+      var id = button.getAttribute(
+        "data-xwendnga-cinema-favorite"
+      );
+
+      var current = cinemaFavoriteState(id);
+      var nextState = !current;
+
+      button.classList.add("is-busy");
+      button.disabled = true;
+
+      if (!window.AppLib || typeof window.AppLib.setFavorite !== "function") {
+        button.disabled = false;
+        button.classList.remove("is-busy");
+        return;
+      }
+
+      window.AppLib.setFavorite(
+        "cinema",
+        id,
+        nextState
+      )
+        .then(function () {
+          updateCinemaFavoriteButtons();
+        })
+        .catch(function (error) {
+          console.error(
+            "Cinema favorite:",
+            error
+          );
+
+          toast(
+            "نوێکردنەوەی دڵخواز سەرکەوتوو نەبوو"
+          );
+        })
+        .finally(function () {
+          button.disabled = false;
+          button.classList.remove("is-busy");
+          updateCinemaFavoriteButton(button);
+        });
+    });
+  }
+
+
+  function ensureCinemaFavoriteButtons() {
+    var view = document.querySelector(
+      '[data-app-view="cinema"]'
+    );
+
+    if (!view) {
+      return;
+    }
+
+    ensureCinemaStateStyles();
+
+    view
+      .querySelectorAll(
+        ".cinema-card"
+      )
+      .forEach(function (card) {
+        var visual = card.querySelector(
+          ".cinema-card__visual"
+        );
+
+        if (!visual) {
+          return;
+        }
+
+        var id = normalizeContentId(
+          card.getAttribute(
+            "data-cinema-card-id"
+          )
+        );
+
+        if (!id) {
+          return;
+        }
+
+        var button = visual.querySelector(
+          "[data-xwendnga-cinema-favorite]"
+        );
+
+        if (!button) {
+          button = document.createElement("button");
+          button.type = "button";
+          button.className =
+            "cinema-state-favorite";
+          button.setAttribute(
+            "data-xwendnga-cinema-favorite",
+            id
+          );
+          visual.appendChild(button);
+        }
+
+        updateCinemaFavoriteButton(
+          button
+        );
+        bindCinemaFavoriteButton(
+          button
+        );
+      });
+  }
+
+
+  function cinemaCatalogItems() {
+    if (
+      window.XwendngaCinemaUI &&
+      typeof window.XwendngaCinemaUI.getItems ===
+        "function"
+    ) {
+      try {
+        var items =
+          window.XwendngaCinemaUI.getItems();
+
+        return Array.isArray(items)
+          ? items
+          : [];
+      } catch (error) {
+        return [];
+      }
+    }
+
+    return homeCinemaItems.slice();
+  }
+
+
+  function findCinemaCatalogItem(id) {
+    var contentId =
+      normalizeContentId(id);
+
+    if (!contentId) {
+      return null;
+    }
+
+    var items =
+      cinemaCatalogItems();
+
+    return (
+      items.find(function (item) {
+        return item &&
+          String(item.id) === contentId;
+      }) || null
+    );
+  }
+
+
+  function formatCinemaTime(seconds) {
+    var value = Math.max(
+      0,
+      Math.floor(
+        Number(seconds) || 0
+      )
+    );
+
+    var hours = Math.floor(
+      value / 3600
+    );
+    var minutes = Math.floor(
+      (value % 3600) / 60
+    );
+    var secs = value % 60;
+
+    function pad(number) {
+      return String(number).padStart(2, "0");
+    }
+
+    return hours > 0
+      ? hours + ":" + pad(minutes) + ":" + pad(secs)
+      : minutes + ":" + pad(secs);
+  }
+
+
+  function normalizeCinemaEpisodeNumber(value) {
+    if (value === null || value === undefined || value === "") {
+      return null;
+    }
+
+    var number = Number(value);
+
+    if (!Number.isFinite(number) || number < 0) {
+      return null;
+    }
+
+    return Math.floor(number);
+  }
+
+
+  function resolveCinemaEpisodeId(
+    cinemaId,
+    episodeNumber
+  ) {
+    var contentId =
+      normalizeContentId(cinemaId);
+    var number =
+      normalizeCinemaEpisodeNumber(
+        episodeNumber
+      );
+
+    if (!contentId || number === null) {
+      return Promise.resolve(null);
+    }
+
+    var key =
+      contentId + "::" + String(number);
+
+    if (
+      Object.prototype.hasOwnProperty.call(
+        cinemaLatestEpisodeCache,
+        key
+      )
+    ) {
+      return Promise.resolve(
+        cinemaLatestEpisodeCache[key]
+      );
+    }
+
+    if (!supabaseReady()) {
+      return Promise.resolve(null);
+    }
+
+    return supabaseClient
+      .from("cinema_episodes")
+      .select("id,episode_number")
+      .eq("cinema_id", contentId)
+      .eq("episode_number", number)
+      .eq("status", "published")
+      .maybeSingle()
+      .then(function (result) {
+        if (result && result.error) {
+          throw result.error;
+        }
+
+        var episodeId =
+          result && result.data && result.data.id
+            ? String(result.data.id)
+            : null;
+
+        cinemaLatestEpisodeCache[key] =
+          episodeId;
+
+        return episodeId;
+      })
+      .catch(function (error) {
+        console.warn(
+          "Cinema episode resolver:",
+          error
+        );
+        return null;
+      });
+  }
+
+
+  function writeCinemaLegacyProgress(
+    latestState,
+    episodeId
+  ) {
+    if (!authState.user || !latestState) {
+      return false;
+    }
+
+    var contentId = normalizeContentId(
+      latestState.contentId
+    );
+
+    var progress =
+      latestState.progress || {};
+
+    var seconds = Number(
+      progress.seconds
+    );
+
+    if (!contentId || !Number.isFinite(seconds) || seconds <= 0) {
+      return false;
+    }
+
+    var episodeNumber =
+      normalizeCinemaEpisodeNumber(
+        progress.episode_number
+      );
+
+    var key = episodeId
+      ? contentId + "::" + String(episodeId)
+      : contentId;
+
+    var updatedAt = Date.parse(
+      String(
+        latestState.progressUpdatedAt ||
+        latestState.updatedAt ||
+        ""
+      )
+    );
+
+    if (!Number.isFinite(updatedAt) || updatedAt <= 0) {
+      updatedAt = Date.now();
+    }
+
+    try {
+      var raw = localStorage.getItem(
+        "xwendnga_cinema_progress"
+      );
+      var data = raw ? JSON.parse(raw) : {};
+
+      if (!data || typeof data !== "object" || Array.isArray(data)) {
+        data = {};
+      }
+
+      data[key] = {
+        cinemaId: contentId,
+        episodeId: episodeId ? String(episodeId) : null,
+        episodeNumber: episodeNumber,
+        currentTime: seconds,
+        duration: 0,
+        percent: 0,
+        updatedAt: updatedAt
+      };
+
+      localStorage.setItem(
+        "xwendnga_cinema_progress",
+        JSON.stringify(data)
+      );
+
+      var seenKey =
+        String(authState.user.id) +
+        ":" +
+        key;
+
+      legacyCinemaProgressSeen[seenKey] =
+        updatedAt;
+      legacyCinemaSessionEntries[seenKey] =
+        true;
+
+      return true;
+    } catch (error) {
+      console.warn(
+        "Cinema cloud-to-local progress:",
+        error
+      );
+      return false;
+    }
+  }
+
+
+  function prepareCinemaResumeState(
+    latestState,
+    item
+  ) {
+    if (
+      !latestState ||
+      !item ||
+      !latestState.progress
+    ) {
+      return Promise.resolve(null);
+    }
+
+    var episodeNumber =
+      normalizeCinemaEpisodeNumber(
+        latestState.progress.episode_number
+      );
+
+    return resolveCinemaEpisodeId(
+      latestState.contentId,
+      episodeNumber
+    ).then(function (episodeId) {
+      if (
+        episodeNumber !== null &&
+        !episodeId
+      ) {
+        return null;
+      }
+
+      if (
+        !writeCinemaLegacyProgress(
+          latestState,
+          episodeId
+        )
+      ) {
+        return null;
+      }
+
+      return episodeId;
+    });
+  }
+
+
+  function renderCinemaLatestContent() {
+    var host = document.getElementById(
+      "cinemaContinueWatching"
+    );
+
+    if (!host) {
+      return Promise.resolve(null);
+    }
+
+    var requestId =
+      ++cinemaLatestRenderRequestId;
+
+    if (!authState.user) {
+      cinemaLatestState = null;
+      cinemaLatestSelfMutation = true;
+      host.innerHTML = "";
+      host.hidden = true;
+      window.setTimeout(function () {
+        cinemaLatestSelfMutation = false;
+      }, 0);
+      return Promise.resolve(null);
+    }
+
+    if (!window.AppLib || typeof window.AppLib.getLatestContent !== "function") {
+      return Promise.resolve(null);
+    }
+
+    return window.AppLib
+      .getLatestContent("cinema")
+      .then(function (latestState) {
+        if (
+          requestId !==
+          cinemaLatestRenderRequestId
+        ) {
+          return null;
+        }
+
+        var progress =
+          latestState &&
+          latestState.progress
+            ? latestState.progress
+            : null;
+
+        var seconds = progress
+          ? Number(progress.seconds)
+          : 0;
+
+        if (
+          !latestState ||
+          !progress ||
+          !Number.isFinite(seconds) ||
+          seconds <= 10
+        ) {
+          cinemaLatestState = null;
+          cinemaLatestSelfMutation = true;
+          host.innerHTML = "";
+          host.hidden = true;
+          window.setTimeout(function () {
+            cinemaLatestSelfMutation = false;
+          }, 0);
+          return null;
+        }
+
+        var item =
+          findCinemaCatalogItem(
+            latestState.contentId
+          );
+
+        if (!item) {
+          cinemaLatestState = latestState;
+          return null;
+        }
+
+        var title = homeCinemaTitle(
+          item
+        );
+        var poster = String(
+          item.poster_url || ""
+        ).trim();
+        var episodeNumber =
+          normalizeCinemaEpisodeNumber(
+            progress.episode_number
+          );
+        var episodeText =
+          episodeNumber !== null
+            ? "ئەڵقە " + String(episodeNumber)
+            : (item.type === "series" || item.type === "anime"
+                ? "ئەڵقە"
+                : typeLabelForHomeCinema(item.type));
+        var timeText =
+          "وەستا لە " +
+          formatCinemaTime(seconds);
+
+        var latestKey =
+          String(latestState.contentId) +
+          "|" +
+          String(progress.episode_number == null ? "" : progress.episode_number) +
+          "|" +
+          String(latestState.progressUpdatedAt || "");
+
+        cinemaLatestState = latestState;
+        cinemaLatestSelfMutation = true;
+        host.hidden = false;
+        host.setAttribute(
+          "data-xwendnga-latest-key",
+          latestKey
+        );
+        host.innerHTML = [
+          '<div class="cinema-section__head">',
+            '<div>',
+              '<h2 class="cinema-section__title">کۆتا بینین</h2>',
+              '<p class="cinema-section__hint">لەو شوێنەی وەستابوویتەوە بەردەوام بە</p>',
+            '</div>',
+          '</div>',
+          '<div class="cinema-wide-grid">',
+            '<article class="cinema-wide-card">',
+              '<button type="button" class="cinema-wide-card__thumb" data-cinema-latest-open aria-label="بەردەوام بە لە ' + esc(title) + '">',
+                poster
+                  ? '<img src="' + esc(poster) + '" alt="" loading="lazy">'
+                  : '<span aria-hidden="true"><i class="fa-solid fa-film"></i></span>',
+              '</button>',
+              '<div class="cinema-wide-card__body">',
+                '<h3 class="cinema-wide-card__title">' + esc(title) + '</h3>',
+                '<div class="cinema-wide-card__meta">' + esc(episodeText + " • " + timeText) + '</div>',
+                '<button type="button" class="cinema-action-btn cinema-action-btn--primary" data-cinema-latest-open aria-label="بەردەوام بە لە ' + esc(title) + '">',
+                  '<i class="fa-solid fa-play"></i>',
+                  ' بەردەوام بە',
+                '</button>',
+              '</div>',
+            '</article>',
+          '</div>'
+        ].join("");
+
+        host
+          .querySelectorAll("[data-cinema-latest-open]")
+          .forEach(function (button) {
+            button.addEventListener("click", function (event) {
+              event.preventDefault();
+              event.stopPropagation();
+
+              var currentLatest =
+                cinemaLatestState;
+              var currentItem =
+                findCinemaCatalogItem(
+                  currentLatest &&
+                    currentLatest.contentId
+                );
+
+              if (!currentLatest || !currentItem) {
+                return;
+              }
+
+              button.disabled = true;
+
+              prepareCinemaResumeState(
+                currentLatest,
+                currentItem
+              )
+                .then(function (episodeId) {
+                  if (!episodeId &&
+                      normalizeCinemaEpisodeNumber(
+                        currentLatest.progress &&
+                          currentLatest.progress.episode_number
+                      ) !== null) {
+                    throw new Error(
+                      "ئەڵقەکە بۆ بەردەوامبوون نەدۆزرایەوە"
+                    );
+                  }
+
+                  navigateHomeCinema({
+                    kind: "open",
+                    item: currentItem,
+                    episodeId: episodeId
+                  });
+                })
+                .catch(function (error) {
+                  console.error(
+                    "Cinema latest open:",
+                    error
+                  );
+                  toast(
+                    error && error.message
+                      ? error.message
+                      : "نەتوانرا کۆتا بینین بکرێتەوە"
+                  );
+                })
+                .finally(function () {
+                  button.disabled = false;
+                });
+            });
+          });
+
+        window.setTimeout(function () {
+          cinemaLatestSelfMutation = false;
+        }, 0);
+
+        return latestState;
+      })
+      .catch(function (error) {
+        if (
+          requestId !==
+          cinemaLatestRenderRequestId
+        ) {
+          return null;
+        }
+
+        cinemaLatestState = null;
+        console.warn(
+          "Cinema latest content:",
+          error
+        );
+        return null;
+      });
+  }
+
+
+  function scheduleCinemaLatestContentRender() {
+    if (cinemaLatestRenderTimer !== null) {
+      window.clearTimeout(
+        cinemaLatestRenderTimer
+      );
+    }
+
+    cinemaLatestRenderTimer =
+      window.setTimeout(function () {
+        cinemaLatestRenderTimer = null;
+        renderCinemaLatestContent();
+      }, 0);
+  }
+
+
+  function initCinemaStateObservers() {
+    var view = document.querySelector(
+      '[data-app-view="cinema"]'
+    );
+
+    if (!view || !window.MutationObserver) {
+      return;
+    }
+
+    ensureCinemaStateStyles();
+    ensureCinemaFavoriteButtons();
+    scheduleCinemaLatestContentRender();
+
+    if (!cinemaFavoriteObserver) {
+      cinemaFavoriteObserver =
+        new MutationObserver(function () {
+          ensureCinemaFavoriteButtons();
+          updateCinemaFavoriteButtons();
+        });
+
+      cinemaFavoriteObserver.observe(
+        view,
+        {
+          subtree: true,
+          childList: true
+        }
+      );
+    }
+
+    if (!cinemaStateUiObserver) {
+      cinemaStateUiObserver =
+        new MutationObserver(function () {
+          if (cinemaLatestSelfMutation) {
+            return;
+          }
+
+          scheduleCinemaLatestContentRender();
+        });
+
+      cinemaStateUiObserver.observe(
+        view,
+        {
+          subtree: true,
+          childList: true
+        }
+      );
+    }
+  }
+
+
+  function typeLabelForHomeCinema(type) {
+    var labels = {
+      movie: "فیلم",
+      series: "زنجیرە",
+      anime: "ئەنیمی",
+      cartoon: "کارتۆن"
+    };
+
+    return labels[String(type || "").toLowerCase()] || "سینەما";
+  }
+
+
+  /* =======================================================
+     PHASE 6-D-1 — LEGACY CINEMA PROGRESS BRIDGE
+     -------------------------------------------------------
+     Local player progress remains the compatibility path.
+     Removed local entries are reconciled with cloud state;
+     if no replacement episode remains, cloud progress is cleared.
+     ======================================================= */
+
+  function syncLegacyCinemaProgress(
+    force
+  ) {
+    if (!authState.user) {
+      return Promise.resolve([]);
+    }
+
+    var raw;
+
+    try {
+      raw = localStorage.getItem(
+        "xwendnga_cinema_progress"
+      );
+    } catch (error) {
+      return Promise.resolve([]);
+    }
+
+    var data;
+
+    try {
+      data = raw
+        ? JSON.parse(raw)
+        : {};
+    } catch (error) {
+      data = {};
+    }
+
+    if (
+      !data ||
+      typeof data !== "object" ||
+      Array.isArray(data)
+    ) {
+      return Promise.resolve([]);
+    }
+
+    var uid = String(
+      authState.user.id || ""
+    );
+    var currentKeys = {};
+
+    Object.keys(data).forEach(function (key) {
+      currentKeys[key] = true;
+    });
+
+    var removedByCinema = {};
+
+    Object.keys(legacyCinemaSessionEntries).forEach(function (seenKey) {
+      if (seenKey.indexOf(uid + ":") !== 0) {
+        return;
+      }
+
+      var localKey = seenKey.slice(uid.length + 1);
+
+      if (
+        Object.prototype.hasOwnProperty.call(
+          currentKeys,
+          localKey
+        )
+      ) {
+        return;
+      }
+
+      var cinemaId = normalizeContentId(
+        String(localKey).split("::")[0]
+      );
+
+      if (!cinemaId) {
+        delete legacyCinemaSessionEntries[seenKey];
+        delete legacyCinemaProgressSeen[seenKey];
+        return;
+      }
+
+      removedByCinema[cinemaId] =
+        removedByCinema[cinemaId] || [];
+      removedByCinema[cinemaId].push(
+        seenKey
+      );
+    });
+
+    var removalTasks = Object.keys(
+      removedByCinema
+    ).map(function (cinemaId) {
+      var remaining = Object.keys(data)
+        .map(function (key) {
+          return {
+            key: key,
+            entry: data[key]
+          };
+        })
+        .filter(function (candidate) {
+          if (
+            !candidate.entry ||
+            typeof candidate.entry !== "object"
+          ) {
+            return false;
+          }
+
+          var candidateCinemaId =
+            normalizeContentId(
+              candidate.entry.cinemaId ||
+                String(candidate.key).split("::")[0]
+            );
+
+          return candidateCinemaId ===
+            cinemaId;
+        })
+        .sort(function (a, b) {
+          return (
+            Number(
+              b.entry && b.entry.updatedAt
+            ) || 0
+          ) - (
+            Number(
+              a.entry && a.entry.updatedAt
+            ) || 0
+          );
+        });
+
+      var task;
+
+      if (remaining.length) {
+        var candidate =
+          remaining[0];
+        var candidateSeconds = Number(
+          candidate.entry.currentTime
+        );
+        var candidateEpisodeNumber =
+          candidate.entry.episodeNumber != null
+            ? Number(
+                candidate.entry.episodeNumber
+              )
+            : null;
+
+        if (
+          !Number.isFinite(candidateSeconds) ||
+          candidateSeconds < 0
+        ) {
+          task = Promise.resolve(null);
+        } else {
+          task = saveProgress(
+            "cinema",
+            cinemaId,
+            {
+              seconds: candidateSeconds,
+              episode_number:
+                Number.isFinite(candidateEpisodeNumber) &&
+                candidateEpisodeNumber >= 0
+                  ? Math.floor(candidateEpisodeNumber)
+                  : null
+            }
+          );
+        }
+      } else {
+        task = clearProgress(
+          "cinema",
+          cinemaId
+        );
+      }
+
+      return task.then(function (result) {
+        removedByCinema[cinemaId].forEach(
+          function (seenKey) {
+            delete legacyCinemaSessionEntries[
+              seenKey
+            ];
+            delete legacyCinemaProgressSeen[
+              seenKey
+            ];
+          }
+        );
+
+        return result;
+      }).catch(function (error) {
+        console.warn(
+          "Cinema removed progress reconciliation:",
+          error
+        );
+        return null;
+      });
+    });
+
+    var tasks = removalTasks;
+
+    Object.keys(data).forEach(
+      function (key) {
+        var entry = data[key];
+
+        if (
+          !entry ||
+          typeof entry !== "object"
+        ) {
+          return;
+        }
+
+        var cinemaId =
+          normalizeContentId(
+            entry.cinemaId ||
+              String(key).split("::")[0]
+          );
+
+        if (!cinemaId) {
+          return;
+        }
+
+        var seconds = Number(
+          entry.currentTime
+        );
+
+        var episodeNumber =
+          entry.episodeNumber != null
+            ? Number(entry.episodeNumber)
+            : null;
+
+        var updatedAt = Number(
+          entry.updatedAt
+        ) || 0;
+
+        if (
+          !Number.isFinite(seconds) ||
+          seconds < 0 ||
+          !Number.isFinite(updatedAt) ||
+          updatedAt <= 0
+        ) {
+          return;
+        }
+
+        var seenKey =
+          uid + ":" + String(key);
+
+        if (
+          !force &&
+          updatedAt <=
+            Number(
+              legacyCinemaProgressSeen[
+                seenKey
+              ] || 0
+            )
+        ) {
+          return;
+        }
+
+        /* The legacy store has no user_id. Do not silently
+           attach stale guest/device progress to a new account. */
+        if (
+          userContentStateLoadedUserId &&
+          updatedAt <
+            Number(
+              window.XWENDNGA_SESSION_STARTED_AT ||
+                0
+            )
+        ) {
+          legacyCinemaProgressSeen[
+            seenKey
+          ] = updatedAt;
+          return;
+        }
+
+        tasks.push(
+          saveProgress(
+            "cinema",
+            cinemaId,
+            {
+              seconds: seconds,
+              episode_number:
+                Number.isFinite(
+                  episodeNumber
+                ) &&
+                episodeNumber >= 0
+                  ? Math.floor(
+                      episodeNumber
+                    )
+                  : null
+            }
+          ).then(function (result) {
+            legacyCinemaProgressSeen[
+              seenKey
+            ] = updatedAt;
+            legacyCinemaSessionEntries[
+              seenKey
+            ] = true;
+            return result;
+          }).catch(function (error) {
+            console.warn(
+              "Cinema progress cloud sync:",
+              error
+            );
+            return null;
+          })
+        );
+      }
+    );
+
+    return Promise.all(tasks);
+  }
+
+
+  /* Re-enable the player-close refresh without touching the locked player. */
+  window.addEventListener(
+    "xwendnga:cinema-player-close",
+    function () {
+      syncLegacyCinemaProgress(
+        true
+      ).finally(function () {
+        scheduleCinemaLatestContentRender();
+        updateCinemaFavoriteButtons();
+      });
+    }
+  );
+
+  window.addEventListener(
+    "xwendnga:user-content-state-changed",
+    function (event) {
+      var detail = event && event.detail
+        ? event.detail
+        : {};
+
+      if (
+        detail.contentType === "cinema" ||
+        detail.reason === "progress-cleared" ||
+        detail.reason === "favorite"
+      ) {
+        updateCinemaFavoriteButtons();
+        scheduleCinemaLatestContentRender();
+      }
+    }
+  );
+
+  window.addEventListener(
+    "xwendnga:cinema-data-ready",
+    function () {
+      ensureCinemaStateStyles();
+      ensureCinemaFavoriteButtons();
+      scheduleCinemaLatestContentRender();
+    }
+  );
+
+  window.addEventListener(
+    "xwendnga:routechange",
+    function (event) {
+      var route =
+        event && event.detail
+          ? event.detail.route
+          : "";
+
+      if (route === "cinema") {
+        initCinemaStateObservers();
+        ensureCinemaFavoriteButtons();
+        scheduleCinemaLatestContentRender();
+      }
+    }
+  );
 
   window.setInterval(
     function () {
-      syncLegacyCinemaProgress(
-        false
-      );
+      syncLegacyCinemaProgress(false);
     },
     CINEMA_PROGRESS_SYNC_MS
   );
 
   window.addEventListener(
-    "xwendnga:routechange",
+    "pagehide",
     function () {
-      syncLegacyCinemaProgress(
-        false
-      );
+      syncLegacyCinemaProgress(true);
     }
   );
 
-  window.addEventListener(
-    "pagehide",
-    function () {
-      syncLegacyCinemaProgress(
-        true
-      );
-    }
-  );
+  initCinemaStateObservers();
+
 
   /* =======================================================
      PAGE / BOOK ROUTE EVENTS
@@ -8832,6 +10055,9 @@
 
     getProgress:
       getProgress,
+
+    clearProgress:
+      clearProgress,
 
     getLatestContent:
       getLatestContent,
@@ -9307,6 +10533,8 @@
         "";
       legacyCinemaProgressSeen =
         {};
+      legacyCinemaSessionEntries =
+        {};
 
       renderVocab();
       renderBooks();
@@ -9329,6 +10557,8 @@
       window.XWENDNGA_SESSION_STARTED_AT =
         Date.now();
       legacyCinemaProgressSeen =
+        {};
+      legacyCinemaSessionEntries =
         {};
     }
 
@@ -9794,6 +11024,8 @@ function renderSettingsPage() {
         renderBooks();
         renderTracks();
         renderOwnerPanel();
+        updateCinemaFavoriteButtons();
+        scheduleCinemaLatestContentRender();
         if (authState.isAdmin) {
           loadAdminUsers().catch(function (adminError) { console.error("loadAdminUsers:", adminError); });
         }
