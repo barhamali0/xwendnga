@@ -81,24 +81,6 @@
   }
 
 
-  function formatUpdatedAt(value) {
-    if (!value) return "";
-
-    try {
-      var date = new Date(value);
-      if (!Number.isFinite(date.getTime())) return "";
-
-      return date.toLocaleDateString("ckb-IQ", {
-        year: "numeric",
-        month: "short",
-        day: "numeric"
-      });
-    } catch (e) {
-      return "";
-    }
-  }
-
-
   function typeLabel(type) {
     if (type === "book") return "کتێب";
     return "سینەما";
@@ -377,7 +359,6 @@
     ).trim();
     var pageCount = Number(book && book.pageCount) || 0;
     var language = String(book && (book.language || book.lang) || "").trim();
-    var date = formatUpdatedAt(row.updatedAt);
     var id = escapeHtml(row.contentId);
 
     return [
@@ -397,10 +378,6 @@
             '<span><i class="fa-regular fa-file-lines"></i> ' + escapeHtml(pageCount) + ' لاپەڕە</span>',
             language ? '<span><i class="fa-solid fa-language"></i> ' + escapeHtml(language) + '</span>' : '',
             '<span class="tag-badge"><i class="fa-solid fa-book-open"></i> کتێب</span>',
-          '</div>',
-          '<div class="favorites-card-source">',
-            '<span><i class="fa-solid fa-heart"></i> دڵخواز</span>',
-            date ? '<span>' + escapeHtml(date) + '</span>' : '',
           '</div>',
           '<div class="actions">',
             '<button class="small primary" type="button" data-favorite-open="1">',
@@ -422,7 +399,6 @@
     var type = String(item && item.type || "").trim();
     var year = String(item && item.year || "").trim();
     var rating = Number(item && item.rating);
-    var date = formatUpdatedAt(row.updatedAt);
     var id = escapeHtml(row.contentId);
 
     return [
