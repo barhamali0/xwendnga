@@ -589,6 +589,46 @@
   };
 
   /* =======================================================
+     USER CONTENT STATE — PHASE 6-C DATA LAYER
+     -------------------------------------------------------
+     Canonical Supabase contract:
+       user_content_state
+         user_id             uuid
+         content_type        text: book | cinema | music
+         content_id          text
+         is_favorite         boolean
+         progress            jsonb
+         progress_updated_at timestamptz
+         updated_at          timestamptz
+
+     Canonical progress JSON:
+       book   -> { page: number }
+       cinema -> { seconds: number, episode_number: number|null }
+       music  -> { seconds: number }
+
+     Row identity:
+       (user_id, content_type, content_id)
+
+     Favorite and progress are separate states.
+     Latest uses progress_updated_at, not updated_at.
+     ======================================================= */
+
+  var USER_CONTENT_STATE_TABLE = "user_content_state";
+  var USER_CONTENT_TYPES = {
+    book: true,
+    cinema: true,
+    music: true
+  };
+  var userContentStateCache = {};
+  var userContentStateLoadedUserId = "";
+  var legacyFavoriteMigrationUserId = "";
+  var legacyCinemaProgressSeen = {};
+  var lastMusicProgressSavedAt = 0;
+  var musicProgressRequestId = 0;
+  var CONTENT_PROGRESS_SAVE_MS = 5000;
+  var CINEMA_PROGRESS_SYNC_MS = 5000;
+
+  /* =======================================================
      PUBLIC PROFILE DATA LAYER — PHASE 4B-2
      Kept completely separate from authState.profile.
      ======================================================= */
@@ -701,6 +741,1730 @@
   function favoriteKey(itemType, itemId) {
     return String(itemType || "book") + ":" + String(itemId);
   }
+
+  function normalizeContentType(value) {
+    var type = String(value || "").trim().toLowerCase();
+    return USER_CONTENT_TYPES[type] ? type : "";
+  }
+
+  function normalizeContentId(value) {
+    return String(value == null ? "" : value).trim();
+  }
+
+  function userContentStateKey(type, id) {
+    return String(type) + ":" + String(id);
+  }
+
+  function isUserContentStateMissingError(error) {
+    if (!error) return false;
+
+    var code = String(error.code || "").toUpperCase();
+
+    if (code === "42P01" || code === "PGRST205") {
+      return true;
+    }
+
+    var message = String(
+      error.message ||
+      error.details ||
+      ""
+    ).toLowerCase();
+
+    return (
+      message.indexOf("user_content_state") >= 0 &&
+      (
+        message.indexOf("does not exist") >= 0 ||
+        message.indexOf("not found") >= 0 ||
+        message.indexOf("relation") >= 0
+      )
+    );
+  }
+
+  function normalizeContentProgress(
+    type,
+    value
+  ) {
+    var contentType =
+      normalizeContentType(type);
+
+    if (
+      !contentType ||
+      !value ||
+      typeof value !== "object"
+    ) {
+      return null;
+    }
+
+    if (contentType === "book") {
+      var page =
+        Number(value.page);
+
+      if (
+        !Number.isFinite(page) ||
+        page < 0
+      ) {
+        return null;
+      }
+
+      return {
+        page: Math.max(
+          0,
+          Math.floor(page)
+        )
+      };
+    }
+
+    if (contentType === "cinema") {
+      var seconds =
+        Number(value.seconds);
+
+      if (
+        !Number.isFinite(seconds) ||
+        seconds < 0
+      ) {
+        return null;
+      }
+
+      var episodeNumber =
+        value.episode_number;
+
+      if (
+        episodeNumber !== null &&
+        episodeNumber !== undefined &&
+        episodeNumber !== ""
+      ) {
+        episodeNumber =
+          Number(episodeNumber);
+
+        if (
+          !Number.isFinite(episodeNumber) ||
+          episodeNumber < 0
+        ) {
+          return null;
+        }
+
+        episodeNumber =
+          Math.max(
+            0,
+            Math.floor(episodeNumber)
+          );
+      } else {
+        episodeNumber = null;
+      }
+
+      return {
+        seconds:
+          Math.max(0, seconds),
+        episode_number:
+          episodeNumber
+      };
+    }
+
+    var musicSeconds =
+      Number(value.seconds);
+
+    if (
+      !Number.isFinite(musicSeconds) ||
+      musicSeconds < 0
+    ) {
+      return null;
+    }
+
+    return {
+      seconds:
+        Math.max(0, musicSeconds)
+    };
+  }
+
+  function cacheUserContentState(row) {
+    if (!row) return null;
+
+    var type =
+      normalizeContentType(
+        row.content_type
+      );
+
+    var id =
+      normalizeContentId(
+        row.content_id
+      );
+
+    if (!type || !id) {
+      return null;
+    }
+
+    var progress =
+      normalizeContentProgress(
+        type,
+        row.progress
+      );
+
+    var state = {
+      contentType: type,
+      contentId: id,
+      isFavorite:
+        row.is_favorite === true,
+      progress:
+        progress,
+      progressUpdatedAt:
+        row.progress_updated_at || null,
+      updatedAt:
+        row.updated_at || null
+    };
+
+    userContentStateCache[
+      userContentStateKey(
+        type,
+        id
+      )
+    ] = state;
+
+    return state;
+  }
+
+  function getCachedUserContentState(
+    type,
+    id
+  ) {
+    var contentType =
+      normalizeContentType(type);
+
+    var contentId =
+      normalizeContentId(id);
+
+    if (!contentType || !contentId) {
+      return null;
+    }
+
+    return (
+      userContentStateCache[
+        userContentStateKey(
+          contentType,
+          contentId
+        )
+      ] || null
+    );
+  }
+
+  function applyCachedStateToBook(
+    book
+  ) {
+    if (
+      !book ||
+      book.remoteId == null
+    ) {
+      return;
+    }
+
+    var state =
+      getCachedUserContentState(
+        "book",
+        book.remoteId
+      );
+
+    if (!state) {
+      return;
+    }
+
+    book.favorite =
+      !!state.isFavorite;
+
+    if (state.progress) {
+      book.currentPage =
+        state.progress.page;
+
+      book.progress =
+        book.pageCount > 1
+          ? book.currentPage /
+            (
+              Number(book.pageCount) -
+              1
+            )
+          : book.currentPage > 0
+          ? 1
+          : 0;
+    }
+  }
+
+  function applyContentStateCache() {
+    books.forEach(function (book) {
+      applyCachedStateToBook(
+        book
+      );
+    });
+  }
+
+  function legacyFavoritesRequest() {
+    if (
+      !authState.user ||
+      !supabaseReady()
+    ) {
+      return Promise.resolve([]);
+    }
+
+    return supabaseClient
+      .from("favorites")
+      .select(
+        "item_id,item_type"
+      )
+      .eq(
+        "user_id",
+        authState.user.id
+      )
+      .then(function (result) {
+        if (
+          result &&
+          result.error
+        ) {
+          throw result.error;
+        }
+
+        return (
+          result &&
+          Array.isArray(result.data)
+        )
+          ? result.data
+          : [];
+      });
+  }
+
+  function migrateLegacyFavoritesForUser() {
+    if (
+      !authState.user ||
+      legacyFavoriteMigrationUserId ===
+        String(authState.user.id)
+    ) {
+      return Promise.resolve();
+    }
+
+    legacyFavoriteMigrationUserId =
+      String(authState.user.id);
+
+    return legacyFavoritesRequest()
+      .then(function (rows) {
+        var missing = [];
+
+        (rows || []).forEach(
+          function (row) {
+            var type =
+              normalizeContentType(
+                row &&
+                  row.item_type
+              );
+
+            var id =
+              normalizeContentId(
+                row &&
+                  row.item_id
+              );
+
+            if (!type || !id) {
+              return;
+            }
+
+            var key =
+              userContentStateKey(
+                type,
+                id
+              );
+
+            if (
+              userContentStateCache[
+                key
+              ]
+            ) {
+              return;
+            }
+
+            missing.push({
+              user_id:
+                authState.user.id,
+              content_type:
+                type,
+              content_id:
+                id,
+              is_favorite:
+                true
+            });
+          }
+        );
+
+        if (!missing.length) {
+          return;
+        }
+
+        return supabaseClient
+          .from(
+            USER_CONTENT_STATE_TABLE
+          )
+          .upsert(
+            missing,
+            {
+              onConflict:
+                "user_id,content_type,content_id"
+            }
+          )
+          .then(
+            function (result) {
+              if (
+                result &&
+                result.error
+              ) {
+                throw result.error;
+              }
+
+              missing.forEach(
+                function (row) {
+                  cacheUserContentState(
+                    row
+                  );
+                }
+              );
+            }
+          );
+      })
+      .catch(function (error) {
+        legacyFavoriteMigrationUserId =
+          "";
+
+        if (
+          !isUserContentStateMissingError(
+            error
+          )
+        ) {
+          console.warn(
+            "Legacy favorites migration:",
+            error
+          );
+        }
+      });
+  }
+
+  function setFavorite(
+    type,
+    id,
+    isFavorite
+  ) {
+    if (!authState.user) {
+      return Promise.reject(
+        new Error(
+          "سەرەتا بچۆ ژوورەوە"
+        )
+      );
+    }
+
+    if (!supabaseReady()) {
+      return Promise.reject(
+        new Error(
+          "Supabase بەردەست نییە"
+        )
+      );
+    }
+
+    var contentType =
+      normalizeContentType(type);
+
+    var contentId =
+      normalizeContentId(id);
+
+    var nextState =
+      !!isFavorite;
+
+    if (
+      !contentType ||
+      !contentId
+    ) {
+      return Promise.reject(
+        new Error(
+          "جۆر یان ناسنامەی ناوەڕۆک نادروستە"
+        )
+      );
+    }
+
+    var payload = {
+      user_id:
+        authState.user.id,
+      content_type:
+        contentType,
+      content_id:
+        contentId,
+      is_favorite:
+        nextState
+    };
+
+    return supabaseClient
+      .from(
+        USER_CONTENT_STATE_TABLE
+      )
+      .upsert(
+        payload,
+        {
+          onConflict:
+            "user_id,content_type,content_id"
+        }
+      )
+      .then(function (result) {
+        if (
+          result &&
+          result.error
+        ) {
+          throw result.error;
+        }
+
+        var cached =
+          getCachedUserContentState(
+            contentType,
+            contentId
+          ) || {
+            contentType:
+              contentType,
+            contentId:
+              contentId,
+            isFavorite:
+              false,
+            progress:
+              null,
+            progressUpdatedAt:
+              null,
+            updatedAt:
+              null
+          };
+
+        cached.isFavorite =
+          nextState;
+
+        cached.updatedAt =
+          new Date().toISOString();
+
+        userContentStateCache[
+          userContentStateKey(
+            contentType,
+            contentId
+          )
+        ] = cached;
+
+        if (
+          contentType ===
+          "book"
+        ) {
+          authState.favorites[
+            favoriteKey(
+              contentType,
+              contentId
+            )
+          ] = nextState;
+
+          var targetBook =
+            books.find(
+              function (book) {
+                return (
+                  book &&
+                  book.remoteId != null &&
+                  String(
+                    book.remoteId
+                  ) === contentId
+                );
+              }
+            );
+
+          if (targetBook) {
+            targetBook.favorite =
+              nextState;
+          }
+        }
+
+        return cached;
+      })
+      .catch(function (error) {
+        /* Only keep the old Book Favorite path alive
+           while the new target table is not deployed. */
+        if (
+          contentType !== "book" ||
+          !isUserContentStateMissingError(
+            error
+          )
+        ) {
+          throw error;
+        }
+
+        var legacyRequest =
+          nextState
+            ? supabaseClient
+                .from("favorites")
+                .insert({
+                  user_id:
+                    authState.user.id,
+                  item_type:
+                    "book",
+                  item_id:
+                    id
+                })
+            : supabaseClient
+                .from("favorites")
+                .delete()
+                .eq(
+                  "user_id",
+                  authState.user.id
+                )
+                .eq(
+                  "item_type",
+                  "book"
+                )
+                .eq(
+                  "item_id",
+                  id
+                );
+
+        return legacyRequest
+          .then(
+            function (legacyResult) {
+              if (
+                legacyResult &&
+                legacyResult.error
+              ) {
+                throw legacyResult.error;
+              }
+
+              authState.favorites[
+                favoriteKey(
+                  "book",
+                  id
+                )
+              ] = nextState;
+
+              var legacyBook =
+                books.find(
+                  function (book) {
+                    return (
+                      String(
+                        book &&
+                          book.remoteId
+                      ) === contentId
+                    );
+                  }
+                );
+
+              if (legacyBook) {
+                legacyBook.favorite =
+                  nextState;
+              }
+
+              return {
+                contentType:
+                  contentType,
+                contentId:
+                  contentId,
+                isFavorite:
+                  nextState,
+                progress:
+                  getCachedUserContentState(
+                    contentType,
+                    contentId
+                  )
+                    ? getCachedUserContentState(
+                        contentType,
+                        contentId
+                      ).progress
+                    : null,
+                progressUpdatedAt:
+                  null,
+                updatedAt:
+                  null,
+                legacy:
+                  true
+              };
+            }
+          );
+      });
+  }
+
+  function getFavorites(
+    type
+  ) {
+    if (!authState.user) {
+      return Promise.resolve([]);
+    }
+
+    if (!supabaseReady()) {
+      return Promise.reject(
+        new Error(
+          "Supabase بەردەست نییە"
+        )
+      );
+    }
+
+    var contentType =
+      normalizeContentType(type);
+
+    if (
+      type &&
+      !contentType
+    ) {
+      return Promise.reject(
+        new Error(
+          "جۆری ناوەڕۆک نادروستە"
+        )
+      );
+    }
+
+    var queryBuilder =
+      supabaseClient
+        .from(
+          USER_CONTENT_STATE_TABLE
+        )
+        .select(
+          "content_type,content_id,is_favorite,progress,progress_updated_at,updated_at"
+        )
+        .eq(
+          "user_id",
+          authState.user.id
+        )
+        .eq(
+          "is_favorite",
+          true
+        );
+
+    if (contentType) {
+      queryBuilder =
+        queryBuilder.eq(
+          "content_type",
+          contentType
+        );
+    }
+
+    return queryBuilder
+      .then(function (result) {
+        if (
+          result &&
+          result.error
+        ) {
+          throw result.error;
+        }
+
+        return (
+          result &&
+          Array.isArray(result.data)
+        )
+          ? result.data
+              .map(
+                cacheUserContentState
+              )
+              .filter(Boolean)
+          : [];
+      })
+      .catch(function (error) {
+        if (
+          !isUserContentStateMissingError(
+            error
+          )
+        ) {
+          throw error;
+        }
+
+        return legacyFavoritesRequest()
+          .then(function (rows) {
+            var output = [];
+
+            (rows || []).forEach(
+              function (row) {
+                var rowType =
+                  normalizeContentType(
+                    row &&
+                      row.item_type
+                  );
+
+                var rowId =
+                  normalizeContentId(
+                    row &&
+                      row.item_id
+                  );
+
+                if (
+                  !rowType ||
+                  !rowId
+                ) {
+                  return;
+                }
+
+                if (
+                  contentType &&
+                  rowType !==
+                    contentType
+                ) {
+                  return;
+                }
+
+                output.push({
+                  contentType:
+                    rowType,
+                  contentId:
+                    rowId,
+                  isFavorite:
+                    true,
+                  progress:
+                    null,
+                  progressUpdatedAt:
+                    null,
+                  updatedAt:
+                    null,
+                  legacy:
+                    true
+                });
+              }
+            );
+
+            return output;
+          });
+      });
+  }
+
+  function saveProgress(
+    type,
+    id,
+    progress
+  ) {
+    if (!authState.user) {
+      return Promise.reject(
+        new Error(
+          "سەرەتا بچۆ ژوورەوە"
+        )
+      );
+    }
+
+    var contentType =
+      normalizeContentType(type);
+
+    var contentId =
+      normalizeContentId(id);
+
+    var normalized =
+      normalizeContentProgress(
+        contentType,
+        progress
+      );
+
+    if (
+      !contentType ||
+      !contentId ||
+      !normalized
+    ) {
+      return Promise.reject(
+        new Error(
+          "داتای progress نادروستە"
+        )
+      );
+    }
+
+    var cached =
+      getCachedUserContentState(
+        contentType,
+        contentId
+      ) || {
+        contentType:
+          contentType,
+        contentId:
+          contentId,
+        isFavorite:
+          false,
+        progress:
+          null,
+        progressUpdatedAt:
+          null,
+        updatedAt:
+          null
+      };
+
+    var now =
+      new Date().toISOString();
+
+    cached.progress =
+      normalized;
+    cached.progressUpdatedAt =
+      now;
+    cached.updatedAt =
+      now;
+
+    userContentStateCache[
+      userContentStateKey(
+        contentType,
+        contentId
+      )
+    ] = cached;
+
+    if (
+      contentType ===
+      "book"
+    ) {
+      var progressBook =
+        books.find(
+          function (book) {
+            return (
+              book &&
+              book.remoteId != null &&
+              String(
+                book.remoteId
+              ) === contentId
+            );
+          }
+        );
+
+      if (
+        progressBook &&
+        normalized.page !==
+          undefined
+      ) {
+        progressBook.currentPage =
+          normalized.page;
+
+        progressBook.progress =
+          progressBook.pageCount > 1
+            ? normalized.page /
+              (
+                Number(
+                  progressBook.pageCount
+                ) - 1
+              )
+            : normalized.page > 0
+            ? 1
+            : 0;
+      }
+    }
+
+    return supabaseClient
+      .from(
+        USER_CONTENT_STATE_TABLE
+      )
+      .upsert(
+        {
+          user_id:
+            authState.user.id,
+          content_type:
+            contentType,
+          content_id:
+            contentId,
+          is_favorite:
+            !!cached.isFavorite,
+          progress:
+            normalized,
+          progress_updated_at:
+            now,
+          updated_at:
+            now
+        },
+        {
+          onConflict:
+            "user_id,content_type,content_id"
+        }
+      )
+      .then(function (result) {
+        if (
+          result &&
+          result.error
+        ) {
+          throw result.error;
+        }
+
+        return cached;
+      })
+      .catch(function (error) {
+        if (
+          isUserContentStateMissingError(
+            error
+          )
+        ) {
+          return Object.assign(
+            {},
+            cached,
+            {
+              localOnly:
+                true
+            }
+          );
+        }
+
+        throw error;
+      });
+  }
+
+  function getProgress(
+    type,
+    id
+  ) {
+    if (!authState.user) {
+      return Promise.resolve(
+        null
+      );
+    }
+
+    var contentType =
+      normalizeContentType(type);
+
+    var contentId =
+      normalizeContentId(id);
+
+    if (
+      !contentType ||
+      !contentId
+    ) {
+      return Promise.reject(
+        new Error(
+          "جۆر یان ناسنامەی ناوەڕۆک نادروستە"
+        )
+      );
+    }
+
+    var cached =
+      getCachedUserContentState(
+        contentType,
+        contentId
+      );
+
+    if (!supabaseReady()) {
+      return Promise.resolve(
+        cached
+          ? cached.progress
+          : null
+      );
+    }
+
+    return supabaseClient
+      .from(
+        USER_CONTENT_STATE_TABLE
+      )
+      .select(
+        "content_type,content_id,is_favorite,progress,progress_updated_at,updated_at"
+      )
+      .eq(
+        "user_id",
+        authState.user.id
+      )
+      .eq(
+        "content_type",
+        contentType
+      )
+      .eq(
+        "content_id",
+        contentId
+      )
+      .maybeSingle()
+      .then(function (result) {
+        if (
+          result &&
+          result.error
+        ) {
+          throw result.error;
+        }
+
+        var state =
+          cacheUserContentState(
+            result &&
+              result.data
+              ? result.data
+              : {
+                  content_type:
+                    contentType,
+                  content_id:
+                    contentId,
+                  is_favorite:
+                    cached
+                      ? cached.isFavorite
+                      : false,
+                  progress:
+                    null,
+                  progress_updated_at:
+                    cached
+                      ? cached.progressUpdatedAt
+                      : null,
+                  updated_at:
+                    cached
+                      ? cached.updatedAt
+                      : null
+                }
+          );
+
+        return (
+          state &&
+          state.progress
+            ? state.progress
+            : null
+        );
+      })
+      .catch(function (error) {
+        if (
+          isUserContentStateMissingError(
+            error
+          )
+        ) {
+          return cached
+            ? cached.progress
+            : null;
+        }
+
+        throw error;
+      });
+  }
+
+  function getLatestContent(
+    type
+  ) {
+    if (!authState.user) {
+      return Promise.resolve(
+        null
+      );
+    }
+
+    var contentType =
+      normalizeContentType(type);
+
+    if (
+      type &&
+      !contentType
+    ) {
+      return Promise.reject(
+        new Error(
+          "جۆری ناوەڕۆک نادروستە"
+        )
+      );
+    }
+
+    function latestFromCache() {
+      return Object.keys(
+        userContentStateCache
+      )
+        .map(
+          function (key) {
+            return userContentStateCache[
+              key
+            ];
+          }
+        )
+        .filter(
+          function (row) {
+            return (
+              row &&
+              row.progress &&
+              row.progressUpdatedAt &&
+              (
+                !contentType ||
+                row.contentType ===
+                  contentType
+              )
+            );
+          }
+        )
+        .sort(
+          function (a, b) {
+            return (
+              new Date(
+                b.progressUpdatedAt
+              ).getTime() -
+              new Date(
+                a.progressUpdatedAt
+              ).getTime()
+            );
+          }
+        )[0] || null;
+    }
+
+    if (!supabaseReady()) {
+      return Promise.resolve(
+        latestFromCache()
+      );
+    }
+
+    var queryBuilder =
+      supabaseClient
+        .from(
+          USER_CONTENT_STATE_TABLE
+        )
+        .select(
+          "content_type,content_id,is_favorite,progress,progress_updated_at,updated_at"
+        )
+        .eq(
+          "user_id",
+          authState.user.id
+        )
+        .not(
+          "progress_updated_at",
+          "is",
+          null
+        )
+        .order(
+          "progress_updated_at",
+          {
+            ascending: false
+          }
+        )
+        .limit(1);
+
+    if (contentType) {
+      queryBuilder =
+        queryBuilder.eq(
+          "content_type",
+          contentType
+        );
+    }
+
+    return queryBuilder
+      .maybeSingle()
+      .then(function (result) {
+        if (
+          result &&
+          result.error
+        ) {
+          throw result.error;
+        }
+
+        return result &&
+          result.data
+          ? cacheUserContentState(
+              result.data
+            )
+          : null;
+      })
+      .catch(function (error) {
+        if (
+          isUserContentStateMissingError(
+            error
+          )
+        ) {
+          return latestFromCache();
+        }
+
+        throw error;
+      });
+  }
+
+  function loadUserContentState() {
+    if (!authState.user) {
+      userContentStateCache = {};
+      userContentStateLoadedUserId =
+        "";
+      legacyFavoriteMigrationUserId =
+        "";
+      legacyCinemaProgressSeen = {};
+      authState.favorites = {};
+      applyContentStateCache();
+      return Promise.resolve();
+    }
+
+    if (!supabaseReady()) {
+      return Promise.resolve();
+    }
+
+    var uid =
+      String(
+        authState.user.id || ""
+      );
+
+    return supabaseClient
+      .from(
+        USER_CONTENT_STATE_TABLE
+      )
+      .select(
+        "content_type,content_id,is_favorite,progress,progress_updated_at,updated_at"
+      )
+      .eq(
+        "user_id",
+        authState.user.id
+      )
+      .then(function (result) {
+        if (
+          result &&
+          result.error
+        ) {
+          throw result.error;
+        }
+
+        userContentStateCache =
+          {};
+        authState.favorites = {};
+
+        (
+          result.data || []
+        ).forEach(
+          function (row) {
+            var state =
+              cacheUserContentState(
+                row
+              );
+
+            if (
+              state &&
+              state.isFavorite
+            ) {
+              authState.favorites[
+                favoriteKey(
+                  state.contentType,
+                  state.contentId
+                )
+              ] = true;
+            }
+          }
+        );
+
+        userContentStateLoadedUserId =
+          uid;
+
+        applyContentStateCache();
+
+        return migrateLegacyFavoritesForUser();
+      })
+      .catch(function (error) {
+        if (
+          !isUserContentStateMissingError(
+            error
+          )
+        ) {
+          throw error;
+        }
+
+        return legacyFavoritesRequest()
+          .then(
+            function (rows) {
+              userContentStateCache =
+                {};
+              authState.favorites =
+                {};
+
+              (rows || []).forEach(
+                function (row) {
+                  var type =
+                    normalizeContentType(
+                      row &&
+                        row.item_type
+                    );
+
+                  var id =
+                    normalizeContentId(
+                      row &&
+                        row.item_id
+                    );
+
+                  if (
+                    !type ||
+                    !id
+                  ) {
+                    return;
+                  }
+
+                  cacheUserContentState({
+                    content_type:
+                      type,
+                    content_id:
+                      id,
+                    is_favorite:
+                      true,
+                    progress:
+                      null,
+                    progress_updated_at:
+                      null,
+                    updated_at:
+                      null
+                  });
+
+                  authState.favorites[
+                    favoriteKey(
+                      type,
+                      id
+                    )
+                  ] = true;
+                }
+              );
+
+              userContentStateLoadedUserId =
+                uid +
+                ":legacy";
+
+              applyContentStateCache();
+            }
+          );
+      });
+  }
+
+  function syncBookProgressFromBook(
+    book
+  ) {
+    if (
+      !book ||
+      !authState.user ||
+      !book.isRemote ||
+      book.remoteId == null
+    ) {
+      return Promise.resolve(
+        null
+      );
+    }
+
+    var page =
+      Number(
+        book.currentPage
+      );
+
+    if (
+      !Number.isFinite(page) ||
+      page < 0
+    ) {
+      return Promise.resolve(
+        null
+      );
+    }
+
+    return saveProgress(
+      "book",
+      book.remoteId,
+      {
+        page:
+          page
+      }
+    ).catch(
+      function (error) {
+        console.warn(
+          "Book progress cloud sync:",
+          error
+        );
+        return null;
+      }
+    );
+  }
+
+  function syncLegacyCinemaProgress(
+    force
+  ) {
+    if (!authState.user) {
+      return Promise.resolve(
+        []
+      );
+    }
+
+    var raw;
+
+    try {
+      raw =
+        localStorage.getItem(
+          "xwendnga_cinema_progress"
+        );
+    } catch (error) {
+      return Promise.resolve(
+        []
+      );
+    }
+
+    var data;
+
+    try {
+      data =
+        raw
+          ? JSON.parse(raw)
+          : {};
+    } catch (error) {
+      data = {};
+    }
+
+    if (
+      !data ||
+      typeof data !== "object" ||
+      Array.isArray(data)
+    ) {
+      return Promise.resolve(
+        []
+      );
+    }
+
+    var tasks = [];
+
+    Object.keys(data).forEach(
+      function (key) {
+        var entry =
+          data[key];
+
+        if (
+          !entry ||
+          typeof entry !== "object"
+        ) {
+          return;
+        }
+
+        var cinemaId =
+          normalizeContentId(
+            entry.cinemaId ||
+              String(
+                key
+              ).split("::")[0]
+          );
+
+        if (!cinemaId) {
+          return;
+        }
+
+        var seconds =
+          Number(
+            entry.currentTime
+          );
+
+        var episodeNumber =
+          entry.episodeNumber !=
+          null
+            ? Number(
+                entry.episodeNumber
+              )
+            : null;
+
+        var updatedAt =
+          Number(
+            entry.updatedAt
+          ) || 0;
+
+        if (
+          !Number.isFinite(
+            seconds
+          ) ||
+          seconds < 0 ||
+          !Number.isFinite(
+            updatedAt
+          ) ||
+          updatedAt <= 0
+        ) {
+          return;
+        }
+
+        var seenKey =
+          String(
+            authState.user.id
+          ) +
+          ":" +
+          String(key);
+
+        if (
+          !force &&
+          updatedAt <=
+            Number(
+              legacyCinemaProgressSeen[
+                seenKey
+              ] || 0
+            )
+        ) {
+          return;
+        }
+
+        /* The legacy store has no user_id.
+           Do not silently attach stale guest/device
+           progress to a newly opened account. */
+        if (
+          userContentStateLoadedUserId &&
+          updatedAt <
+            Number(
+              window.XWENDNGA_SESSION_STARTED_AT ||
+              0
+            )
+        ) {
+          legacyCinemaProgressSeen[
+            seenKey
+          ] = updatedAt;
+          return;
+        }
+
+        tasks.push(
+          saveProgress(
+            "cinema",
+            cinemaId,
+            {
+              seconds:
+                seconds,
+              episode_number:
+                Number.isFinite(
+                  episodeNumber
+                ) &&
+                episodeNumber >= 0
+                  ? Math.floor(
+                      episodeNumber
+                    )
+                  : null
+            }
+          ).then(
+            function (result) {
+              legacyCinemaProgressSeen[
+                seenKey
+              ] = updatedAt;
+              return result;
+            }
+          ).catch(
+            function (error) {
+              console.warn(
+                "Cinema progress cloud sync:",
+                error
+              );
+              return null;
+            }
+          )
+        );
+      }
+    );
+
+    return Promise.all(
+      tasks
+    );
+  }
+
+  function syncMusicProgress(
+    track,
+    seconds
+  ) {
+    if (
+      !track ||
+      !authState.user ||
+      track.remoteId == null
+    ) {
+      return Promise.resolve(
+        null
+      );
+    }
+
+    var value =
+      Number(seconds);
+
+    if (
+      !Number.isFinite(value) ||
+      value < 0
+    ) {
+      return Promise.resolve(
+        null
+      );
+    }
+
+    var now =
+      Date.now();
+
+    if (
+      value <
+        (
+          Number(
+            track.duration
+          ) || 0
+        ) &&
+      now -
+        lastMusicProgressSavedAt <
+        CONTENT_PROGRESS_SAVE_MS
+    ) {
+      return Promise.resolve(
+        null
+      );
+    }
+
+    lastMusicProgressSavedAt =
+      now;
+
+    return saveProgress(
+      "music",
+      track.remoteId,
+      {
+        seconds:
+          value
+      }
+    ).catch(
+      function (error) {
+        console.warn(
+          "Music progress cloud sync:",
+          error
+        );
+        return null;
+      }
+    );
+  }
+
+  function resumeMusicProgress(
+    track,
+    audio
+  ) {
+    if (
+      !track ||
+      !audio ||
+      !authState.user ||
+      track.remoteId == null
+    ) {
+      return;
+    }
+
+    var requestId =
+      ++musicProgressRequestId;
+
+    getProgress(
+      "music",
+      track.remoteId
+    ).then(
+      function (progress) {
+        if (
+          requestId !==
+          musicProgressRequestId
+        ) {
+          return;
+        }
+
+        var seconds =
+          progress &&
+          Number.isFinite(
+            Number(
+              progress.seconds
+            )
+          )
+            ? Number(
+                progress.seconds
+              )
+            : 0;
+
+        if (
+          seconds <= 0
+        ) {
+          return;
+        }
+
+        var apply = function () {
+          if (
+            requestId !==
+            musicProgressRequestId
+          ) {
+            return;
+          }
+
+          if (
+            audio.duration &&
+            seconds >=
+              audio.duration - 1
+          ) {
+            return;
+          }
+
+          try {
+            audio.currentTime =
+              seconds;
+          } catch (error) {}
+        };
+
+        if (
+          audio.readyState >=
+          1
+        ) {
+          apply();
+        } else {
+          audio.addEventListener(
+            "loadedmetadata",
+            apply,
+            {
+              once: true
+            }
+          );
+        }
+      }
+    ).catch(
+      function (error) {
+        console.warn(
+          "Music progress resume:",
+          error
+        );
+      }
+    );
+  }
+
 
   var AUTH_RECOVERY_NOTICE =
     "هەژمارەکەت دروست بوو. ئەگەر پشتڕاستکردنەوەی ئیمەیڵ چالاک بێت، تکایە ئیمەیڵەکەت پشتڕاست بکەوە و پاشان بچۆ ژوورەوە.";
@@ -1497,6 +3261,12 @@
 
               tx.oncomplete =
                 function () {
+                  /* Keep IndexedDB as the local compatibility/cache path.
+                     ReaderEngine still receives the same dbPut() result;
+                     cloud progress is synchronized in the background. */
+                  syncBookProgressFromBook(
+                    book
+                  );
                   resolve(
                     book
                   );
@@ -2710,61 +4480,66 @@
   }
 
   function getLatestBook() {
-    if (
-      !books.length
-    ) {
+    if (!books.length) {
       return null;
     }
+
+    applyContentStateCache();
 
     var candidates =
       books
         .slice()
         .sort(
-          function (
-            a,
-            b
-          ) {
-            var aTime =
-              Number(
-                a.updatedAt ||
-                a.addedAt ||
-                0
-              );
+          function (a, b) {
+            function bookTime(
+              book
+            ) {
+              var state =
+                getCachedUserContentState(
+                  "book",
+                  book &&
+                    book.remoteId != null
+                    ? book.remoteId
+                    : book &&
+                      book.id
+                );
 
-            var bTime =
-              Number(
-                b.updatedAt ||
-                b.addedAt ||
-                0
-              );
+              if (
+                state &&
+                state.progressUpdatedAt
+              ) {
+                return new Date(
+                  state.progressUpdatedAt
+                ).getTime();
+              }
+
+              return Number(
+                book &&
+                  (
+                    book.updatedAt ||
+                    book.addedAt ||
+                    0
+                  )
+              ) || 0;
+            }
 
             return (
-              bTime -
-              aTime
+              bookTime(b) -
+              bookTime(a)
             );
           }
         );
 
     var started =
       candidates.find(
-        function (
-          book
-        ) {
+        function (book) {
           return (
-            (
-              Number(
-                book.progress
-              ) ||
-              0
-            ) >
-              0 ||
-            (
-              Number(
-                book.currentPage
-              ) ||
-              0
-            ) >
-              0
+            Number(
+              book.progress
+            ) > 0 ||
+            Number(
+              book.currentPage
+            ) > 0
           );
         }
       );
@@ -2775,6 +4550,7 @@
       null
     );
   }
+
 
 
   /* =======================================================
@@ -3434,44 +5210,60 @@
     id
   ) {
     if (!authState.user) {
-      openAuthModal("login", "بۆ بەکارهێنانی دڵخوازەکان سەرەتا بچۆ ژوورەوە.");
+      openAuthModal(
+        "login",
+        "بۆ بەکارهێنانی دڵخوازەکان سەرەتا بچۆ ژوورەوە."
+      );
       return;
     }
 
-    var book = books.find(function (item) {
-      return item.id === id;
-    });
-    if (!book || !book.isRemote) return;
+    var book =
+      books.find(function (item) {
+        return item.id === id;
+      });
 
-    var remoteId = book.remoteId != null ? book.remoteId : Number(book.id);
-    var nextState = !book.favorite;
+    if (
+      !book ||
+      !book.isRemote
+    ) {
+      return;
+    }
 
-    var request = nextState
-      ? supabaseClient.from("favorites").insert({
-          user_id: authState.user.id,
-          item_type: "book",
-          item_id: remoteId
-        })
-      : supabaseClient.from("favorites")
-          .delete()
-          .eq("user_id", authState.user.id)
-          .eq("item_type", "book")
-          .eq("item_id", remoteId);
+    var remoteId =
+      book.remoteId != null
+        ? book.remoteId
+        : Number(book.id);
 
-    request.then(function (result) {
-      if (result.error) throw result.error;
-      book.favorite = nextState;
-      if (nextState) authState.favorites[favoriteKey("book", remoteId)] = true;
-      else delete authState.favorites[favoriteKey("book", remoteId)];
-      renderBooks();
-      toast(nextState
-        ? "کتێبەکە خرایە ناو دڵخوازەکان"
-        : "کتێبەکە لە دڵخوازەکان لابرا");
-    }).catch(function (error) {
-      console.error("favorite:", error);
-      toast("نوێکردنەوەی دڵخواز سەرکەوتوو نەبوو");
-    });
+    var nextState =
+      !book.favorite;
+
+    window.AppLib
+      .setFavorite(
+        "book",
+        remoteId,
+        nextState
+      )
+      .then(function () {
+        renderBooks();
+
+        toast(
+          nextState
+            ? "کتێبەکە خرایە ناو دڵخوازەکان"
+            : "کتێبەکە لە دڵخوازەکان لابرا"
+        );
+      })
+      .catch(function (error) {
+        console.error(
+          "favorite:",
+          error
+        );
+
+        toast(
+          "نوێکردنەوەی دڵخواز سەرکەوتوو نەبوو"
+        );
+      });
   }
+
 
 
   /* =======================================================
@@ -5076,6 +6868,11 @@
       audio.src = track.url;
       audio.volume = musicVolume;
 
+      resumeMusicProgress(
+        track,
+        audio
+      );
+
       var nowName = $("nowName");
       var nowSub = $("nowSub");
       if (nowName) nowName.textContent = track.name || "موزیک";
@@ -5918,6 +7715,22 @@
             ) *
             100;
         }
+
+        var currentTrack =
+          music[musicIndex];
+
+        if (
+          currentTrack &&
+          this.duration &&
+          Number.isFinite(
+            this.currentTime
+          )
+        ) {
+          syncMusicProgress(
+            currentTrack,
+            this.currentTime
+          );
+        }
       }
     );
 
@@ -5928,22 +7741,73 @@
 
     audio.addEventListener(
       "pause",
-      updatePlayButton
+      function () {
+        updatePlayButton();
+
+        var currentTrack =
+          music[musicIndex];
+
+        if (
+          currentTrack &&
+          Number.isFinite(
+            this.currentTime
+          )
+        ) {
+          syncMusicProgress(
+            currentTrack,
+            this.currentTime
+          );
+        }
+      }
     );
 
     audio.addEventListener(
       "ended",
       function () {
-        var playable = getPlayableMusic();
-      if (playable.length) {
-        var current = music[musicIndex];
-        var pIndex = playable.indexOf(current);
-        var next = pIndex >= playable.length - 1 ? 0 : pIndex + 1;
-        loadTrack(next, true);
-      }
+        var currentTrack =
+          music[musicIndex];
+
+        if (
+          currentTrack &&
+          Number.isFinite(
+            this.duration
+          )
+        ) {
+          syncMusicProgress(
+            currentTrack,
+            this.duration
+          );
+        }
+
+        var playable =
+          getPlayableMusic();
+
+        if (
+          playable.length
+        ) {
+          var current =
+            music[musicIndex];
+
+          var pIndex =
+            playable.indexOf(
+              current
+            );
+
+          var next =
+            pIndex >=
+              playable.length - 1
+              ? 0
+              : pIndex + 1;
+
+          loadTrack(
+            next,
+            true
+          );
+        }
       }
     );
   }
+
 
   var audioRange =
     $("audioRange");
@@ -6591,6 +8455,41 @@
   );
 
   /* =======================================================
+     PHASE 6-C — LEGACY CINEMA PROGRESS BRIDGE
+     cinema-player.js remains locked and continues using
+     xwendnga_cinema_progress in localStorage.
+     Newly observed entries are mirrored to the unified
+     user_content_state through AppLib.saveProgress().
+     ======================================================= */
+
+  window.setInterval(
+    function () {
+      syncLegacyCinemaProgress(
+        false
+      );
+    },
+    CINEMA_PROGRESS_SYNC_MS
+  );
+
+  window.addEventListener(
+    "xwendnga:routechange",
+    function () {
+      syncLegacyCinemaProgress(
+        false
+      );
+    }
+  );
+
+  window.addEventListener(
+    "pagehide",
+    function () {
+      syncLegacyCinemaProgress(
+        true
+      );
+    }
+  );
+
+  /* =======================================================
      PAGE / BOOK ROUTE EVENTS
      ======================================================= */
 
@@ -6922,6 +8821,21 @@
     dbPut:
       dbPut,
 
+    setFavorite:
+      setFavorite,
+
+    getFavorites:
+      getFavorites,
+
+    saveProgress:
+      saveProgress,
+
+    getProgress:
+      getProgress,
+
+    getLatestContent:
+      getLatestContent,
+
     authState:
       authState,
 
@@ -6952,6 +8866,7 @@
           loadRemoteBooks()
             .then(function (items) {
               books = items || [];
+              applyContentStateCache();
               applyFavoritesToBooks();
               renderBooks();
               renderLibraryModeControls();
@@ -7285,16 +9200,32 @@
       authState.favorites = {};
       return Promise.resolve();
     }
-    return supabaseClient
-      .from("favorites")
-      .select("item_id,item_type")
-      .eq("user_id", authState.user.id)
-      .then(function (result) {
-        if (result.error) throw result.error;
+
+    return window.AppLib
+      .getFavorites(
+        "book"
+      )
+      .then(function (rows) {
         authState.favorites = {};
-        (result.data || []).forEach(function (row) {
-          authState.favorites[favoriteKey(row.item_type, row.item_id)] = true;
-        });
+
+        (rows || []).forEach(
+          function (state) {
+            if (
+              state &&
+              state.contentId != null &&
+              state.isFavorite
+            ) {
+              authState.favorites[
+                favoriteKey(
+                  "book",
+                  state.contentId
+                )
+              ] = true;
+            }
+          }
+        );
+
+        applyContentStateCache();
       });
   }
 
@@ -7326,11 +9257,24 @@
   }
 
   function applyFavoritesToBooks() {
-    books.forEach(function (book) {
-      if (book && book.remoteId != null) {
-        book.favorite = !!authState.favorites[favoriteKey("book", book.remoteId)];
+    books.forEach(
+      function (book) {
+        if (
+          book &&
+          book.remoteId != null
+        ) {
+          book.favorite =
+            !!authState.favorites[
+              favoriteKey(
+                "book",
+                book.remoteId
+              )
+            ];
+        }
       }
-    });
+    );
+
+    applyContentStateCache();
   }
 
   function userBookUsage() {
@@ -7354,21 +9298,58 @@
       authState.favorites = {};
       authState.savedWords = [];
       vocab = [];
+
+      userContentStateCache =
+        {};
+      userContentStateLoadedUserId =
+        "";
+      legacyFavoriteMigrationUserId =
+        "";
+      legacyCinemaProgressSeen =
+        {};
+
       renderVocab();
       renderBooks();
+
       return Promise.resolve();
     }
 
+    var currentUserId =
+      String(
+        authState.user.id || ""
+      );
+
+    if (
+      currentUserId &&
+      userContentStateLoadedUserId !==
+        currentUserId &&
+      userContentStateLoadedUserId !==
+        currentUserId + ":legacy"
+    ) {
+      window.XWENDNGA_SESSION_STARTED_AT =
+        Date.now();
+      legacyCinemaProgressSeen =
+        {};
+    }
+
     return Promise.all([
-      loadFavorites(),
+      loadUserContentState(),
       loadSavedWords()
-    ]).then(function () {
-      applyFavoritesToBooks();
-      renderBooks();
-      renderVocab();
-      renderProfile();
-    });
+    ]).then(
+      function () {
+        applyFavoritesToBooks();
+        applyContentStateCache();
+        renderBooks();
+        renderVocab();
+        renderProfile();
+
+        return syncLegacyCinemaProgress(
+          false
+        );
+      }
+    );
   }
+
 
   function ensureAuthenticated(message) {
     if (authState.user) return Promise.resolve(true);
