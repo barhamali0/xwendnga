@@ -4,7 +4,7 @@
 
    Responsibility:
    - Load published cinema records from Supabase
-   - Render hero + catalog cards
+   - Render cinema header + catalog cards
    - Search and filter
    - Handle catalog-only interactions
 
@@ -459,17 +459,18 @@
       '<section class="cinema-shell">',
 
         '<header class="cinema-header">',
-          '<div>',
+          '<div class="cinema-header__main">',
             '<div class="cinema-section__link">XWENDNGA • CINEMA</div>',
-            '<h2 class="cinema-header__title">سینەما</h2>',
+            '<div class="cinema-header__title-row">',
+              '<h2 class="cinema-header__title">سینەما</h2>',
+              '<div class="cinema-header__count" aria-label="ژمارەی ناوەڕۆکەکان">',
+                '<strong id="cinemaContentCount">0</strong>',
+                '<span>ناوەڕۆک</span>',
+              '</div>',
+            '</div>',
             '<p class="cinema-header__subtitle">فیلم، ئەنیمی، زنجیرە و کارتۆن لە یەک شوێن</p>',
           '</div>',
-          '<div class="cinema-header__actions">',
-            '<button class="cinema-action-btn cinema-action-btn--primary" type="button" data-cinema-featured="true">',
-              '<i class="fa-solid fa-clapperboard"></i>',
-              ' تایبەتەکان',
-            '</button>',
-          '</div>',
+          '<div class="cinema-header__actions"></div>',
         '</header>',
 
         '<div class="cinema-toolbar">',
@@ -500,9 +501,6 @@
         '</div>',
 
         '<div class="cinema-filter-group" id="cinemaGenreFilters" aria-label="ژانەرەکان"></div>',
-
-        '<section id="cinemaHero" class="cinema-hero" aria-label="فیلمی تایبەت"></section>',
-
         '<section id="cinemaContinueWatching" class="cinema-section" hidden aria-label="بەردەوام بە لە سەیرکردن"></section>',
 
         '<section class="cinema-section">',
@@ -525,35 +523,6 @@
 
   function renderLoading() {
     var grid = document.getElementById("cinemaGrid");
-    var hero = document.getElementById("cinemaHero");
-
-    if (hero) {
-      hero.innerHTML = [
-        '<div class="cinema-skeleton-hero" aria-hidden="true">',
-          '<div class="cinema-skeleton-hero__backdrop"></div>',
-          '<div class="cinema-skeleton-hero__content">',
-            '<div class="cinema-skeleton-hero__body">',
-              '<span class="cinema-skeleton-line cinema-skeleton-line--eyebrow"></span>',
-              '<span class="cinema-skeleton-line cinema-skeleton-line--title"></span>',
-              '<span class="cinema-skeleton-line cinema-skeleton-line--original"></span>',
-              '<div class="cinema-skeleton-hero__facts">',
-                '<span class="cinema-skeleton-pill"></span>',
-                '<span class="cinema-skeleton-pill"></span>',
-                '<span class="cinema-skeleton-pill cinema-skeleton-pill--short"></span>',
-              '</div>',
-              '<div class="cinema-skeleton-hero__description">',
-                '<span class="cinema-skeleton-line cinema-skeleton-line--description"></span>',
-                '<span class="cinema-skeleton-line cinema-skeleton-line--description cinema-skeleton-line--description-short"></span>',
-              '</div>',
-              '<div class="cinema-skeleton-hero__actions">',
-                '<span class="cinema-skeleton-button cinema-skeleton-button--primary"></span>',
-                '<span class="cinema-skeleton-button"></span>',
-              '</div>',
-            '</div>',
-          '</div>',
-        '</div>'
-      ].join("");
-    }
 
     if (grid) {
       grid.innerHTML = [1, 2, 3, 4, 5, 6]
@@ -575,11 +544,6 @@
 
   function renderError(message) {
     var grid = document.getElementById("cinemaGrid");
-    var hero = document.getElementById("cinemaHero");
-
-    if (hero) {
-      hero.innerHTML = "";
-    }
 
     if (!grid) {
       return;
@@ -604,87 +568,6 @@
     if (retry) {
       retry.addEventListener("click", load);
     }
-  }
-
-
-  function renderHero(items) {
-    var hero = document.getElementById("cinemaHero");
-
-    if (!hero) {
-      return;
-    }
-
-    if (!items.length) {
-      hero.innerHTML = "";
-      return;
-    }
-
-    var featured = items
-      .slice()
-      .sort(function (a, b) {
-        var ratingA = Number(a.rating || 0);
-        var ratingB = Number(b.rating || 0);
-        return ratingB - ratingA;
-      })[0];
-
-    var hasBackdrop = String(featured.backdrop_url || "").trim() !== "";
-    var backdrop = getBackdrop(featured);
-    var title = getTitle(featured);
-    var original = getOriginalTitle(featured);
-    var synopsis =
-      featured.synopsis_ku ||
-      featured.synopsis_en ||
-      "";
-
-    var genres = safeArray(featured.genres)
-      .slice(0, 3);
-
-    hero.innerHTML = [
-      backdrop
-        ? '<img class="cinema-hero__backdrop' + (hasBackdrop ? '' : ' cinema-hero__backdrop--poster-fallback') + '" src="' + escapeHtml(backdrop) + '" alt="" aria-hidden="true" loading="eager">'
-        : "",
-      '<div class="cinema-hero__content">',
-        '<div class="cinema-hero__body">',
-          '<div class="cinema-hero__eyebrow">',
-            '<i class="fa-solid fa-clapperboard"></i>',
-            ' ڤیلمی تایبەت',
-          '</div>',
-          '<h1 class="cinema-hero__title">', escapeHtml(title), '</h1>',
-          original && normalizeText(original) !== normalizeText(title)
-            ? '<div class="cinema-hero__original">' + escapeHtml(original) + '</div>'
-            : "",
-          '<div class="cinema-hero__meta cinema-hero__meta--facts">',
-            '<span class="cinema-card__badge cinema-hero__type">', escapeHtml(typeLabel(featured.type)), '</span>',
-            featured.year ? '<span>' + escapeHtml(featured.year) + '</span>' : "",
-            featured.duration ? '<span>' + escapeHtml(featured.duration) + '</span>' : "",
-            Number.isFinite(Number(featured.rating))
-              ? '<span><i class="fa-solid fa-star"></i> ' + escapeHtml(formatRating(featured.rating)) + '</span>'
-              : "",
-          '</div>',
-          synopsis
-            ? '<p class="cinema-hero__description">' + escapeHtml(synopsis) + '</p>'
-            : "",
-          genres.length
-            ? '<div class="cinema-hero__meta cinema-hero__meta--genres">' +
-                genres.map(function (genre) {
-                  return '<span>' + escapeHtml(genre) + '</span>';
-                }).join("") +
-              '</div>'
-            : "",
-          '<div class="cinema-hero__actions">',
-            '<button class="cinema-action-btn cinema-action-btn--primary" type="button" data-cinema-open-id="' + escapeHtml(featured.id) + '">',
-              '<i class="fa-solid fa-play"></i>',
-              ' بینە',
-            '</button>',
-            '<button class="cinema-action-btn" type="button" data-cinema-open-id="' + escapeHtml(featured.id) + '">',
-              'زانیارییەکان',
-            '</button>',
-          '</div>',
-        '</div>',
-      '</div>'
-    ].join("");
-
-    bindOpenButtons(hero);
   }
 
 
@@ -784,6 +667,12 @@
       count.textContent = String(items.length);
     }
 
+    var totalCount = document.getElementById("cinemaContentCount");
+
+    if (totalCount) {
+      totalCount.textContent = String(state.items.length);
+    }
+
     if (!grid) {
       return;
     }
@@ -873,7 +762,6 @@
 
     state.filtered = sortItems(filtered);
 
-    renderHero(state.filtered.length ? state.filtered : state.items);
     renderContinueWatching();
     renderGrid(state.filtered);
   }
