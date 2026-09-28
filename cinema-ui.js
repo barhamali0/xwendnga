@@ -38,6 +38,7 @@
     query: "",
     type: "all",
     genre: "all",
+    year: "all",
     sort: "newest",
     telegramByCinema: {}
   };
@@ -68,22 +69,24 @@
 
 
   function safeArray(value) {
-    if (Array.isArray(value)) {
-      return value.filter(function (item) {
-        return item != null && String(item).trim() !== "";
-      });
-    }
+    var source = Array.isArray(value)
+      ? value
+      : typeof value === "string"
+        ? [value]
+        : [];
 
-    if (typeof value === "string") {
-      return value
-        .split(",")
-        .map(function (item) {
-          return item.trim();
-        })
-        .filter(Boolean);
-    }
+    return source
+      .reduce(function (result, item) {
+        if (item == null) {
+          return result;
+        }
 
-    return [];
+        return result.concat(String(item).split(/[،,]/));
+      }, [])
+      .map(function (item) {
+        return item.trim();
+      })
+      .filter(Boolean);
   }
 
 
@@ -153,6 +156,30 @@
 
     return Object.keys(map).sort(function (a, b) {
       return a.localeCompare(b, "ku");
+    });
+  }
+
+
+  function getUniqueYears(items) {
+    var map = {};
+
+    items.forEach(function (item) {
+      var year = String(item && item.year != null ? item.year : "").trim();
+
+      if (year) {
+        map[year] = true;
+      }
+    });
+
+    return Object.keys(map).sort(function (a, b) {
+      var numberA = Number(a);
+      var numberB = Number(b);
+
+      if (Number.isFinite(numberA) && Number.isFinite(numberB)) {
+        return numberB - numberA;
+      }
+
+      return b.localeCompare(a, "ku");
     });
   }
 
@@ -593,65 +620,57 @@
           '</div>',
         '</div>',
 
-        '<div class="cinema-filterbar" id="cinemaFilters" aria-label="فلتەرەکانی سینەما">',
-          '<div class="cinema-filter cinema-filter--genre" id="cinemaGenreFilters" data-cinema-dropdown="genre">',
-            '<button',
-              ' class="cinema-filter__trigger"',
-              ' type="button"',
-              ' data-cinema-filter-trigger="genre"',
-              ' aria-haspopup="listbox"',
-              ' aria-expanded="false"',
-            '>',
-              '<span class="cinema-filter__label">ژانەرەکان</span>',
-              '<span class="cinema-filter__value" data-cinema-filter-value="genre">هەموو</span>',
-              '<i class="fa-solid fa-chevron-down cinema-filter__chevron" aria-hidden="true"></i>',
-            '</button>',
-            '<div class="cinema-filter__menu" data-cinema-filter-menu="genre" role="listbox" aria-label="ژانەرەکان"></div>',
-          '</div>',
+        '<div class="cinema-filterbar" id="cinemaFilterBar" aria-label="فلتەرەکانی سینەما">',
+          '<div class="cinema-filterbar__row cinema-filterbar__row--primary">',
+            '<div class="cinema-filter" data-cinema-filter="categories">',
+              '<button class="cinema-filter__trigger" type="button" data-cinema-filter-trigger="categories" aria-haspopup="true" aria-expanded="false">',
+                '<span>چەشنەکان</span>',
+                '<i class="fa-solid fa-chevron-down" aria-hidden="true"></i>',
+              '</button>',
+              '<div class="cinema-filter__menu" data-cinema-filter-menu="categories" hidden>',
+                '<div class="cinema-filter__group-label">جۆر</div>',
+                '<div class="cinema-filter__options">',
+                  '<button type="button" class="cinema-filter__option" data-cinema-type="all">هەموو جۆرەکان</button>',
+                  '<button type="button" class="cinema-filter__option" data-cinema-type="movie">فیلم</button>',
+                  '<button type="button" class="cinema-filter__option" data-cinema-type="series">زنجیرە</button>',
+                  '<button type="button" class="cinema-filter__option" data-cinema-type="anime">ئەنیمی</button>',
+                  '<button type="button" class="cinema-filter__option" data-cinema-type="cartoon">کارتۆن</button>',
+                '</div>',
+                '<div class="cinema-filter__group-label cinema-filter__group-label--secondary">ژانەر</div>',
+                '<div class="cinema-filter__options" id="cinemaGenreFilters" aria-label="ژانەرەکان"></div>',
+              '</div>',
+            '</div>',
 
-          '<div class="cinema-filter cinema-filter--type" id="cinemaTypeFilters" data-cinema-dropdown="type">',
-            '<button',
-              ' class="cinema-filter__trigger"',
-              ' type="button"',
-              ' data-cinema-filter-trigger="type"',
-              ' aria-haspopup="listbox"',
-              ' aria-expanded="false"',
-            '>',
-              '<span class="cinema-filter__label">جۆر</span>',
-              '<span class="cinema-filter__value" data-cinema-filter-value="type">هەموو</span>',
-              '<i class="fa-solid fa-chevron-down cinema-filter__chevron" aria-hidden="true"></i>',
-            '</button>',
-            '<div class="cinema-filter__menu" data-cinema-filter-menu="type" role="listbox" aria-label="جۆری ناوەڕۆک">',
-              '<button class="cinema-filter__option is-selected" type="button" data-cinema-filter-option="type" data-cinema-type="all" role="option" aria-selected="true">هەموو</button>',
-              '<button class="cinema-filter__option" type="button" data-cinema-filter-option="type" data-cinema-type="movie" role="option" aria-selected="false">فیلم</button>',
-              '<button class="cinema-filter__option" type="button" data-cinema-filter-option="type" data-cinema-type="series" role="option" aria-selected="false">زنجیرە</button>',
-              '<button class="cinema-filter__option" type="button" data-cinema-filter-option="type" data-cinema-type="anime" role="option" aria-selected="false">ئەنیمی</button>',
-              '<button class="cinema-filter__option" type="button" data-cinema-filter-option="type" data-cinema-type="cartoon" role="option" aria-selected="false">کارتۆن</button>',
+            '<div class="cinema-filter" data-cinema-filter="year">',
+              '<button class="cinema-filter__trigger" type="button" data-cinema-filter-trigger="year" aria-haspopup="true" aria-expanded="false">',
+                '<span>ساڵ</span>',
+                '<i class="fa-solid fa-chevron-down" aria-hidden="true"></i>',
+              '</button>',
+              '<div class="cinema-filter__menu cinema-filter__menu--years" data-cinema-filter-menu="year" hidden>',
+                '<div class="cinema-filter__options" id="cinemaYearFilters" aria-label="ساڵەکان"></div>',
+              '</div>',
             '</div>',
           '</div>',
 
-          '<div class="cinema-filter cinema-filter--sort" id="cinemaSort" data-cinema-dropdown="sort">',
-            '<button',
-              ' class="cinema-filter__trigger"',
-              ' type="button"',
-              ' data-cinema-filter-trigger="sort"',
-              ' aria-haspopup="listbox"',
-              ' aria-expanded="false"',
-            '>',
-              '<span class="cinema-filter__label">ڕیزکردن</span>',
-              '<span class="cinema-filter__value" data-cinema-filter-value="sort">نوێترین</span>',
-              '<i class="fa-solid fa-chevron-down cinema-filter__chevron" aria-hidden="true"></i>',
-            '</button>',
-            '<div class="cinema-filter__menu" data-cinema-filter-menu="sort" role="listbox" aria-label="ڕیزکردن">',
-              '<button class="cinema-filter__option is-selected" type="button" data-cinema-filter-option="sort" data-cinema-sort="newest" role="option" aria-selected="true">نوێترین</button>',
-              '<button class="cinema-filter__option" type="button" data-cinema-filter-option="sort" data-cinema-sort="oldest" role="option" aria-selected="false">کۆنترین</button>',
-              '<button class="cinema-filter__option" type="button" data-cinema-filter-option="sort" data-cinema-sort="rating" role="option" aria-selected="false">بەرزترین نمرە</button>',
-              '<button class="cinema-filter__option" type="button" data-cinema-filter-option="sort" data-cinema-sort="title" role="option" aria-selected="false">بەپێی ناو</button>',
+          '<div class="cinema-filterbar__row cinema-filterbar__row--secondary">',
+            '<div class="cinema-filter" data-cinema-filter="sort">',
+              '<button class="cinema-filter__trigger" type="button" data-cinema-filter-trigger="sort" aria-haspopup="true" aria-expanded="false">',
+                '<span>ڕیزکردن</span>',
+                '<i class="fa-solid fa-chevron-down" aria-hidden="true"></i>',
+              '</button>',
+              '<div class="cinema-filter__menu cinema-filter__menu--sort" data-cinema-filter-menu="sort" hidden>',
+                '<div class="cinema-filter__options">',
+                  '<button type="button" class="cinema-filter__option" data-cinema-sort="newest">نوێترین</button>',
+                  '<button type="button" class="cinema-filter__option" data-cinema-sort="oldest">کۆنترین</button>',
+                  '<button type="button" class="cinema-filter__option" data-cinema-sort="rating">بەرزترین نمرە</button>',
+                  '<button type="button" class="cinema-filter__option" data-cinema-sort="title">بەپێی ناو</button>',
+                '</div>',
+              '</div>',
             '</div>',
           '</div>',
+
+          '<div id="cinemaActiveFilters" class="cinema-active-filters" aria-live="polite"></div>',
         '</div>',
-
-        '<div class="cinema-active-filters" id="cinemaActiveFilters" aria-live="polite" aria-label="فلتەرە چالاکەکان" hidden></div>',
 
         '<section id="cinemaContinueWatching" class="cinema-section" hidden aria-label="بەردەوام بە لە سەیرکردن"></section>',
 
@@ -724,31 +743,48 @@
 
 
   function renderGenres() {
-    var target = root
-      ? root.querySelector('[data-cinema-filter-menu="genre"]')
-      : null;
+    var genreTarget = document.getElementById("cinemaGenreFilters");
+    var yearTarget = document.getElementById("cinemaYearFilters");
 
-    if (!target) {
-      return;
+    if (genreTarget) {
+      var genres = getUniqueGenres(state.items);
+
+      genreTarget.innerHTML = [
+        '<button type="button" class="cinema-filter__option" data-cinema-genre="all">',
+          '<span>هەموو ژانەرەکان</span>',
+        '</button>'
+      ].concat(
+        genres.map(function (genre) {
+          return '<button type="button" class="cinema-filter__option" data-cinema-genre="' +
+            escapeHtml(genre) +
+            '">' +
+            '<span>' + escapeHtml(genre) + '</span>' +
+            '</button>';
+        })
+      ).join("");
     }
 
-    var genres = getUniqueGenres(state.items);
+    if (yearTarget) {
+      var years = getUniqueYears(state.items);
 
-    target.innerHTML = [
-      '<button class="cinema-filter__option is-selected" type="button" data-cinema-filter-option="genre" data-cinema-genre="all" role="option" aria-selected="true">هەموو ژانەرەکان</button>'
-    ].concat(
-      genres.map(function (genre) {
-        return '<button class="cinema-filter__option" type="button" data-cinema-filter-option="genre" data-cinema-genre="' +
-          escapeHtml(genre) +
-          '" role="option" aria-selected="false">' +
-          escapeHtml(genre) +
-          '</button>';
-      })
-    ).join("");
+      yearTarget.innerHTML = [
+        '<button type="button" class="cinema-filter__option" data-cinema-year="all">هەموو ساڵەکان</button>'
+      ].concat(
+        years.map(function (year) {
+          return '<button type="button" class="cinema-filter__option" data-cinema-year="' +
+            escapeHtml(year) +
+            '">' +
+            escapeHtml(year) +
+            '</button>';
+        })
+      ).join("");
+    }
+
+    updateFilterUI();
   }
 
 
-  function sortLabel(sort) {
+  function filterSortLabel(sort) {
     var labels = {
       newest: "نوێترین",
       oldest: "کۆنترین",
@@ -760,144 +796,136 @@
   }
 
 
-  function closeCinemaDropdowns(exceptDropdown) {
+  function closeCinemaFilters() {
     if (!root) {
       return;
     }
 
-    root
-      .querySelectorAll("[data-cinema-dropdown].is-open")
-      .forEach(function (dropdown) {
-        if (exceptDropdown && dropdown === exceptDropdown) {
-          return;
-        }
-
-        dropdown.classList.remove("is-open");
-
-        var trigger = dropdown.querySelector(
-          "[data-cinema-filter-trigger]"
-        );
-
-        if (trigger) {
-          trigger.setAttribute("aria-expanded", "false");
-        }
-      });
-  }
-
-
-  function setCinemaDropdownState(key, value) {
-    if (!root) {
-      return;
-    }
-
-    var dropdown = root.querySelector(
-      '[data-cinema-dropdown="' + key + '"]'
-    );
-
-    if (!dropdown) {
-      return;
-    }
-
-    dropdown
-      .querySelectorAll("[data-cinema-filter-option]")
-      .forEach(function (option) {
-        var selected = false;
-
-        if (key === "type") {
-          selected = String(
-            option.getAttribute("data-cinema-type") || "all"
-          ) === String(value || "all");
-        } else if (key === "genre") {
-          selected = String(
-            option.getAttribute("data-cinema-genre") || "all"
-          ) === String(value || "all");
-        } else if (key === "sort") {
-          selected = String(
-            option.getAttribute("data-cinema-sort") || "newest"
-          ) === String(value || "newest");
-        }
-
-        option.classList.toggle("is-selected", selected);
-        option.setAttribute(
-          "aria-selected",
-          selected ? "true" : "false"
-        );
-      });
-  }
-
-
-  function updateCinemaFilterUI() {
-    if (!root) {
-      return;
-    }
-
-    var values = {
-      genre: state.genre === "all" ? "هەموو" : String(state.genre),
-      type: state.type === "all" ? "هەموو" : typeLabel(state.type),
-      sort: sortLabel(state.sort)
-    };
-
-    Object.keys(values).forEach(function (key) {
-      var valueNode = root.querySelector(
-        '[data-cinema-filter-value="' + key + '"]'
-      );
-
-      if (valueNode) {
-        valueNode.textContent = values[key];
-      }
+    root.querySelectorAll("[data-cinema-filter]").forEach(function (filter) {
+      filter.classList.remove("is-open");
     });
 
-    setCinemaDropdownState("genre", state.genre);
-    setCinemaDropdownState("type", state.type);
-    setCinemaDropdownState("sort", state.sort);
+    root.querySelectorAll("[data-cinema-filter-menu]").forEach(function (menu) {
+      menu.hidden = true;
+    });
+
+    root.querySelectorAll("[data-cinema-filter-trigger]").forEach(function (trigger) {
+      trigger.setAttribute("aria-expanded", "false");
+    });
   }
 
 
-  function renderActiveFilterTags() {
-    var target = document.getElementById("cinemaActiveFilters");
+  function toggleCinemaFilter(name) {
+    if (!root) {
+      return;
+    }
 
-    if (!target) {
+    var filter = root.querySelector('[data-cinema-filter="' + name + '"]');
+    var menu = root.querySelector('[data-cinema-filter-menu="' + name + '"]');
+    var trigger = root.querySelector('[data-cinema-filter-trigger="' + name + '"]');
+
+    if (!filter || !menu || !trigger) {
+      return;
+    }
+
+    var shouldOpen = !filter.classList.contains("is-open");
+
+    closeCinemaFilters();
+
+    if (shouldOpen) {
+      filter.classList.add("is-open");
+      menu.hidden = false;
+      trigger.setAttribute("aria-expanded", "true");
+    }
+  }
+
+
+  function updateFilterUI() {
+    if (!root) {
+      return;
+    }
+
+    var categoryTrigger = root.querySelector('[data-cinema-filter-trigger="categories"] span');
+    var yearTrigger = root.querySelector('[data-cinema-filter-trigger="year"] span');
+    var sortTrigger = root.querySelector('[data-cinema-filter-trigger="sort"] span');
+
+    if (categoryTrigger) {
+      categoryTrigger.textContent = "چەشنەکان";
+    }
+
+    if (yearTrigger) {
+      yearTrigger.textContent = state.year === "all" ? "ساڵ" : state.year;
+    }
+
+    if (sortTrigger) {
+      sortTrigger.textContent = filterSortLabel(state.sort);
+    }
+
+    root.querySelectorAll("[data-cinema-type]").forEach(function (option) {
+      option.classList.toggle(
+        "is-active",
+        String(option.getAttribute("data-cinema-type") || "all") === String(state.type)
+      );
+    });
+
+    root.querySelectorAll("[data-cinema-genre]").forEach(function (option) {
+      option.classList.toggle(
+        "is-active",
+        normalizeText(option.getAttribute("data-cinema-genre") || "") === normalizeText(state.genre)
+      );
+    });
+
+    root.querySelectorAll("[data-cinema-year]").forEach(function (option) {
+      option.classList.toggle(
+        "is-active",
+        String(option.getAttribute("data-cinema-year") || "all") === String(state.year)
+      );
+    });
+
+    root.querySelectorAll("[data-cinema-sort]").forEach(function (option) {
+      option.classList.toggle(
+        "is-active",
+        String(option.getAttribute("data-cinema-sort") || "newest") === String(state.sort)
+      );
+    });
+
+    var active = document.getElementById("cinemaActiveFilters");
+
+    if (!active) {
       return;
     }
 
     var tags = [];
 
-    if (state.genre !== "all") {
-      tags.push({
-        key: "genre",
-        label: String(state.genre)
-      });
-    }
-
     if (state.type !== "all") {
-      tags.push({
-        key: "type",
-        label: typeLabel(state.type)
-      });
-    }
-
-    if (!tags.length) {
-      target.innerHTML = "";
-      target.hidden = true;
-      return;
-    }
-
-    target.hidden = false;
-    target.innerHTML = tags.map(function (tag) {
-      var prefix = tag.key === "genre" ? "ژانەر" : "جۆر";
-
-      return [
-        '<button',
-          ' class="cinema-filter-tag"',
-          ' type="button"',
-          ' data-cinema-filter-remove="' + escapeHtml(tag.key) + '"',
-          ' aria-label="لابردنی فلتەری ' + escapeHtml(prefix + ": " + tag.label) + '"',
-        '>',
-          '<span>' + escapeHtml(tag.label) + '</span>',
-          '<i class="fa-solid fa-xmark" aria-hidden="true"></i>',
+      tags.push(
+        '<button type="button" class="cinema-filter-tag" data-cinema-remove-filter="type" aria-label="لابردنی فلتەری جۆر">' +
+          '<span>' + escapeHtml(typeLabel(state.type)) + '</span>' +
+          '<i class="fa-solid fa-xmark" aria-hidden="true"></i>' +
         '</button>'
-      ].join("");
-    }).join("");
+      );
+    }
+
+    if (state.genre !== "all") {
+      tags.push(
+        '<button type="button" class="cinema-filter-tag" data-cinema-remove-filter="genre" aria-label="لابردنی فلتەری ژانەر">' +
+          '<span>' + escapeHtml(state.genre) + '</span>' +
+          '<i class="fa-solid fa-xmark" aria-hidden="true"></i>' +
+        '</button>'
+      );
+    }
+
+    if (state.year !== "all") {
+      tags.push(
+        '<button type="button" class="cinema-filter-tag" data-cinema-remove-filter="year" aria-label="لابردنی فلتەری ساڵ">' +
+          '<span>' + escapeHtml(state.year) + '</span>' +
+          '<i class="fa-solid fa-xmark" aria-hidden="true"></i>' +
+        '</button>'
+      );
+    }
+
+    active.innerHTML = tags.join("");
+    active.hidden = tags.length === 0;
   }
 
 
@@ -1032,6 +1060,14 @@
         return false;
       }
 
+      var yearMatches =
+        state.year === "all" ||
+        String(item.year == null ? "" : item.year) === String(state.year);
+
+      if (!yearMatches) {
+        return false;
+      }
+
       if (!query) {
         return true;
       }
@@ -1055,10 +1091,9 @@
 
     state.filtered = sortItems(filtered);
 
-    updateCinemaFilterUI();
-    renderActiveFilterTags();
     renderContinueWatching();
     renderGrid(state.filtered);
+    updateFilterUI();
   }
 
 
@@ -1095,8 +1130,7 @@
     }
 
     var search = document.getElementById("cinemaSearchInput");
-    var filters = document.getElementById("cinemaFilters");
-    var activeFilters = document.getElementById("cinemaActiveFilters");
+    var filterBar = document.getElementById("cinemaFilterBar");
 
     if (search) {
       search.addEventListener("input", function () {
@@ -1105,101 +1139,75 @@
       });
     }
 
-    if (filters) {
-      filters.addEventListener("click", function (event) {
-        var trigger = event.target.closest(
-          "[data-cinema-filter-trigger]"
-        );
+    if (filterBar) {
+      filterBar.addEventListener("click", function (event) {
+        var trigger = event.target.closest("[data-cinema-filter-trigger]");
 
-        if (trigger && filters.contains(trigger)) {
-          var dropdown = trigger.closest("[data-cinema-dropdown]");
+        if (trigger && filterBar.contains(trigger)) {
+          toggleCinemaFilter(trigger.getAttribute("data-cinema-filter-trigger") || "");
+          return;
+        }
 
-          if (!dropdown) {
-            return;
+        var typeOption = event.target.closest("[data-cinema-type]");
+        if (typeOption && filterBar.contains(typeOption)) {
+          state.type = typeOption.getAttribute("data-cinema-type") || "all";
+          closeCinemaFilters();
+          applyFilters();
+          return;
+        }
+
+        var genreOption = event.target.closest("[data-cinema-genre]");
+        if (genreOption && filterBar.contains(genreOption)) {
+          state.genre = String(genreOption.getAttribute("data-cinema-genre") || "all");
+          closeCinemaFilters();
+          applyFilters();
+          return;
+        }
+
+        var yearOption = event.target.closest("[data-cinema-year]");
+        if (yearOption && filterBar.contains(yearOption)) {
+          state.year = String(yearOption.getAttribute("data-cinema-year") || "all");
+          closeCinemaFilters();
+          applyFilters();
+          return;
+        }
+
+        var sortOption = event.target.closest("[data-cinema-sort]");
+        if (sortOption && filterBar.contains(sortOption)) {
+          state.sort = sortOption.getAttribute("data-cinema-sort") || "newest";
+          closeCinemaFilters();
+          applyFilters();
+          return;
+        }
+
+        var removeFilter = event.target.closest("[data-cinema-remove-filter]");
+        if (removeFilter && filterBar.contains(removeFilter)) {
+          var filterName = removeFilter.getAttribute("data-cinema-remove-filter") || "";
+
+          if (filterName === "type") {
+            state.type = "all";
+          } else if (filterName === "genre") {
+            state.genre = "all";
+          } else if (filterName === "year") {
+            state.year = "all";
           }
 
-          var isOpen = dropdown.classList.contains("is-open");
-
-          closeCinemaDropdowns(dropdown);
-
-          if (isOpen) {
-            dropdown.classList.remove("is-open");
-            trigger.setAttribute("aria-expanded", "false");
-          } else {
-            dropdown.classList.add("is-open");
-            trigger.setAttribute("aria-expanded", "true");
-          }
-
-          return;
+          applyFilters();
         }
-
-        var option = event.target.closest(
-          "[data-cinema-filter-option]"
-        );
-
-        if (!option || !filters.contains(option)) {
-          return;
-        }
-
-        var key = option.getAttribute("data-cinema-filter-option") || "";
-
-        if (key === "genre") {
-          state.genre = String(
-            option.getAttribute("data-cinema-genre") || "all"
-          );
-        } else if (key === "type") {
-          state.type = String(
-            option.getAttribute("data-cinema-type") || "all"
-          );
-        } else if (key === "sort") {
-          state.sort = String(
-            option.getAttribute("data-cinema-sort") || "newest"
-          );
-        }
-
-        closeCinemaDropdowns();
-        applyFilters();
-      });
-    }
-
-    if (activeFilters) {
-      activeFilters.addEventListener("click", function (event) {
-        var removeButton = event.target.closest(
-          "[data-cinema-filter-remove]"
-        );
-
-        if (!removeButton || !activeFilters.contains(removeButton)) {
-          return;
-        }
-
-        var key = removeButton.getAttribute(
-          "data-cinema-filter-remove"
-        ) || "";
-
-        if (key === "genre") {
-          state.genre = "all";
-        } else if (key === "type") {
-          state.type = "all";
-        }
-
-        closeCinemaDropdowns();
-        applyFilters();
       });
     }
 
     document.addEventListener("click", function (event) {
-      if (!root || !document.documentElement.contains(root)) {
+      if (!filterBar || filterBar.contains(event.target)) {
         return;
       }
 
-      if (!event.target.closest("#cinemaFilters")) {
-        closeCinemaDropdowns();
-      }
+      closeCinemaFilters();
     });
 
     document.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
-        closeCinemaDropdowns();
+        closeCinemaFilters();
       }
     });
   }
