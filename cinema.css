@@ -246,33 +246,183 @@
   pointer-events:none;
 }
 
-.cinema-filter-group{
+.cinema-filterbar{
+  position:relative;
+  z-index:20;
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:10px;
+  margin-top:-4px;
+}
+
+.cinema-filter{
+  position:relative;
+  min-width:0;
+}
+
+.cinema-filter__trigger{
+  width:100%;
+  min-height:46px;
   display:flex;
   align-items:center;
   gap:8px;
-  flex-wrap:wrap;
-}
-
-.cinema-chip{
-  min-height:42px;
-  padding:0 13px;
+  padding:0 12px;
   border:1px solid var(--cinema-line);
+  border-radius:14px;
+  color:var(--cinema-text);
+  background:rgba(255,255,255,.045);
+  box-shadow:0 10px 26px rgba(0,0,0,.14);
+  backdrop-filter:blur(18px) saturate(130%);
+  -webkit-backdrop-filter:blur(18px) saturate(130%);
+  text-align:start;
+  transition:border-color .2s ease,background .2s ease,box-shadow .2s ease;
+}
+
+.cinema-filter__trigger:hover,
+.cinema-filter.is-open .cinema-filter__trigger{
+  border-color:color-mix(in srgb,var(--cinema-accent) 46%,transparent);
+  background:color-mix(in srgb,var(--cinema-accent) 7%,rgba(255,255,255,.04));
+  box-shadow:0 14px 34px rgba(0,0,0,.20);
+}
+
+.cinema-filter__label{
+  flex:0 0 auto;
+  color:var(--cinema-muted);
+  font-size:.72rem;
+  font-weight:700;
+}
+
+.cinema-filter__value{
+  min-width:0;
+  flex:1 1 auto;
+  overflow:hidden;
+  color:#fff;
+  font-size:.75rem;
+  font-weight:800;
+  white-space:nowrap;
+  text-overflow:ellipsis;
+}
+
+.cinema-filter__chevron{
+  flex:0 0 auto;
+  color:#9eabc0;
+  font-size:.66rem;
+  transition:transform .2s ease;
+}
+
+.cinema-filter.is-open .cinema-filter__chevron{
+  transform:rotate(180deg);
+}
+
+.cinema-filter__menu{
+  position:absolute;
+  inset-inline:0 auto;
+  inset-block-start:calc(100% + 8px);
+  z-index:40;
+  width:max-content;
+  min-width:100%;
+  max-width:min(320px,calc(100vw - 24px));
+  max-height:320px;
+  overflow:auto;
+  padding:7px;
+  border:1px solid var(--cinema-line-strong);
+  border-radius:16px;
+  background:var(--cinema-surface-strong);
+  box-shadow:0 22px 52px rgba(0,0,0,.40);
+  backdrop-filter:blur(22px) saturate(140%);
+  -webkit-backdrop-filter:blur(22px) saturate(140%);
+  opacity:0;
+  visibility:hidden;
+  pointer-events:none;
+  transform:translateY(-5px);
+  transition:opacity .18s ease,visibility .18s ease,transform .18s ease;
+}
+
+.cinema-filter.is-open .cinema-filter__menu{
+  opacity:1;
+  visibility:visible;
+  pointer-events:auto;
+  transform:translateY(0);
+}
+
+.cinema-filter__option{
+  width:100%;
+  min-height:40px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:0 10px;
+  border:1px solid transparent;
+  border-radius:11px;
+  color:#c9d2e1;
+  background:transparent;
+  font-size:.76rem;
+  font-weight:700;
+  text-align:start;
+  transition:background .16s ease,color .16s ease,border-color .16s ease;
+}
+
+.cinema-filter__option:hover,
+.cinema-filter__option:focus-visible{
+  color:#fff;
+  background:rgba(255,255,255,.06);
+}
+
+.cinema-filter__option.is-selected{
+  color:#fff;
+  border-color:color-mix(in srgb,var(--cinema-accent) 28%,transparent);
+  background:color-mix(in srgb,var(--cinema-accent) 12%,transparent);
+}
+
+.cinema-filter__option.is-selected::after{
+  content:"✓";
+  margin-inline-start:auto;
+  color:var(--cinema-accent-2);
+  font-size:.8rem;
+  font-weight:900;
+}
+
+.cinema-active-filters{
+  display:flex;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:7px;
+  min-height:0;
+  margin-top:9px;
+}
+
+.cinema-filter-tag{
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+  min-height:30px;
+  max-width:100%;
+  padding:0 9px 0 10px;
+  border:1px solid color-mix(in srgb,var(--cinema-accent) 22%,rgba(255,255,255,.10));
   border-radius:999px;
-  color:#c6cedd;
-  background:rgba(255,255,255,.035);
-  transition:transform .18s ease,border-color .18s ease,background .18s ease,color .18s ease;
+  color:#edf2fb;
+  background:color-mix(in srgb,var(--cinema-accent) 8%,rgba(255,255,255,.035));
+  font-size:.68rem;
+  font-weight:800;
 }
 
-.cinema-chip:hover{
-  border-color:color-mix(in srgb,var(--cinema-accent) 45%,transparent);
-  color:#fff;
+.cinema-filter-tag i{
+  display:grid;
+  place-items:center;
+  width:15px;
+  height:15px;
+  border-radius:50%;
+  color:#aeb9ca;
+  font-size:.58rem;
 }
 
-.cinema-chip.is-active{
-  color:#fff;
-  border-color:transparent;
-  background:linear-gradient(135deg,color-mix(in srgb,var(--cinema-accent) 95%,transparent),color-mix(in srgb,var(--cinema-accent-2) 90%,transparent));
-  box-shadow:0 10px 24px color-mix(in srgb,var(--cinema-accent) 22%,transparent);
+.cinema-filter-tag:hover{
+  border-color:color-mix(in srgb,var(--cinema-accent) 42%,transparent);
+  background:color-mix(in srgb,var(--cinema-accent) 12%,rgba(255,255,255,.035));
+}
+
+.cinema-filter-tag:active{
+  transform:scale(.98);
 }
 
 /* =========================================================
@@ -1043,19 +1193,8 @@
     grid-template-columns:1fr;
   }
 
-  .cinema-filter-group{
-    overflow-x:auto;
-    flex-wrap:nowrap;
-    padding-bottom:2px;
-    scrollbar-width:none;
-  }
-
-  .cinema-filter-group::-webkit-scrollbar{
-    display:none;
-  }
-
-  .cinema-chip{
-    flex:0 0 auto;
+  .cinema-filterbar{
+    grid-template-columns:repeat(3,minmax(0,1fr));
   }
 
   .cinema-grid,
@@ -1098,6 +1237,52 @@
   .cinema-header__count{
     min-height:26px;
     padding:4px 8px;
+  }
+
+  .cinema-filterbar{
+    gap:7px;
+    margin-top:-2px;
+  }
+
+  .cinema-filter__trigger{
+    min-height:44px;
+    gap:5px;
+    padding:0 9px;
+    border-radius:13px;
+  }
+
+  .cinema-filter__label{
+    font-size:.66rem;
+  }
+
+  .cinema-filter__value{
+    font-size:.68rem;
+  }
+
+  .cinema-filter__chevron{
+    font-size:.58rem;
+  }
+
+  .cinema-filter__menu{
+    max-height:280px;
+    padding:6px;
+  }
+
+  .cinema-filter__option{
+    min-height:39px;
+    padding:0 9px;
+    font-size:.72rem;
+  }
+
+  .cinema-active-filters{
+    gap:6px;
+    margin-top:8px;
+  }
+
+  .cinema-filter-tag{
+    min-height:28px;
+    padding-inline:8px;
+    font-size:.64rem;
   }
 
   .cinema-grid,
