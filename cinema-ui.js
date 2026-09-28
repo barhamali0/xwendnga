@@ -38,7 +38,8 @@
     query: "",
     type: "all",
     genre: "all",
-    sort: "newest"
+    sort: "newest",
+    telegramByCinema: {}
   };
 
   var client = null;
@@ -287,6 +288,112 @@
       ? result.data
       : [];
   }
+
+
+  function safeExternalUrl(value) {
+    var s = String(value || "").trim();
+
+    if (!/^https?:\/\//i.test(s)) {
+      return "";
+    }
+
+    try {
+      var url = new URL(s);
+
+      return /^https?:$/i.test(url.protocol)
+        ? url.href
+        : "";
+    } catch (error) {
+      return "";
+    }
+  }
+
+
+  function isTelegramServer(server) {
+    if (!server) {
+      return false;
+    }
+
+    var name = String(server.server_name || "")
+      .trim()
+      .toLowerCase();
+
+    if (
+      name.indexOf("telegram") >= 0 ||
+      name.indexOf("تێلیگرام") >= 0
+    ) {
+      return true;
+    }
+
+    var url = safeExternalUrl(server.video_url);
+
+    if (!url) {
+      return false;
+    }
+
+    try {
+      return new URL(url).hostname.toLowerCase() === "t.me";
+    } catch (error) {
+      return false;
+    }
+  }
+
+
+  async function loadTelegramAvailability(items) {
+    state.telegramByCinema = {};
+
+    if (
+      !client ||
+      !Array.isArray(items) ||
+      !items.length
+    ) {
+      return;
+    }
+
+    var ids = items
+      .map(function (item) {
+        return item && item.id != null
+          ? String(item.id)
+          : "";
+      })
+      .filter(Boolean);
+
+    if (!ids.length) {
+      return;
+    }
+
+    try {
+      var result = await client
+        .from("cinema_servers")
+        .select("cinema_id,server_name,server_type,video_url")
+        .eq("status", "published")
+        .in("cinema_id", ids);
+
+      if (result.error) {
+        throw result.error;
+      }
+
+      (Array.isArray(result.data) ? result.data : [])
+        .forEach(function (server) {
+          if (
+            server &&
+            server.cinema_id != null &&
+            isTelegramServer(server)
+          ) {
+            state.telegramByCinema[
+              String(server.cinema_id)
+            ] = true;
+          }
+        });
+    } catch (error) {
+      console.warn(
+        "Xwendnga cinema Telegram availability check failed:",
+        error
+      );
+    }
+  }
+
+
 
 
   /* =====================================================
@@ -620,16 +727,27 @@
   function cardHtml(item) {
     var poster = getPoster(item);
     var title = getTitle(item);
-    var original = getOriginalTitle(item);
-    var synopsis =
-      item.synopsis_ku ||
-      item.synopsis_en ||
-      "";
-    var genres = safeArray(item.genres);
+    var meta = [];
+
+    if (item.year) {
+      meta.push(String(item.year));
+    }
+
+    if (Number.isFinite(Number(item.rating))) {
+      meta.push("★ " + formatRating(item.rating));
+    }
+
+    meta.push(typeLabel(item.type));
 
     var posterHtml = poster
       ? '<img class="cinema-card__poster" src="' + escapeHtml(poster) + '" alt="' + escapeHtml(title) + '" loading="lazy">'
       : '<div class="cinema-card__poster" aria-hidden="true"></div>';
+
+    var telegramBadge = state.telegramByCinema[
+      String(item.id)
+    ]
+      ? '<span class="cinema-card__telegram" data-cinema-telegram="true" title="سێرڤەری تێلیگرام بەردەستە" aria-label="سێرڤەری تێلیگرام بەردەستە"><i class="fa-brands fa-telegram" aria-hidden="true"></i></span>'
+      : "";
 
     return [
       '<article class="cinema-card" data-cinema-card-id="' + escapeHtml(item.id) + '">',
@@ -639,6 +757,7 @@
           Number.isFinite(Number(item.rating))
             ? '<span class="cinema-card__rating"><i class="fa-solid fa-star"></i> ' + escapeHtml(formatRating(item.rating)) + '</span>'
             : "",
+          telegramBadge,
           '<button class="cinema-card__play" type="button" data-cinema-open-id="' + escapeHtml(item.id) + '" aria-label="بینینی ' + escapeHtml(title) + '">',
             '<i class="fa-solid fa-play"></i>',
           '</button>',
@@ -646,13 +765,10 @@
         '<div class="cinema-card__body">',
           '<h3 class="cinema-card__name">' + escapeHtml(title) + '</h3>',
           '<div class="cinema-card__meta">',
-            item.year ? '<span>' + escapeHtml(item.year) + '</span>' : "",
-            item.duration ? '<span>' + escapeHtml(item.duration) + '</span>' : "",
-            original && normalizeText(original) !== normalizeText(title)
-              ? '<span>' + escapeHtml(original) + '</span>'
-              : "",
+            meta.map(function (value) {
+              return '<span>' + escapeHtml(value) + '</span>';
+            }).join('<span class="cinema-card__meta-separator" aria-hidden="true">•</span>'),
           '</div>',
-          synopsis ? '<p class="cinema-card__description">' + escapeHtml(synopsis) + '</p>' : "",
         '</div>',
       '</article>'
     ].join("");
@@ -857,6 +973,8 @@
 
     try {
       state.items = await fetchCinemas();
+
+      await loadTelegramAvailability(state.items);
 
       dispatchDataReady(state.items);
 
