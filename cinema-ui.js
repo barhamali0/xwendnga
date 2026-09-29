@@ -40,7 +40,9 @@
     genre: "all",
     year: "all",
     sort: "newest",
-    telegramByCinema: {}
+    telegramByCinema: {},
+    qualityByCinema: {},
+    presentationByCinema: {}
   };
 
   var client = null;
@@ -299,6 +301,7 @@
         "synopsis_en",
         "synopsis_ku",
         "status",
+        "sub_ku",
         "created_at",
         "updated_at"
       ].join(","))
@@ -366,8 +369,79 @@
   }
 
 
+  function detectQuality(server) {
+    if (!server) {
+      return "";
+    }
+
+    var haystack = [
+      server.server_name,
+      server.server_type
+    ]
+      .filter(function (value) {
+        return value !== null && value !== undefined;
+      })
+      .join(" ")
+      .toLowerCase();
+
+    if (/(?:4k|2160p|ultra\s*hd)/i.test(haystack)) {
+      return "4K";
+    }
+
+    if (/(?:1080p|full\s*hd|\bhd\b)/i.test(haystack)) {
+      return "HD";
+    }
+
+    return "";
+  }
+
+
+  function serverIndicatesDub(server) {
+    if (!server) {
+      return false;
+    }
+
+    var haystack = [
+      server.server_name,
+      server.server_type
+    ]
+      .filter(function (value) {
+        return value !== null && value !== undefined;
+      })
+      .join(" ")
+      .toLowerCase();
+
+    return /(dubbing|dubbed|\bdub\b|دۆبلاژ|دۆبلاج)/i.test(haystack);
+  }
+
+
+  function markPresentation(cinemaId, patch) {
+    var key = String(cinemaId || "");
+    if (!key) {
+      return;
+    }
+
+    if (!state.presentationByCinema[key]) {
+      state.presentationByCinema[key] = {
+        subtitle: false,
+        dub: false
+      };
+    }
+
+    if (patch && patch.subtitle) {
+      state.presentationByCinema[key].subtitle = true;
+    }
+
+    if (patch && patch.dub) {
+      state.presentationByCinema[key].dub = true;
+    }
+  }
+
+
   async function loadTelegramAvailability(items) {
     state.telegramByCinema = {};
+    state.qualityByCinema = {};
+    state.presentationByCinema = {};
 
     if (
       !client ||
@@ -402,22 +476,69 @@
 
       (Array.isArray(result.data) ? result.data : [])
         .forEach(function (server) {
-          if (
-            server &&
-            server.cinema_id != null &&
-            isTelegramServer(server)
-          ) {
-            state.telegramByCinema[
-              String(server.cinema_id)
-            ] = true;
+          if (!server || server.cinema_id == null) {
+            return;
+          }
+
+          var cinemaId = String(server.cinema_id);
+          var quality = detectQuality(server);
+
+          if (quality) {
+            var previousQuality = state.qualityByCinema[cinemaId];
+
+            if (quality === "4K" || !previousQuality) {
+              state.qualityByCinema[cinemaId] = quality;
+            }
+          }
+
+          if (serverIndicatesDub(server)) {
+            markPresentation(cinemaId, { dub: true });
+          }
+
+          if (isTelegramServer(server)) {
+            state.telegramByCinema[cinemaId] = true;
           }
         });
     } catch (error) {
       console.warn(
-        "Xwendnga cinema Telegram availability check failed:",
+        "Xwendnga cinema server metadata check failed:",
         error
       );
     }
+
+    try {
+      var episodes = await client
+        .from("cinema_episodes")
+        .select("cinema_id,sub_ku")
+        .eq("status", "published")
+        .in("cinema_id", ids);
+
+      if (episodes.error) {
+        throw episodes.error;
+      }
+
+      (Array.isArray(episodes.data) ? episodes.data : [])
+        .forEach(function (episode) {
+          if (
+            episode &&
+            episode.cinema_id != null &&
+            String(episode.sub_ku || "").trim()
+          ) {
+            markPresentation(String(episode.cinema_id), { subtitle: true });
+          }
+        });
+    } catch (error) {
+      console.warn(
+        "Xwendnga cinema episode subtitle check failed:",
+        error
+      );
+    }
+
+    items.forEach(function (item) {
+      if (item && String(item.sub_ku || "").trim()) {
+        markPresentation(String(item.id), { subtitle: true });
+      }
+    });
   }
 
 
@@ -910,7 +1031,21 @@
   function cardHtml(item) {
     var poster = getPoster(item);
     var title = getTitle(item);
+    var original = getOriginalTitle(item);
+    var genres = safeArray(item.genres);
+    var quality = state.qualityByCinema[String(item.id)] || "";
+    var presentation = state.presentationByCinema[String(item.id)] || {};
+
+    var posterHtml = poster
+      ? '<img class="cinema-card__poster" src="' + escapeHtml(poster) + '" alt="' + escapeHtml(title) + '" loading="lazy">'
+      : '<div class="cinema-card__poster" aria-hidden="true"></div>';
+
+    var primaryGenre = genres.length ? genres[0] : "";
     var meta = [];
+
+    if (primaryGenre) {
+      meta.push(primaryGenre);
+    }
 
     if (item.year) {
       meta.push(String(item.year));
@@ -920,15 +1055,21 @@
       meta.push("★ " + formatRating(item.rating));
     }
 
-    meta.push(typeLabel(item.type));
+    var modeTags = [];
 
-    var posterHtml = poster
-      ? '<img class="cinema-card__poster" src="' + escapeHtml(poster) + '" alt="' + escapeHtml(title) + '" loading="lazy">'
-      : '<div class="cinema-card__poster" aria-hidden="true"></div>';
+    if (presentation.subtitle) {
+      modeTags.push(
+        '<span class="cinema-card__mode cinema-card__mode--subtitle">ژێرنووسی کوردی</span>'
+      );
+    }
 
-    var telegramBadge = state.telegramByCinema[
-      String(item.id)
-    ]
+    if (presentation.dub) {
+      modeTags.push(
+        '<span class="cinema-card__mode cinema-card__mode--dub">دۆبلاژی کوردی</span>'
+      );
+    }
+
+    var telegramBadge = state.telegramByCinema[String(item.id)]
       ? '<span class="cinema-card__telegram" data-cinema-telegram="true" title="سێرڤەری تێلیگرام بەردەستە" aria-label="سێرڤەری تێلیگرام بەردەستە"><i class="fa-brands fa-telegram" aria-hidden="true"></i></span>'
       : "";
 
@@ -936,21 +1077,32 @@
       '<article class="cinema-card" data-cinema-card-id="' + escapeHtml(item.id) + '">',
         '<div class="cinema-card__visual">',
           posterHtml,
-          '<span class="cinema-card__badge"><i class="fa-solid fa-circle-play"></i> ' + escapeHtml(typeLabel(item.type)) + '</span>',
+          '<div class="cinema-card__shade" aria-hidden="true"></div>',
+          quality
+            ? '<span class="cinema-card__quality">' + escapeHtml(quality) + '</span>'
+            : "",
           Number.isFinite(Number(item.rating))
-            ? '<span class="cinema-card__rating"><i class="fa-solid fa-star"></i> ' + escapeHtml(formatRating(item.rating)) + '</span>'
+            ? '<span class="cinema-card__rating"><i class="fa-solid fa-star" aria-hidden="true"></i> ' + escapeHtml(formatRating(item.rating)) + '</span>'
             : "",
           telegramBadge,
-          '<button class="cinema-card__play" type="button" data-cinema-open-id="' + escapeHtml(item.id) + '" aria-label="بینینی ' + escapeHtml(title) + '">',
-            '<i class="fa-solid fa-play"></i>',
-          '</button>',
-        '</div>',
-        '<div class="cinema-card__body">',
-          '<h3 class="cinema-card__name">' + escapeHtml(title) + '</h3>',
-          '<div class="cinema-card__meta">',
-            meta.map(function (value) {
-              return '<span>' + escapeHtml(value) + '</span>';
-            }).join('<span class="cinema-card__meta-separator" aria-hidden="true">•</span>'),
+          '<div class="cinema-card__center">',
+            '<button class="cinema-card__play" type="button" data-cinema-open-id="' + escapeHtml(item.id) + '" aria-label="بینینی ' + escapeHtml(title) + '">',
+              '<i class="fa-solid fa-play" aria-hidden="true"></i>',
+            '</button>',
+            modeTags.length
+              ? '<div class="cinema-card__modes">' + modeTags.join("") + '</div>'
+              : "",
+          '</div>',
+          '<div class="cinema-card__overlay">',
+            '<div class="cinema-card__meta">',
+              meta.map(function (value) {
+                return '<span>' + escapeHtml(value) + '</span>';
+              }).join('<span class="cinema-card__meta-separator" aria-hidden="true">•</span>'),
+            '</div>',
+            '<h3 class="cinema-card__name">' + escapeHtml(title) + '</h3>',
+            original && normalizeText(original) !== normalizeText(title)
+              ? '<div class="cinema-card__original">' + escapeHtml(original) + '</div>'
+              : "",
           '</div>',
         '</div>',
       '</article>'
@@ -988,6 +1140,7 @@
     }
 
     grid.innerHTML = items.map(cardHtml).join("");
+    bindCardMotion(grid);
     bindOpenButtons(grid);
   }
 
@@ -1078,6 +1231,43 @@
   /* =====================================================
      EVENTS
      ===================================================== */
+
+  function bindCardMotion(container) {
+    if (!container) {
+      return;
+    }
+
+    container
+      .querySelectorAll(".cinema-card")
+      .forEach(function (card) {
+        if (card.dataset.cinemaMotionBound === "1") {
+          return;
+        }
+
+        card.dataset.cinemaMotionBound = "1";
+
+        card.addEventListener("pointerdown", function (event) {
+          if (event.pointerType === "touch") {
+            card.classList.add("is-touch-active");
+          }
+        }, { passive: true });
+
+        card.addEventListener("pointerup", function (event) {
+          if (event.pointerType === "touch") {
+            window.setTimeout(function () {
+              card.classList.remove("is-touch-active");
+            }, 220);
+          }
+        }, { passive: true });
+
+        card.addEventListener("pointercancel", function (event) {
+          if (event.pointerType === "touch") {
+            card.classList.remove("is-touch-active");
+          }
+        }, { passive: true });
+      });
+  }
+
 
   function bindOpenButtons(container) {
     if (!container) {
