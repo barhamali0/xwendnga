@@ -134,13 +134,6 @@
   letter-spacing:-.02em;
 }
 
-.cinema-header__subtitle{
-  margin:.45rem 0 0;
-  color:var(--cinema-muted);
-  font-size:clamp(.78rem,1.3vw,.98rem);
-  line-height:1.9;
-}
-
 .cinema-header__actions{
   display:flex;
   align-items:center;
@@ -227,48 +220,6 @@
 /* =========================================================
    SEARCH / FILTERS / BEENAR-STYLE CONTROLS
    ========================================================= */
-
-.cinema-toolbar{
-  display:block;
-  margin:18px 0 10px;
-}
-
-.cinema-search{
-  position:relative;
-  min-width:0;
-}
-
-.cinema-search input{
-  width:100%;
-  min-height:44px;
-  padding:0 44px 0 14px;
-  border:1px solid var(--cinema-line);
-  border-radius:9px;
-  background:color-mix(in srgb,var(--cinema-bg) 92%,var(--cinema-surface));
-  color:var(--cinema-text);
-  box-shadow:none;
-  transition:border-color .18s ease,background .18s ease;
-}
-
-.cinema-search input::placeholder{
-  color:var(--cinema-muted);
-}
-
-.cinema-search input:focus{
-  border-color:rgba(199,164,75,.38);
-  background:color-mix(in srgb,var(--cinema-accent) 4%,var(--cinema-bg));
-  box-shadow:none;
-  outline:none;
-}
-
-.cinema-search__icon{
-  position:absolute;
-  inset-inline-start:14px;
-  top:50%;
-  transform:translateY(-50%);
-  color:var(--cinema-muted);
-  pointer-events:none;
-}
 
 .cinema-filterbar{
   display:flex;
@@ -1253,9 +1204,6 @@
     padding:18px 16px 24px;
   }
 
-  .cinema-toolbar{
-    margin-top:14px;
-  }
 
   .cinema-filter__menu{
     max-height:min(340px,58vh);
